@@ -1,0 +1,1 @@
+export default function Filters(){return <nav>Todos RIDA RETOV TYC</nav>}

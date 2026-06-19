@@ -1,0 +1,34 @@
+{
+  "huesller": {
+    "slug": "huesller",
+    "name": "Huesller",
+    "phone": "554733054401",
+    "policyType": "nenhum",
+    "baseDiscount": null,
+    "targetDiscount": null
+  },
+  "ney": {
+    "slug": "ney",
+    "name": "Ney",
+    "phone": "554733054400",
+    "policyType": "nenhum",
+    "baseDiscount": null,
+    "targetDiscount": null
+  },
+  "francisco": {
+    "slug": "francisco",
+    "name": "Francisco",
+    "phone": "5527992747307",
+    "policyType": "politicaDesconto",
+    "baseDiscount": 45,
+    "targetDiscount": 50
+  },
+  "representante": {
+    "slug": "representante",
+    "name": "Francisco",
+    "phone": "5527992747307",
+    "policyType": "politicaDesconto",
+    "baseDiscount": 45,
+    "targetDiscount": 50
+  }
+}

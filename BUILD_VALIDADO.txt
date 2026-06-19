@@ -1,0 +1,11 @@
+Build validado nesta sessão:
+
+npm install
+npm run build
+
+Resultado:
+OK
+
+Observação:
+node_modules e dist foram removidos do ZIP limpo.
+A Vercel irá gerar dist automaticamente no deploy.

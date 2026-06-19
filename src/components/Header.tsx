@@ -1,0 +1,1 @@
+export default function Header(){return <header className='p-4'>Z Automotiva</header>}

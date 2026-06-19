@@ -1,0 +1,1 @@
+export default function SearchHero(){return <section><input placeholder='Buscar peça, veículo ou código'/></section>}

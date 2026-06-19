@@ -1,0 +1,25 @@
+{
+  "name": "zconnect-catalogo-premium",
+  "private": true,
+  "version": "10.0.0",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "generate-search-index": "node scripts/generate-search-index.mjs",
+    "update-catalog": "node scripts/generate-catalog.mjs && npm run generate-search-index",
+    "update-fast": "npm run update-catalog",
+    "update-daily": "npm run update-catalog",
+    "scrape": "npm run update-catalog",
+    "estoque": "npm run update-catalog"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^5.4.21"
+  },
+  "type": "module"
+}

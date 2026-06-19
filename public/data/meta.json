@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-06-18T17:25:03.270Z",
+  "productCount": 2223,
+  "brands": [
+    [
+      "RETOV",
+      642
+    ],
+    [
+      "RIDA",
+      425
+    ],
+    [
+      "TYC",
+      590
+    ],
+    [
+      "Z AUTO",
+      566
+    ]
+  ],
+  "source": {
+    "catalog": "legacy/CatalogoPremium/catalogo-gerado/catalogo-completo.json",
+    "consultants": "legacy/CatalogoPremium/catalogo-gerado/assets/consultores.js"
+  }
+}

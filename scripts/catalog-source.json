@@ -1,0 +1,12 @@
+{
+  "legacyCatalogPath": "legacy/CatalogoPremium/catalogo-gerado/catalogo-completo.json",
+  "legacyConsultantsPath": "legacy/CatalogoPremium/catalogo-gerado/assets/consultores.js",
+  "brands": {
+    "1436": "RETOV",
+    "1438": "RIDA",
+    "1494": "TYC",
+    "1493": "TYC",
+    "1437": "Z AUTO"
+  },
+  "_note": "Se o scraper legado não existir, update-daily reaproveita public/data/catalog.v5.json e regenera índices."
+}

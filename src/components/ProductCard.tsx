@@ -1,0 +1,1 @@
+export default function ProductCard(){return <article><div>Imagem</div><h3>Descrição</h3><strong>R$ 0,00</strong><small>✓ Valor com IPI incluso</small><div><button>+Adicionar</button><button>+Detalhes</button></div></article>}
