@@ -1,29 +1,3 @@
 @echo off
-chcp 65001 >nul
-cd /d "%~dp0.."
-
-title Z Connect - Build
-
-echo.
-echo ======================================
-echo        Z CONNECT - BUILD
-echo ======================================
-echo.
-
-if not exist node_modules (
-  echo node_modules nao encontrado. Rodando npm install...
-  npm install
-  if errorlevel 1 exit /b 1
-)
-
 npm run build
-if errorlevel 1 (
-  echo.
-  echo [ERRO] Build falhou.
-  pause
-  exit /b 1
-)
-
-echo.
-echo Build OK.
 pause
