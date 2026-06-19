@@ -1,6 +1,5 @@
-@echo off
-title Z Connect Catalogo - Atualizar
-cd /d "%~dp0\.."
-npm run update-daily
-npm run build
-pause
+@echo off
+chcp 65001 >nul
+cd /d "%~dp0.."
+
+call dev\UPDATE_CATALOGO.bat

@@ -1,10 +1,38 @@
+# dependencies
 node_modules/
+
+# build
 dist/
+.vite/
 .vercel/
+
+# env
 .env
 .env.*
+!.env.example
+
+# logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
 .DS_Store
 Thumbs.db
-*.zip
 desktop.ini
+.vscode/
+.idea/
+
+# archives / temp
+*.zip
+*.rar
+*.7z
+backup/
+backups/
+temp/
+tmp/
+logs/
+
+# generated local files
+BUILD_VALIDADO.txt

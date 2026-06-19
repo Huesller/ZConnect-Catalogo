@@ -1,31 +1,55 @@
-# Z Connect Catálogo Premium
+# ZConnect Catálogo
 
-Catálogo B2B automotivo em React + Vite.
+Catálogo B2B automotivo premium da Z Connect.
 
-## Comandos
+## Requisitos
+
+- Node.js
+- NPM
+- Git
+
+## Instalação
 
 ```bash
 npm install
+```
+
+## Desenvolvimento
+
+```bash
 npm run dev
+```
+
+## Build
+
+```bash
 npm run build
+```
+
+## Atualização do catálogo
+
+```bash
 npm run update-daily
 ```
 
-## Deploy
+## DevKit
 
-Projeto pronto para GitHub + Vercel.
+Os comandos de rotina estão em:
 
-Arquivos versionados:
-- `src/`
-- `public/`
-- `scripts/`
-- `package.json`
-- `package-lock.json`
-- `index.html`
+```txt
+dev/
+```
 
-Arquivos ignorados:
-- `node_modules/`
-- `dist/`
-- `.vercel/`
-- `.git/`
-- zips e backups locais
+Atalho principal:
+
+```txt
+ZCONNECT.bat
+```
+
+## Publicação
+
+```txt
+dev/PUBLICAR.bat
+```
+
+O deploy é feito automaticamente pela Vercel após o push no GitHub.
