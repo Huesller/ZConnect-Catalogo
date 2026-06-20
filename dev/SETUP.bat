@@ -1,54 +1,54 @@
 @echo off
-chcp 65001 >nul
-cd /d "%~dp0.."
-
-title Z Connect - Setup
-
-echo.
-echo ======================================
-echo        Z CONNECT - SETUP
-echo ======================================
+cd /d "%~dp0\.."
+cls
+echo ==================================================
+echo Z CONNECT - PRIMEIRA INSTALACAO
+echo ==================================================
 echo.
 
-where node >nul 2>nul
-if errorlevel 1 (
-  echo [ERRO] Node nao encontrado.
-  echo Instale o Node.js LTS.
+where node >nul 2>nul || (
+  echo ERRO: Node nao encontrado.
+  echo Instale em: https://nodejs.org
   pause
   exit /b 1
 )
 
-where npm >nul 2>nul
-if errorlevel 1 (
-  echo [ERRO] NPM nao encontrado.
+where npm >nul 2>nul || (
+  echo ERRO: NPM nao encontrado.
   pause
   exit /b 1
 )
 
-where git >nul 2>nul
-if errorlevel 1 (
-  echo [ERRO] Git nao encontrado.
-  echo Instale Git for Windows.
+where git >nul 2>nul || (
+  echo ERRO: Git nao encontrado.
+  echo Instale em: https://git-scm.com/download/win
   pause
   exit /b 1
 )
 
-echo Node:
-node -v
-echo NPM:
-npm -v
-echo Git:
-git --version
+if not exist package.json (
+  echo ERRO: package.json nao encontrado. Execute este arquivo na raiz do projeto.
+  pause
+  exit /b 1
+)
 
-echo.
 echo Instalando dependencias...
-npm install
+call npm install
 if errorlevel 1 (
-  echo [ERRO] npm install falhou.
+  echo ERRO no npm install.
   pause
   exit /b 1
 )
 
 echo.
-echo Setup concluido.
+echo Validando build...
+call npm run build
+if errorlevel 1 (
+  echo ERRO no build.
+  pause
+  exit /b 1
+)
+
+echo.
+echo SETUP CONCLUIDO COM SUCESSO.
 pause
