@@ -3,17 +3,17 @@
     "slug": "huesller",
     "name": "Huesller",
     "phone": "554733054401",
-    "policyType": "nenhum",
-    "baseDiscount": null,
-    "targetDiscount": null
+    "policyType": "politicaDesconto",
+    "baseDiscount": 45,
+    "targetDiscount": 45
   },
   "ney": {
     "slug": "ney",
     "name": "Ney",
     "phone": "554733054400",
-    "policyType": "nenhum",
-    "baseDiscount": null,
-    "targetDiscount": null
+    "policyType": "politicaDesconto",
+    "baseDiscount": 45,
+    "targetDiscount": 45
   },
   "francisco": {
     "slug": "francisco",

@@ -1,26 +1,73 @@
 {
-  "generatedAt": "2026-06-18T17:25:03.270Z",
-  "productCount": 2223,
+  "generatedAt": "2026-06-20T21:25:09.888Z",
+  "productCount": 2202,
   "brands": [
     [
       "RETOV",
-      642
+      636
     ],
     [
       "RIDA",
-      425
+      424
     ],
     [
       "TYC",
-      590
+      587
     ],
     [
       "Z AUTO",
-      566
+      555
     ]
   ],
   "source": {
-    "catalog": "legacy/CatalogoPremium/catalogo-gerado/catalogo-completo.json",
-    "consultants": "legacy/CatalogoPremium/catalogo-gerado/assets/consultores.js"
+    "type": "zetta-official",
+    "fallbackUsed": false,
+    "officialLinks": [
+      {
+        "brand": "RIDA",
+        "catalogId": "1438",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438",
+        "description": "CATÁLOGO RIDA",
+        "pages": 43,
+        "productCount": 424
+      },
+      {
+        "brand": "RETOV",
+        "catalogId": "1436",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436",
+        "description": "CATÁLOGO RETOV",
+        "pages": 64,
+        "productCount": 636
+      },
+      {
+        "brand": "TYC",
+        "catalogId": "1494",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494",
+        "description": "CATÁLOGO TYC",
+        "pages": 37,
+        "productCount": 366
+      },
+      {
+        "brand": "TYC",
+        "catalogId": "1493",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493",
+        "description": "CATÁLOGO TYC RETROVISORES",
+        "pages": 23,
+        "productCount": 221
+      },
+      {
+        "brand": "Z AUTO",
+        "catalogId": "1437",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437",
+        "description": "CATÁLOGO ZATT",
+        "pages": 56,
+        "productCount": 555
+      }
+    ],
+    "legacyFallback": {
+      "allowedOnlyWithEnv": "ZCONNECT_ALLOW_LEGACY_FALLBACK=1",
+      "source": null,
+      "officialError": null
+    }
   }
 }

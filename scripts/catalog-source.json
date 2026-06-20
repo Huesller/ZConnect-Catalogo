@@ -1,12 +1,42 @@
 {
-  "legacyCatalogPath": "legacy/CatalogoPremium/catalogo-gerado/catalogo-completo.json",
-  "legacyConsultantsPath": "legacy/CatalogoPremium/catalogo-gerado/assets/consultores.js",
-  "brands": {
+  "officialSources": [
+    {
+      "brand": "RIDA",
+      "catalogId": "1438",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438"
+    },
+    {
+      "brand": "RETOV",
+      "catalogId": "1436",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436"
+    },
+    {
+      "brand": "TYC",
+      "catalogId": "1494",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494"
+    },
+    {
+      "brand": "TYC",
+      "catalogId": "1493",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493"
+    },
+    {
+      "brand": "Z AUTO",
+      "catalogId": "1437",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437"
+    }
+  ],
+  "commercialPolicy": 45,
+  "legacyFallback": {
+    "catalogPath": "legacy/CatalogoPremium/catalogo-gerado/catalogo-completo.json",
+    "enableEnv": "ZCONNECT_ALLOW_LEGACY_FALLBACK"
+  },
+  "legacyBrands": {
     "1436": "RETOV",
     "1438": "RIDA",
     "1494": "TYC",
     "1493": "TYC",
     "1437": "Z AUTO"
   },
-  "_note": "Se o scraper legado não existir, update-daily reaproveita public/data/catalog.v5.json e regenera índices."
+  "_note": "Produtos, precos e disponibilidade vem dos links oficiais Zetta. Fallback legado so e aceito quando ZCONNECT_ALLOW_LEGACY_FALLBACK=1 for definido explicitamente; npm run scrape falha se a fonte Zetta falhar."
 }

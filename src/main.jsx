@@ -7,19 +7,50 @@ const STORAGE_KEYS = {
   cart: 'zconnect:cart:v11',
   favorites: 'zconnect:favorites:v11',
   recent: 'zconnect:recent:v11',
-  added: 'zconnect:added:v11'
+  added: 'zconnect:added:v11',
+  companyName: 'zconnect_company_name'
 };
 
 const BRANDS = ['Todos', 'RETOV', 'RIDA', 'TYC', 'Z AUTO'];
 const FALLBACK_CONSULTANTS = {
-  huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'nenhum', baseDiscount: null, targetDiscount: null },
-  ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'nenhum', baseDiscount: null, targetDiscount: null },
+  huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
+  ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
   francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
 };
+const DEFAULT_COMMERCIAL_POLICY = 45;
+const CONSULTANT_PRICE_POLICIES = {
+  huesller: { discount: 45, multiplier: 0.55 },
+  ney: { discount: 45, multiplier: 0.55 },
+  francisco: { discount: 50, multiplier: 0.5 },
+  representante: { discount: 50, multiplier: 0.5 }
+};
 const PAGE_SIZE = 25;
 
-const ANALYTICS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
+const ANALYTICS_ENDPOINT = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
+
+function getStoredCompanyName() {
+  try {
+    return window.localStorage.getItem(STORAGE_KEYS.companyName)?.trim() || '';
+  } catch {
+    return '';
+  }
+}
+
+function saveCompanyName(value) {
+  const companyName = String(value || '').trim();
+  try {
+    if (companyName) {
+      window.localStorage.setItem(STORAGE_KEYS.companyName, companyName);
+    } else {
+      window.localStorage.removeItem(STORAGE_KEYS.companyName);
+    }
+  } catch {
+    return companyName;
+  }
+
+  return companyName;
+}
 
 function getSessionId() {
   try {
@@ -40,27 +71,128 @@ function getCanonicalConsultantSlug(consultant) {
   return slug === 'ivoney' ? 'ney' : slug;
 }
 
+function toPolicyNumber(value) {
+  const policy = Number(value);
+  return Number.isFinite(policy) && policy >= 0 && policy < 100 ? policy : null;
+}
+
+function getConsultantTargetPolicy(consultant = {}) {
+  const slug = getCanonicalConsultantSlug(consultant);
+  if (CONSULTANT_PRICE_POLICIES[slug]) {
+    return CONSULTANT_PRICE_POLICIES[slug].discount;
+  }
+
+  const targetDiscount = toPolicyNumber(consultant.targetDiscount);
+  return targetDiscount ?? DEFAULT_COMMERCIAL_POLICY;
+}
+
+function getPricePolicyLabel(policy) {
+  return `Desconto ${policy}%`;
+}
+
+function roundCurrency(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function getPolicyMultiplier(policy) {
+  const discount = toPolicyNumber(policy) ?? DEFAULT_COMMERCIAL_POLICY;
+  const consultantPolicy = Object.values(CONSULTANT_PRICE_POLICIES).find((item) => item.discount === discount);
+  return consultantPolicy?.multiplier ?? roundCurrency((100 - discount) / 100);
+}
+
+function getZettaBasePrice(product = {}) {
+  return Number(
+    product.precoZetta
+    ?? product.precoCheio
+    ?? product.precoBase
+    ?? product.priceBase
+    ?? product.basePrice
+    ?? product.price
+    ?? 0
+  );
+}
+
+function applyConsultantPrice(product = {}, consultant = {}) {
+  const basePrice = getZettaBasePrice(product);
+  const pricePolicy = getConsultantTargetPolicy(consultant);
+  const priceMultiplier = getPolicyMultiplier(pricePolicy);
+  const price = roundCurrency(basePrice * priceMultiplier);
+  const basePriceLabel = product.basePriceLabel || product.precoZettaLabel || product.precoCheioLabel || product.priceLabel || money(basePrice);
+
+  return {
+    ...product,
+    basePrice,
+    priceBase: basePrice,
+    precoBase: basePrice,
+    precoZetta: basePrice,
+    precoCheio: basePrice,
+    basePriceLabel,
+    precoBaseLabel: product.precoBaseLabel || basePriceLabel,
+    precoZettaLabel: product.precoZettaLabel || basePriceLabel,
+    precoCheioLabel: product.precoCheioLabel || basePriceLabel,
+    price,
+    priceLabel: money(price),
+    pricePolicy,
+    pricePolicyLabel: getPricePolicyLabel(pricePolicy),
+    priceMultiplier
+  };
+}
+
+function getConsultantAnalytics(consultant, product) {
+  const pricePolicy = getConsultantTargetPolicy(consultant);
+  const analytics = {
+    consultor: getCanonicalConsultantSlug(consultant),
+    pricePolicy,
+    pricePolicyLabel: getPricePolicyLabel(pricePolicy),
+    priceMultiplier: getPolicyMultiplier(pricePolicy)
+  };
+  const zettaBasePrice = getZettaBasePrice(product);
+  if (zettaBasePrice) {
+    analytics.zettaBasePrice = zettaBasePrice;
+  }
+  return analytics;
+}
+
 function getProductAnalytics(product = {}) {
+  const price = Number(product.price || 0);
+  const basePrice = getZettaBasePrice(product);
   return {
     productCode: product.code || '',
     productName: product.name || '',
     brand: product.displayBrand || product.brand || '',
-    price: product.price || 0
+    vehicle: product.vehicle || product.application || '',
+    price,
+    basePrice,
+    priceBase: basePrice,
+    precoZetta: basePrice,
+    precoCheio: basePrice,
+    displayedPrice: price,
+    displayedPriceLabel: product.priceLabel || money(price),
+    pricePolicy: product.pricePolicy ?? product.commercialPolicy ?? '',
+    pricePolicyLabel: product.pricePolicyLabel || (product.pricePolicy ? getPricePolicyLabel(product.pricePolicy) : '')
   };
 }
 
 function trackEvent(event, payload = {}) {
   if (!ANALYTICS_ENDPOINT || typeof window === 'undefined') return;
 
-  const body = JSON.stringify({
-    event,
-    page: window.location.pathname + window.location.search,
-    referrer: document.referrer || '',
-    userAgent: navigator.userAgent || '',
-    sessionId: getSessionId(),
-    createdAt: new Date().toISOString(),
-    ...payload
-  });
+  let body = '';
+  try {
+    const timestamp = new Date().toISOString();
+    body = JSON.stringify({
+      event,
+      page: window.location.pathname + window.location.search,
+      referrer: document.referrer || '',
+      userAgent: navigator.userAgent || '',
+      sessionId: getSessionId(),
+      ...payload,
+      companyName: getStoredCompanyName(),
+      timestamp,
+      createdAt: timestamp
+    });
+  } catch {
+    return;
+  }
 
   try {
     if (navigator.sendBeacon) {
@@ -86,11 +218,15 @@ function trackEvent(event, payload = {}) {
 
 
 const COMPLEMENT_RULES = [
-  ['RETROVISOR', ['CAPA', 'PISCA', 'LANTERNA']],
-  ['FAROL', ['LANTERNA', 'PISCA', 'MOLDURA']],
-  ['LANTERNA', ['SOQUETE', 'FAROL', 'PISCA']],
-  ['PARACHOQUE', ['ALMA', 'GRADE', 'GUIA']],
-  ['GRADE', ['MOLDURA', 'SUPORTE', 'ARO']]
+  ['retrovisor', ['capa', 'pisca', 'lanterna']],
+  ['farol', ['lanterna', 'pisca', 'moldura', 'suporte']],
+  ['lanterna', ['soquete', 'farol', 'pisca', 'moldura']],
+  ['parachoque', ['alma', 'guia', 'suporte', 'grade', 'absorvedor', 'moldura', 'defletor']],
+  ['grade', ['moldura', 'suporte', 'aro', 'parachoque']],
+  ['guia', ['parachoque', 'alma', 'suporte', 'grade']],
+  ['moldura', ['parachoque', 'grade', 'guia', 'suporte']],
+  ['defletor', ['parachoque', 'grade', 'guia', 'suporte']],
+  ['alma', ['parachoque', 'guia', 'suporte', 'grade']]
 ];
 
 
@@ -98,6 +234,8 @@ const SEARCH_SYNONYMS = new Map([
   ['parachoques', 'parachoque'],
   ['para choque', 'parachoque'],
   ['para-choque', 'parachoque'],
+  ['parachoq', 'parachoque'],
+  ['parachoqu', 'parachoque'],
   ['paralamas', 'paralama'],
   ['retrovisores', 'retrovisor'],
   ['lanternas', 'lanterna'],
@@ -109,6 +247,104 @@ const SEARCH_SYNONYMS = new Map([
   ['piscas', 'pisca'],
   ['milhas', 'milha']
 ]);
+
+const FAMILY_TERMS = [
+  'acabamento',
+  'alma',
+  'aplique',
+  'aro',
+  'absorvedor',
+  'braco',
+  'capa',
+  'defletor',
+  'farol',
+  'friso',
+  'grade',
+  'guia',
+  'lanterna',
+  'moldura',
+  'parabarro',
+  'parachoque',
+  'paralama',
+  'pisca',
+  'ponteira',
+  'retrovisor',
+  'spoiler',
+  'suporte'
+];
+
+const FAMILY_ALIASES = new Map([
+  ['parachoq', 'parachoque'],
+  ['parachoqu', 'parachoque'],
+  ['parachoques', 'parachoque'],
+  ['para choque', 'parachoque'],
+  ['para-choque', 'parachoque'],
+  ['paralamas', 'paralama'],
+  ['retrovisores', 'retrovisor'],
+  ['lanternas', 'lanterna'],
+  ['grades', 'grade'],
+  ['molduras', 'moldura'],
+  ['suportes', 'suporte'],
+  ['capas', 'capa'],
+  ['piscas', 'pisca'],
+  ['milhas', 'milha']
+]);
+
+const VEHICLE_STOPWORDS = new Set([
+  ...FAMILY_TERMS,
+  'a',
+  'ano',
+  'black',
+  'central',
+  'cinza',
+  'com',
+  'cromado',
+  'cromada',
+  'da',
+  'das',
+  'de',
+  'diant',
+  'dianteira',
+  'dianteiro',
+  'direita',
+  'direito',
+  'do',
+  'dos',
+  'esquerda',
+  'esquerdo',
+  'furo',
+  'inferior',
+  'lado',
+  'marca',
+  'milha',
+  'modelo',
+  'piano',
+  'preta',
+  'preto',
+  'sem',
+  'superior',
+  'texturizada',
+  'traseira',
+  'traseiro'
+]);
+
+const POSITION_TERMS = [
+  'dianteiro',
+  'dianteira',
+  'traseiro',
+  'traseira',
+  'direito',
+  'direita',
+  'esquerdo',
+  'esquerda',
+  'central',
+  'inferior',
+  'superior'
+];
+
+const FAMILY_RELATION_MAP = new Map(COMPLEMENT_RULES);
+const YEAR_MIN = 1980;
+const YEAR_MAX = 2030;
 
 function normalizeText(value) {
   return String(value || '')
@@ -139,8 +375,22 @@ function tokenizeSearch(value) {
   const normalized = normalizeText(value);
   if (!normalized) return [];
 
-  const tokens = normalized
-    .split(' ')
+  const rawTokens = normalized.split(' ');
+  const mergedTokens = [];
+
+  for (let index = 0; index < rawTokens.length; index += 1) {
+    const token = rawTokens[index];
+    const next = rawTokens[index + 1];
+
+    if (/^[a-z]{1,3}$/.test(token) && /^\d{1,3}$/.test(next || '')) {
+      mergedTokens.push(`${token}${next}`);
+      index += 1;
+    } else {
+      mergedTokens.push(token);
+    }
+  }
+
+  const tokens = mergedTokens
     .map(simplifyToken)
     .filter((token) => token.length > 1);
 
@@ -149,6 +399,451 @@ function tokenizeSearch(value) {
 
 function compactCode(value) {
   return normalizeText(value).replace(/\s+/g, '');
+}
+
+function levenshteinDistance(a, b) {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = new Array(b.length + 1);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        current[j - 1] + 1,
+        previous[j] + 1,
+        previous[j - 1] + cost
+      );
+    }
+    previous.splice(0, previous.length, ...current);
+  }
+
+  return previous[b.length];
+}
+
+function canonicalFamily(token) {
+  const clean = FAMILY_ALIASES.get(token) || simplifyToken(token);
+  const aliased = FAMILY_ALIASES.get(clean) || clean;
+  if (FAMILY_TERMS.includes(aliased)) return aliased;
+
+  if (aliased.length >= 5) {
+    const close = FAMILY_TERMS.find((family) => (
+      family.startsWith(aliased)
+      || aliased.startsWith(family)
+      || levenshteinDistance(aliased, family) <= 2
+    ));
+
+    if (close) return close;
+  }
+
+  return '';
+}
+
+function getPrimaryFamilyFromText(value) {
+  for (const token of tokenizeSearch(value)) {
+    const family = canonicalFamily(token);
+    if (family) return family;
+  }
+
+  return '';
+}
+
+function extractFamilies(value) {
+  return [...new Set(tokenizeSearch(value).map(canonicalFamily).filter(Boolean))];
+}
+
+function extractVehicleTokens(value) {
+  return tokenizeSearch(value).filter((token) => {
+    if (token.length < 2) return false;
+    if (isFullYearToken(token)) return false;
+    if (VEHICLE_STOPWORDS.has(token)) return false;
+    if (canonicalFamily(token)) return false;
+    return true;
+  });
+}
+
+function isFullYearToken(token) {
+  return /^20\d{2}$|^19\d{2}$/.test(String(token || ''));
+}
+
+function normalizeYearText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[ÂªÂºÂ°]/g, '')
+    .replace(/[^a-z0-9\/-]+/g, ' ')
+    .replace(/\s*([\/-])\s*/g, ' $1 ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function expandYear(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+
+  if (raw.length === 4) {
+    const year = Number(raw);
+    return year >= YEAR_MIN && year <= YEAR_MAX ? year : null;
+  }
+
+  if (raw.length === 2) {
+    const shortYear = Number(raw);
+    if (shortYear >= 0 && shortYear <= 30) return 2000 + shortYear;
+    if (shortYear >= 80 && shortYear <= 99) return 1900 + shortYear;
+  }
+
+  return null;
+}
+
+function getYearContextTokens(value) {
+  return tokenizeSearch(value)
+    .filter((token) => !isFullYearToken(token) && token !== 'a' && token !== 'ate');
+}
+
+function isInsideSpan(index, spans) {
+  return spans.some(([start, end]) => index >= start && index < end);
+}
+
+function expandYearRange(start, end) {
+  const years = [];
+  if (!start || !end || end < start || end - start > 60) return years;
+
+  for (let year = start; year <= end; year += 1) {
+    years.push(String(year));
+  }
+
+  return years;
+}
+
+function extractYearApplications(value) {
+  const text = normalizeYearText(value);
+  if (!text) return [];
+
+  const applications = [];
+  const rangeSpans = [];
+  const rangePattern = /\b(\d{2}|\d{4})\s*(?:ate|a|-|\/)\s*(\d{2}|\d{4})\b/g;
+  let previousRangeEnd = 0;
+  let rangeMatch = rangePattern.exec(text);
+
+  while (rangeMatch) {
+    const startYear = expandYear(rangeMatch[1]);
+    const endYear = expandYear(rangeMatch[2]);
+    const start = Math.min(startYear || 0, endYear || 0);
+    const end = Math.max(startYear || 0, endYear || 0);
+    const contextTokens = getYearContextTokens(text.slice(previousRangeEnd, rangeMatch.index));
+
+    if (startYear && endYear && start >= YEAR_MIN && end <= YEAR_MAX && end >= start) {
+      applications.push({
+        start,
+        end,
+        contextTokens,
+        yearTokens: expandYearRange(start, end)
+      });
+      rangeSpans.push([rangeMatch.index, rangePattern.lastIndex]);
+    }
+
+    previousRangeEnd = rangePattern.lastIndex;
+    rangeMatch = rangePattern.exec(text);
+  }
+
+  const yearPattern = /\b(\d{2}|(?:19|20)\d{2})\b/g;
+  let previousYearEnd = 0;
+  let activeContextTokens = [];
+  let yearMatch = yearPattern.exec(text);
+
+  while (yearMatch) {
+    if (isInsideSpan(yearMatch.index, rangeSpans)) {
+      previousYearEnd = Math.max(previousYearEnd, yearPattern.lastIndex);
+      yearMatch = yearPattern.exec(text);
+      continue;
+    }
+
+    const year = expandYear(yearMatch[1]);
+    const contextTokens = getYearContextTokens(text.slice(previousYearEnd, yearMatch.index));
+    if (contextTokens.length) activeContextTokens = contextTokens;
+
+    if (year) {
+      applications.push({
+        start: year,
+        end: year,
+        contextTokens: activeContextTokens,
+        yearTokens: [String(year)]
+      });
+    }
+
+    previousYearEnd = yearPattern.lastIndex;
+    yearMatch = yearPattern.exec(text);
+  }
+
+  return applications;
+}
+
+function extractYearTokens(value) {
+  const years = extractYearApplications(value)
+    .flatMap((application) => application.yearTokens);
+
+  return [...new Set(years)];
+}
+
+function extractApplicationTokens(value) {
+  return tokenizeSearch(value).filter((token) => POSITION_TERMS.includes(token));
+}
+
+function getQueryIntent(query) {
+  const yearTokens = extractYearTokens(query);
+  const yearTokenSet = new Set(yearTokens);
+  const tokens = tokenizeSearch(query).map((token) => {
+    if (isFullYearToken(token)) return token;
+    const expandedYear = /^\d{2}$/.test(token) ? expandYear(token) : null;
+    return expandedYear && yearTokenSet.has(String(expandedYear)) ? String(expandedYear) : token;
+  });
+  const family = tokens.map(canonicalFamily).find(Boolean) || '';
+  const applicationTokens = tokens.filter((token) => POSITION_TERMS.includes(token));
+  const vehicleTokens = tokens.filter((token) => (
+    !canonicalFamily(token)
+    && !VEHICLE_STOPWORDS.has(token)
+    && !isFullYearToken(token)
+  ));
+
+  return {
+    normalized: normalizeText(query),
+    tokens: [...new Set(tokens)],
+    family,
+    vehicleTokens,
+    applicationTokens,
+    yearTokens,
+    yearNumbers: yearTokens.map(Number).filter(Boolean)
+  };
+}
+
+function tokenMatchesProduct(product, token) {
+  if (!token) return false;
+
+  const n = product._n || {};
+  const tokenSet = product._tokenSet || new Set(product._tokens || []);
+  const fields = [n.name, n.vehicle, n.application, n.manufacturer, n.code, n.fabCode, product.search, product._search].filter(Boolean);
+
+  if (isFullYearToken(token) && product._yearTokenSet?.has(token)) return true;
+  if (tokenSet.has(token) || fields.some((field) => field.includes(token))) return true;
+
+  if (token.length >= 5) {
+    return (product._tokens || []).some((productToken) => (
+      productToken.startsWith(token)
+      || token.startsWith(productToken)
+      || levenshteinDistance(token, productToken) <= 2
+    ));
+  }
+
+  return false;
+}
+
+function vehicleTokenMatchesProduct(product, token) {
+  if (!token) return false;
+
+  const productVehicleTokens = product._vehicleTokenSet || new Set(product._vehicleTokens || []);
+  if (productVehicleTokens.has(token)) return true;
+
+  if (token.length <= 3) return false;
+
+  return (product._vehicleTokens || []).some((productToken) => (
+    productToken === token
+    || (
+      !/\d/.test(token + productToken)
+      && (
+        productToken.startsWith(token)
+        || (productToken.length >= 4 && token.startsWith(productToken))
+        || (token.length >= 5 && productToken.length >= 5 && levenshteinDistance(token, productToken) <= 1)
+      )
+    )
+  ));
+}
+
+function vehicleMatchesProduct(product, vehicleTokens) {
+  if (!vehicleTokens.length) return true;
+
+  return vehicleTokens.every((token) => vehicleTokenMatchesProduct(product, token));
+}
+
+function vehicleTokenMatchesContext(contextTokens, token) {
+  if (!token || !contextTokens?.length) return false;
+
+  if (contextTokens.includes(token)) return true;
+  if (token.length <= 3) return false;
+
+  return contextTokens.some((contextToken) => (
+    contextToken === token
+    || (
+      !/\d/.test(token + contextToken)
+      && (
+        contextToken.startsWith(token)
+        || (contextToken.length >= 4 && token.startsWith(contextToken))
+        || (token.length >= 5 && contextToken.length >= 5 && levenshteinDistance(token, contextToken) <= 1)
+      )
+    )
+  ));
+}
+
+function yearApplicationMatchesVehicle(application, vehicleTokens) {
+  if (!vehicleTokens.length) return true;
+  return vehicleTokens.every((token) => vehicleTokenMatchesContext(application.contextTokens || [], token));
+}
+
+function yearApplicationContains(application, yearNumbers) {
+  return yearNumbers.some((year) => year >= application.start && year <= application.end);
+}
+
+function getProductYearCompatibility(product, intent) {
+  if (!intent.yearNumbers?.length) return 'none';
+
+  const applications = getProductYearApplications(product);
+  if (!applications.length) return 'unknown';
+
+  const vehicleApplications = (intent.vehicleTokens || []).length
+    ? applications.filter((application) => yearApplicationMatchesVehicle(application, intent.vehicleTokens))
+    : applications;
+  const candidates = vehicleApplications.length
+    ? vehicleApplications
+    : applications.length === 1
+      ? applications
+      : [];
+
+  if (!candidates.length) return 'unknown';
+
+  return candidates.some((application) => yearApplicationContains(application, intent.yearNumbers))
+    ? 'compatible'
+    : 'outside';
+}
+
+function applicationScore(product, intent) {
+  if (!intent.tokens.length) return 0;
+
+  const n = product._n || {};
+  const applicationBonus = (intent.applicationTokens || []).reduce((total, token) => (
+    total + ((product._applicationTokenSet?.has(token) || n.application?.includes(token) || n.name?.includes(token)) ? 22 : 0)
+  ), 0);
+  const yearCompatibility = getProductYearCompatibility(product, intent);
+  const yearBonus = yearCompatibility === 'compatible'
+    ? (intent.yearTokens || []).length * 64
+    : 0;
+
+  return applicationBonus + yearBonus;
+}
+
+function getSearchMatch(product, query) {
+  const intent = getQueryIntent(query);
+  if (!intent.normalized) {
+    return { score: 1, direct: true, suggestionScore: 0, tier: 0 };
+  }
+
+  const n = product._n || {};
+  const compactQuery = compactCode(intent.normalized);
+  const codeExact = n.code === intent.normalized || n.codeCompact === compactQuery;
+  const fabCodeExact = n.fabCode === intent.normalized || n.fabCodeCompact === compactQuery;
+  const codeStarts = n.codeCompact?.startsWith(compactQuery) || n.fabCodeCompact?.startsWith(compactQuery);
+
+  if (codeExact || fabCodeExact || codeStarts) {
+    return {
+      score: codeExact ? 9000 : fabCodeExact ? 8600 : 7600,
+      direct: true,
+      suggestionScore: 0,
+      tier: codeExact || fabCodeExact ? 1 : 2
+    };
+  }
+
+  const hasVehicleYearIntent = intent.vehicleTokens.length > 0 && intent.yearTokens.length > 0;
+  const yearCompatibility = getProductYearCompatibility(product, intent);
+  const nonYearTokens = intent.tokens.filter((token) => !isFullYearToken(token));
+  const matchedNonYearTokens = nonYearTokens.filter((token) => tokenMatchesProduct(product, token)).length;
+  const matchedYearTokens = intent.yearTokens.filter((token) => (
+    hasVehicleYearIntent
+      ? yearCompatibility === 'compatible'
+      : tokenMatchesProduct(product, token)
+  )).length;
+  const matchedTokens = matchedNonYearTokens + matchedYearTokens;
+
+  if (!matchedTokens) {
+    return { score: 0, direct: false, suggestionScore: 0, tier: 0 };
+  }
+
+  const vehicleMatch = vehicleMatchesProduct(product, intent.vehicleTokens);
+  const familyScore = !intent.family
+    ? 0
+    : product._primaryFamily === intent.family
+      ? 720
+      : product._familyTokenSet?.has(intent.family)
+        ? 430
+        : 0;
+  const familyMatch = !intent.family || familyScore > 0;
+  const allNonYearTermsMatch = matchedNonYearTokens === nonYearTokens.length;
+  const allTermsMatch = hasVehicleYearIntent
+    ? allNonYearTermsMatch && yearCompatibility !== 'outside'
+    : matchedTokens === intent.tokens.length;
+  const productPhrase = [n.name, n.vehicle, n.application].filter(Boolean).join(' ');
+  const exactPhrase = n.name === intent.normalized || productPhrase === intent.normalized;
+  const startsWithPhrase = n.name?.startsWith(intent.normalized) || productPhrase.startsWith(intent.normalized);
+  const containsPhrase = n.name?.includes(intent.normalized) || productPhrase.includes(intent.normalized);
+  const coverage = matchedTokens / Math.max(1, intent.tokens.length);
+  const direct = hasVehicleYearIntent
+    ? vehicleMatch && familyMatch && allNonYearTermsMatch && yearCompatibility !== 'outside'
+    : vehicleMatch && familyMatch && (allTermsMatch || exactPhrase || startsWithPhrase || containsPhrase);
+
+  let tier = 5;
+  let score = 0;
+
+  if (direct) {
+    if (hasVehicleYearIntent && yearCompatibility === 'compatible') {
+      tier = intent.family ? 1 : 2;
+      score = intent.family ? 8200 : 7600;
+    } else if (hasVehicleYearIntent && yearCompatibility === 'unknown') {
+      tier = intent.family ? 3 : 4;
+      score = intent.family ? 4200 : 3600;
+    } else {
+      if (exactPhrase) {
+        tier = 1;
+        score = 7000;
+      } else if (startsWithPhrase) {
+        tier = 2;
+        score = 6200;
+      } else if (allTermsMatch || containsPhrase) {
+        tier = 3;
+        score = 5200;
+      } else {
+        tier = 4;
+        score = 3200;
+      }
+    }
+
+    score += Math.round(coverage * 400);
+    score += familyScore;
+    score += applicationScore(product, intent);
+    score += Math.max(0, 80 - (product.name || '').length * 0.2);
+  }
+
+  let suggestionScore = 0;
+  if (!direct && hasVehicleYearIntent && vehicleMatch && yearCompatibility === 'outside' && allNonYearTermsMatch && familyMatch) {
+    suggestionScore = 180 + Math.round(coverage * 80) + Math.round(familyScore * 0.08);
+  } else if (!direct && vehicleMatch && intent.family) {
+    const relatedFamilies = FAMILY_RELATION_MAP.get(intent.family) || [];
+    const relationIndex = relatedFamilies.indexOf(product._primaryFamily);
+    const hasRelatedFamily = relationIndex >= 0 || product._families?.includes(intent.family);
+
+    if (hasRelatedFamily && allTermsMatch) {
+      suggestionScore = 1800 - Math.max(0, relationIndex) * 80 + applicationScore(product, intent);
+    } else if (hasRelatedFamily && coverage >= 0.5) {
+      suggestionScore = 900 + Math.round(coverage * 200);
+    }
+  }
+
+  if (!direct && !suggestionScore && vehicleMatch && coverage >= 0.67 && !intent.family) {
+    suggestionScore = 600 + Math.round(coverage * 200);
+  }
+
+  return { score, direct, suggestionScore, tier };
 }
 
 function buildSearchField(product) {
@@ -182,12 +877,45 @@ function prepareProduct(product) {
   const tokens = tokenizeSearch(field);
   const tokenSet = new Set(tokens);
   const search = tokens.join(' ');
+  const familySource = [product.name, product.description].filter(Boolean).join(' ');
+  const vehicleSource = [
+    product.vehicleSignature,
+    product.vehicle,
+    product.name,
+    product.manufacturer
+  ].filter(Boolean).join(' ');
+  const families = extractFamilies(familySource);
+  const vehicleTokens = extractVehicleTokens(vehicleSource);
+  const applicationTokens = extractApplicationTokens([product.application, product.name].filter(Boolean).join(' '));
+  const yearSource = [product.name, product.vehicle, product.vehicleSignature].filter(Boolean).join(' ');
+  const yearApplications = extractYearApplications(yearSource);
+  const yearTokens = [...new Set(yearApplications.flatMap((application) => application.yearTokens))];
+  const commercialText = normalizeText([
+    product.name,
+    product.description,
+    product.vehicle,
+    product.application,
+    product.manufacturer,
+    product.code,
+    product.fabCode
+  ].filter(Boolean).join(' '));
 
   return {
     ...product,
     _n: normalized,
     _tokens: tokens,
     _tokenSet: tokenSet,
+    _primaryFamily: getPrimaryFamilyFromText(familySource),
+    _families: families,
+    _familyTokenSet: new Set(families),
+    _vehicleTokens: vehicleTokens,
+    _vehicleTokenSet: new Set(vehicleTokens),
+    _applicationTokens: applicationTokens,
+    _applicationTokenSet: new Set(applicationTokens),
+    _yearApplications: yearApplications,
+    _yearTokens: yearTokens,
+    _yearTokenSet: new Set(yearTokens),
+    _commercialText: commercialText,
     _search: search,
     search: product.search || `${normalizeText(field)} ${search}`.trim()
   };
@@ -205,71 +933,7 @@ function tokenScore(field, token, exactWeight, partialWeight) {
 }
 
 function scoreProduct(product, query) {
-  const normalizedQuery = normalizeText(query);
-  if (!normalizedQuery) return 1;
-
-  const queryTokens = tokenizeSearch(normalizedQuery);
-  if (!queryTokens.length) return 1;
-
-  const n = product._n || {};
-  const search = product.search || product._search || '';
-  const tokenSet = product._tokenSet || new Set(product._tokens || []);
-  const compactQuery = compactCode(normalizedQuery);
-
-  let score = 0;
-  let matchedTokens = 0;
-
-  if (n.code === normalizedQuery || n.codeCompact === compactQuery) score += 900;
-  if (n.fabCode === normalizedQuery || n.fabCodeCompact === compactQuery) score += 760;
-  if (n.codeCompact?.startsWith(compactQuery)) score += 420;
-  if (n.fabCodeCompact?.startsWith(compactQuery)) score += 360;
-
-  if (n.name?.includes(normalizedQuery)) score += 260;
-  if (n.application?.includes(normalizedQuery)) score += 210;
-  if (n.vehicle?.includes(normalizedQuery)) score += 190;
-  if (n.manufacturer?.includes(normalizedQuery)) score += 130;
-  if (search.includes(normalizedQuery)) score += 90;
-
-  for (const token of queryTokens) {
-    let tokenMatched = false;
-    const singular = simplifyToken(token);
-
-    if (tokenSet.has(token) || tokenSet.has(singular)) {
-      score += 55;
-      tokenMatched = true;
-    }
-
-    const fieldScore =
-      tokenScore(n.code, token, 180, 90) +
-      tokenScore(n.fabCode, token, 150, 80) +
-      tokenScore(n.name, token, 120, 64) +
-      tokenScore(n.vehicle, token, 92, 48) +
-      tokenScore(n.application, token, 92, 48) +
-      tokenScore(n.manufacturer, token, 65, 34);
-
-    if (fieldScore > 0) {
-      score += fieldScore;
-      tokenMatched = true;
-    }
-
-    if (!tokenMatched && token.length >= 3 && search.includes(token)) {
-      score += 18;
-      tokenMatched = true;
-    }
-
-    if (tokenMatched) matchedTokens += 1;
-  }
-
-  if (matchedTokens === 0) return 0;
-
-  const coverage = matchedTokens / queryTokens.length;
-  if (coverage < 1) {
-    score = Math.floor(score * (coverage >= 0.67 ? 0.55 : 0.25));
-  } else {
-    score += 220 + queryTokens.length * 20;
-  }
-
-  return score;
+  return getSearchMatch(product, query).score;
 }
 
 function money(value) {
@@ -334,60 +998,128 @@ function getConsultant(consultants) {
     || FALLBACK_CONSULTANTS.huesller;
 }
 
-function buildWhatsAppMessage(cart, consultant, subtotal) {
+function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
+  const totalItems = cart.reduce((total, item) => total + Number(item.qty || 0), 0);
+
   return [
     'Pedido Z Automotiva',
+    `Cliente: ${companyName || 'Não informado'}`,
     `Consultor: ${consultant.name}`,
     '',
-    ...cart.flatMap((item) => [
-      `${item.qty}x ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
+    'Itens:',
+    ...cart.flatMap((item, index) => [
+      `${index + 1}) ${item.qty}x ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
       item.name,
-      `Valor com IPI: ${item.priceLabel || money(item.price)}`,
-      `Subtotal item: ${money(item.price * item.qty)}`,
+      `Valor unitário com IPI: ${item.priceLabel || money(item.price)}`,
+      `Subtotal: ${money(item.price * item.qty)}`,
       ''
     ]),
-    `Itens: ${cart.reduce((total, item) => total + item.qty, 0)}`,
+    'Resumo:',
+    `Total de itens: ${totalItems}`,
     `Subtotal: ${money(subtotal)}`,
-    'Preço com IPI incluso'
+    '',
+    'Observação:',
+    'Preço com IPI incluso.'
   ].join('\n');
+}
+
+function getProductPrimaryFamily(product) {
+  return product?._primaryFamily || getPrimaryFamilyFromText([product?.name, product?.description].filter(Boolean).join(' '));
+}
+
+function getProductFamilies(product) {
+  return product?._families?.length
+    ? product._families
+    : extractFamilies([product?.name, product?.description].filter(Boolean).join(' '));
+}
+
+function getProductVehicleTokens(product) {
+  if (product?._vehicleTokens?.length) return product._vehicleTokens;
+  return extractVehicleTokens([
+    product?.vehicleSignature,
+    product?.vehicle,
+    product?.name,
+    product?.manufacturer
+  ].filter(Boolean).join(' '));
+}
+
+function getProductYearApplications(product) {
+  if (product?._yearApplications?.length) return product._yearApplications;
+  return extractYearApplications([
+    product?.name,
+    product?.vehicle,
+    product?.vehicleSignature
+  ].filter(Boolean).join(' '));
+}
+
+function getProductYearTokens(product) {
+  if (product?._yearTokens?.length) return product._yearTokens;
+  return getProductYearApplications(product).flatMap((application) => application.yearTokens);
+}
+
+function overlapCount(left = [], right = []) {
+  const rightSet = new Set(right);
+  return left.reduce((total, token) => total + (rightSet.has(token) ? 1 : 0), 0);
+}
+
+function sameVehicleScore(product, selectedTokens) {
+  if (!selectedTokens.length) return 0;
+  const productTokens = getProductVehicleTokens(product);
+  const matched = overlapCount(selectedTokens, productTokens);
+  return matched / selectedTokens.length;
+}
+
+function sameApplicationScore(product, selected) {
+  const selectedApp = tokenizeSearch(selected?.application || '').filter((token) => !VEHICLE_STOPWORDS.has(token));
+  if (!selectedApp.length) return 0;
+  const productApp = tokenizeSearch([product?.application, product?.name].filter(Boolean).join(' '));
+  return overlapCount(selectedApp, productApp);
 }
 
 function findRelated(products, selected, addedMap) {
   if (!selected) return { complementary: [], similar: [] };
 
-  const selectedName = normalizeText(selected.name);
-  const selectedVehicle = normalizeText(selected.vehicle);
-  const selectedApp = normalizeText(selected.application);
-  const selectedManufacturer = normalizeText(selected.manufacturer);
-  const rule = COMPLEMENT_RULES.find(([term]) => selectedName.includes(normalizeText(term)));
+  const selectedFamily = getProductPrimaryFamily(selected);
+  const relatedFamilies = FAMILY_RELATION_MAP.get(selectedFamily) || [];
+  const selectedVehicleTokens = getProductVehicleTokens(selected);
+  const selectedYears = getProductYearTokens(selected);
 
-  const complementary = [];
-  const similar = [];
+  if (!selectedVehicleTokens.length) return { complementary: [], similar: [] };
 
-  for (const product of products) {
-    if (product.id === selected.id) continue;
+  const scored = products
+    .filter((product) => product.id !== selected.id)
+    .map((product) => {
+      const vehicleScore = sameVehicleScore(product, selectedVehicleTokens);
+      if (vehicleScore < 1) return null;
 
-    const vehicleMatch = selectedVehicle && normalizeText(product.vehicle).includes(selectedVehicle);
-    const appMatch = selectedApp && normalizeText(product.application).includes(selectedApp);
-    const manufacturerMatch = selectedManufacturer && normalizeText(product.manufacturer) === selectedManufacturer;
+      const productFamily = getProductPrimaryFamily(product);
+      const familyIndex = relatedFamilies.indexOf(productFamily);
+      const familyRelated = familyIndex >= 0 || getProductFamilies(product).some((family) => relatedFamilies.includes(family));
+      const appScore = sameApplicationScore(product, selected);
+      const yearScore = overlapCount(selectedYears, getProductYearTokens(product));
+      const addedScore = addedMap[product.id] || 0;
 
-    if ((vehicleMatch || appMatch || manufacturerMatch) && similar.length < 10) {
-      similar.push(product);
-      continue;
-    }
+      return {
+        product,
+        productFamily,
+        familyRelated,
+        complementaryScore: (familyRelated ? 1000 - Math.max(0, familyIndex) * 70 : 0) + appScore * 20 + yearScore * 12 + addedScore,
+        similarScore: (productFamily === selectedFamily ? 420 : 0) + appScore * 32 + yearScore * 15 + addedScore
+      };
+    })
+    .filter(Boolean);
 
-    if (rule && complementary.length < 10) {
-      const [, candidates] = rule;
-      if (candidates.some((term) => normalizeText(product.name).includes(normalizeText(term)))) {
-        complementary.push(product);
-        continue;
-      }
-    }
+  const complementary = scored
+    .filter((item) => item.familyRelated && item.productFamily !== selectedFamily)
+    .sort((a, b) => b.complementaryScore - a.complementaryScore || a.product.name.localeCompare(b.product.name, 'pt-BR'))
+    .slice(0, 8)
+    .map((item) => item.product);
 
-    if ((addedMap[product.id] || 0) > 0 && complementary.length < 10) {
-      complementary.push(product);
-    }
-  }
+  const similar = scored
+    .filter((item) => item.productFamily === selectedFamily || item.similarScore > 0)
+    .sort((a, b) => b.similarScore - a.similarScore || a.product.name.localeCompare(b.product.name, 'pt-BR'))
+    .slice(0, 8)
+    .map((item) => item.product);
 
   return { complementary, similar };
 }
@@ -436,7 +1168,12 @@ function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite 
                 <div className="compact-item-footer">
                   <small>{product.priceLabel || money(product.price)}</small>
                   <div className="compact-actions">
-                    <button type="button" className="icon-button" onClick={() => onToggleFavorite(product)}>
+                    <button
+                      type="button"
+                      className={favorites.has(product.id) ? 'icon-button favorite-icon active' : 'icon-button favorite-icon'}
+                      aria-label={favorites.has(product.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                      onClick={() => onToggleFavorite(product)}
+                    >
                       {favorites.has(product.id) ? '★' : '☆'}
                     </button>
                     <button type="button" className="primary-button small-button" onClick={() => onAdd(product, 1)}>
@@ -456,7 +1193,12 @@ function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite 
 function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, onToggleFavorite }) {
   return (
     <article className="product-card">
-      <button type="button" className="favorite-toggle" onClick={() => onToggleFavorite(product)}>
+      <button
+        type="button"
+        className={favoriteIds.has(product.id) ? 'favorite-toggle active' : 'favorite-toggle'}
+        aria-label={favoriteIds.has(product.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+        onClick={() => onToggleFavorite(product)}
+      >
         {favoriteIds.has(product.id) ? '★' : '☆'}
       </button>
 
@@ -537,6 +1279,45 @@ function Pagination({ page, totalPages, onChange }) {
   );
 }
 
+function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, onSubmit }) {
+  if (minimized) {
+    return (
+      <div className="company-gate" role="presentation">
+        <button type="button" className="company-restore-card" onClick={onRestore}>
+          Informe o nome da empresa para acessar o catálogo
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="company-gate" role="presentation">
+      <form className="company-card" role="dialog" aria-modal="true" aria-labelledby="company-gate-title" onSubmit={onSubmit}>
+        <button type="button" className="company-close" aria-label="Fechar identificação" onClick={onClose}>×</button>
+        <img src="/logo-z-automotiva.png" alt="Z Automotiva" className="company-logo" />
+        <div>
+          <span className="eyebrow">Z Connect</span>
+          <h1 id="company-gate-title">Bem-vindo ao Catálogo Z Automotiva</h1>
+          <p className="company-intro">Informe o nome da sua empresa para acessar nosso catálogo exclusivo para distribuidores e autopeças.</p>
+        </div>
+        <label className="company-field">
+          <span>Nome da empresa</span>
+          <input
+            autoFocus
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="Digite o nome da sua empresa"
+            required
+          />
+        </label>
+        {error ? <small className="company-error">{error}</small> : null}
+        <button type="submit" className="primary-button">Acessar catálogo</button>
+        <small className="company-note">Seu nome será utilizado apenas para identificar seu atendimento e agilizar seus pedidos.</small>
+      </form>
+    </div>
+  );
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -545,6 +1326,8 @@ function App() {
   const [query, setQuery] = useState('');
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const searchInputRef = useRef(null);
+  const searchBoxRef = useRef(null);
+  const pageViewSentRef = useRef(false);
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
   const [page, setPage] = useState(1);
@@ -555,6 +1338,15 @@ function App() {
   const [recent, setRecent] = usePersistentState(STORAGE_KEYS.recent, []);
   const [addedMap, setAddedMap] = usePersistentState(STORAGE_KEYS.added, {});
   const [cardQty, setCardQty] = useState({});
+  const [cartOpen, setCartOpen] = useState(false);
+  const [companyName, setCompanyName] = useState(() => getStoredCompanyName());
+  const [companyDraft, setCompanyDraft] = useState(() => getStoredCompanyName());
+  const [companyError, setCompanyError] = useState('');
+  const [companyGateMinimized, setCompanyGateMinimized] = useState(false);
+  const [toast, setToast] = useState(() => {
+    const storedCompany = getStoredCompanyName();
+    return storedCompany ? `Bem-vindo de volta, ${storedCompany}` : '';
+  });
 
   useEffect(() => {
     let active = true;
@@ -600,6 +1392,8 @@ function App() {
       if (event.key === 'Escape') {
         setImageViewer(null);
         setSelected(null);
+        setCartOpen(false);
+        setSuggestionsOpen(false);
       }
     }
 
@@ -608,11 +1402,34 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = selected || imageViewer ? 'hidden' : '';
+    document.body.style.overflow = selected || imageViewer || !companyName ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selected, imageViewer]);
+  }, [selected, imageViewer, companyName]);
+
+  useEffect(() => {
+    if (companyName) return;
+    setCompanyGateMinimized(false);
+  }, [companyName]);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+
+    const timeout = window.setTimeout(() => setToast(''), 2800);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  useEffect(() => {
+    function onPointerDown(event) {
+      if (!searchBoxRef.current?.contains(event.target)) {
+        setSuggestionsOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -620,23 +1437,56 @@ function App() {
 
   const consultant = useMemo(() => getConsultant(consultants), [consultants]);
   const online = useMemo(() => getBusinessStatus(), []);
+  const pricedProducts = useMemo(() => products.map((product) => applyConsultantPrice(product, consultant)), [consultant, products]);
+  const productById = useMemo(() => new Map(pricedProducts.map((product) => [product.id, product])), [pricedProducts]);
+  const selectedProduct = useMemo(() => {
+    if (!selected) return null;
+    return productById.get(selected.id) || applyConsultantPrice(selected, consultant);
+  }, [consultant, productById, selected]);
+  const cartItems = useMemo(() => (
+    cart.map((item) => ({
+      ...(productById.get(item.id) || applyConsultantPrice(item, consultant)),
+      qty: Math.max(1, Number(item.qty || 1))
+    }))
+  ), [cart, consultant, productById]);
+  const favoriteProducts = useMemo(() => (
+    favorites.map((item) => productById.get(item.id) || applyConsultantPrice(item, consultant))
+  ), [consultant, favorites, productById]);
+  const recentProducts = useMemo(() => (
+    recent.map((item) => productById.get(item.id) || applyConsultantPrice(item, consultant))
+  ), [consultant, productById, recent]);
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.id)), [favorites]);
 
-  const rankedProducts = useMemo(() => {
-    return products
+  const queryText = deferredQuery.trim();
+  const hasQuery = queryText.length > 0;
+
+  const matchedProducts = useMemo(() => {
+    return pricedProducts
       .filter((product) => filter === 'Todos' || product.brand === filter)
-      .map((product) => ({ product, score: scoreProduct(product, deferredQuery) }))
-      .filter(({ score }) => !deferredQuery.trim() || score > 0)
+      .map((product) => ({ product, ...getSearchMatch(product, deferredQuery) }))
+      .filter((match) => (!hasQuery && match.score > 0) || (hasQuery && match.direct && match.score > 0))
       .sort((a, b) => {
+        if (a.tier !== b.tier) return a.tier - b.tier;
         if (b.score !== a.score) return b.score - a.score;
         return a.product.name.localeCompare(b.product.name, 'pt-BR');
       });
-  }, [deferredQuery, filter, products]);
+  }, [deferredQuery, filter, hasQuery, pricedProducts]);
 
-  const allFilteredProducts = useMemo(() => rankedProducts.map(({ product }) => product), [rankedProducts]);
+  const allFilteredProducts = useMemo(() => matchedProducts.map(({ product }) => product), [matchedProducts]);
+  const fallbackSuggestions = useMemo(() => {
+    if (!hasQuery || allFilteredProducts.length) return [];
+
+    return pricedProducts
+      .filter((product) => filter === 'Todos' || product.brand === filter)
+      .map((product) => ({ product, ...getSearchMatch(product, deferredQuery) }))
+      .filter(({ suggestionScore }) => suggestionScore > 0)
+      .sort((a, b) => b.suggestionScore - a.suggestionScore || a.product.name.localeCompare(b.product.name, 'pt-BR'))
+      .slice(0, 12)
+      .map(({ product }) => product);
+  }, [allFilteredProducts.length, deferredQuery, filter, hasQuery, pricedProducts]);
   const suggestions = useMemo(() => (
-    suggestionsOpen && deferredQuery.trim() ? allFilteredProducts.slice(0, 6) : []
-  ), [allFilteredProducts, deferredQuery, suggestionsOpen]);
+    suggestionsOpen && queryText && allFilteredProducts.length ? allFilteredProducts.slice(0, 6) : []
+  ), [allFilteredProducts, queryText, suggestionsOpen]);
   const totalPages = useMemo(() => Math.max(1, Math.ceil(allFilteredProducts.length / PAGE_SIZE)), [allFilteredProducts.length]);
   const paginatedProducts = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
@@ -644,39 +1494,51 @@ function App() {
   }, [allFilteredProducts, page]);
 
   const mostAdded = useMemo(() => {
-    return [...products]
+    return [...pricedProducts]
       .sort((a, b) => (addedMap[b.id] || 0) - (addedMap[a.id] || 0))
       .filter((product) => (addedMap[product.id] || 0) > 0)
       .slice(0, 6);
-  }, [addedMap, products]);
+  }, [addedMap, pricedProducts]);
 
   const brandCounts = useMemo(() => {
-    const counts = { Todos: products.length, RETOV: 0, RIDA: 0, TYC: 0, 'Z AUTO': 0 };
-    for (const product of products) {
+    const counts = { Todos: pricedProducts.length, RETOV: 0, RIDA: 0, TYC: 0, 'Z AUTO': 0 };
+    for (const product of pricedProducts) {
       counts[product.brand] = (counts[product.brand] || 0) + 1;
     }
     return counts;
-  }, [products]);
+  }, [pricedProducts]);
 
-  const cartCount = useMemo(() => cart.reduce((total, item) => total + item.qty, 0), [cart]);
-  const subtotal = useMemo(() => cart.reduce((total, item) => total + item.price * item.qty, 0), [cart]);
-  const related = useMemo(() => (selected ? findRelated(products, selected, addedMap) : { complementary: [], similar: [] }), [products, selected, addedMap]);
+  const cartCount = useMemo(() => cartItems.reduce((total, item) => total + item.qty, 0), [cartItems]);
+  const subtotal = useMemo(() => cartItems.reduce((total, item) => total + item.price * item.qty, 0), [cartItems]);
+  const related = useMemo(() => (selectedProduct ? findRelated(pricedProducts, selectedProduct, addedMap) : { complementary: [], similar: [] }), [addedMap, pricedProducts, selectedProduct]);
+
+  useEffect(() => {
+    if (loading || !companyName || pageViewSentRef.current) return;
+
+    pageViewSentRef.current = true;
+    trackEvent('page_view', {
+      ...getConsultantAnalytics(consultant),
+      totalProducts: pricedProducts.length
+    });
+  }, [companyName, consultant, loading, pricedProducts.length]);
 
   useEffect(() => {
     const normalizedQuery = deferredQuery.trim();
-    if (loading || normalizedQuery.length < 2) return;
+    if (loading || normalizedQuery.length < 2 || !companyName) return;
 
     const timeout = window.setTimeout(() => {
-      trackEvent(allFilteredProducts.length ? 'search' : 'sem_resultado', {
-        consultor: getCanonicalConsultantSlug(consultant),
+      trackEvent('search', {
+        ...getConsultantAnalytics(consultant),
         query: normalizedQuery,
         total: allFilteredProducts.length,
+        suggestions: fallbackSuggestions.length,
+        resultType: allFilteredProducts.length ? 'direct' : fallbackSuggestions.length ? 'suggestions' : 'empty',
         page: window.location.pathname + window.location.search
       });
     }, 850);
 
     return () => window.clearTimeout(timeout);
-  }, [deferredQuery, allFilteredProducts.length, consultant, loading]);
+  }, [deferredQuery, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, companyName]);
 
   function scrollToCatalog() {
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -686,14 +1548,39 @@ function App() {
     document.getElementById('rodape')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function handleCompanySubmit(event) {
+    event.preventDefault();
+    const nextCompanyName = saveCompanyName(companyDraft);
+
+    if (!nextCompanyName) {
+      setCompanyError('Informe o nome da empresa para acessar o catálogo.');
+      return;
+    }
+
+    setCompanyError('');
+    setCompanyName(nextCompanyName);
+    setCompanyGateMinimized(false);
+    pageViewSentRef.current = false;
+  }
+
+  function changeCompany() {
+    saveCompanyName('');
+    setCompanyName('');
+    setCompanyDraft('');
+    setCompanyError('');
+    setCompanyGateMinimized(false);
+    setCartOpen(false);
+    pageViewSentRef.current = false;
+  }
+
   function rememberProduct(product) {
     setRecent((current) => [product, ...current.filter((item) => item.id !== product.id)].slice(0, 8));
   }
 
   function openDetails(product) {
     rememberProduct(product);
-    trackEvent('view_product', {
-      consultor: getCanonicalConsultantSlug(consultant),
+    trackEvent('product_open', {
+      ...getConsultantAnalytics(consultant, product),
       ...getProductAnalytics(product)
     });
     setSelected(product);
@@ -703,11 +1590,17 @@ function App() {
     setFavorites((current) => {
       const exists = current.some((item) => item.id === product.id);
       if (exists) {
+        trackEvent('favorite', {
+          ...getConsultantAnalytics(consultant, product),
+          action: 'remove',
+          ...getProductAnalytics(product)
+        });
         return current.filter((item) => item.id !== product.id);
       }
 
       trackEvent('favorite', {
-        consultor: getCanonicalConsultantSlug(consultant),
+        ...getConsultantAnalytics(consultant, product),
+        action: 'add',
         ...getProductAnalytics(product)
       });
 
@@ -718,7 +1611,7 @@ function App() {
   function addToCart(product, quantity = 1) {
     const qty = Math.max(1, Number(quantity || 1));
     trackEvent('add_to_cart', {
-      consultor: getCanonicalConsultantSlug(consultant),
+      ...getConsultantAnalytics(consultant, product),
       quantity: qty,
       total: Number(product.price || 0) * qty,
       ...getProductAnalytics(product)
@@ -732,6 +1625,7 @@ function App() {
       }
       return [...current, { ...product, qty }];
     });
+    setCartOpen(true);
     setCardQty((current) => ({ ...current, [product.id]: 1 }));
   }
 
@@ -741,10 +1635,10 @@ function App() {
   }
 
   function removeItem(id) {
-    const item = cart.find((cartItem) => cartItem.id === id);
+    const item = cartItems.find((cartItem) => cartItem.id === id);
     if (item) {
       trackEvent('remove_from_cart', {
-        consultor: getCanonicalConsultantSlug(consultant),
+        ...getConsultantAnalytics(consultant, item),
         quantity: item.qty || 1,
         total: Number(item.price || 0) * Number(item.qty || 1),
         ...getProductAnalytics(item)
@@ -758,19 +1652,24 @@ function App() {
   }
 
   function finishWhatsApp() {
-    if (!cart.length) return;
-    trackEvent('whatsapp_checkout', {
-      consultor: getCanonicalConsultantSlug(consultant),
-      quantity: cart.reduce((total, item) => total + Number(item.qty || 0), 0),
+    if (!cartItems.length) return;
+    trackEvent('whatsapp_order', {
+      ...getConsultantAnalytics(consultant),
+      quantity: cartItems.reduce((total, item) => total + Number(item.qty || 0), 0),
       total: subtotal,
-      productCode: cart.map((item) => item.code).filter(Boolean).join(', '),
-      productName: cart.map((item) => `${item.qty || 1}x ${item.code || ''} ${item.name || ''}`.trim()).join(' | ')
+      displayedPrice: subtotal,
+      displayedPriceLabel: money(subtotal),
+      productCode: cartItems.map((item) => item.code).filter(Boolean).join(', '),
+      productName: cartItems.map((item) => `${item.qty || 1}x ${item.code || ''} ${item.name || ''} - ${item.priceLabel || money(item.price)}`.trim()).join(' | ')
     });
-    openWhatsapp(consultant.phone, buildWhatsAppMessage(cart, consultant, subtotal));
+    openWhatsapp(consultant.phone, buildWhatsAppMessage(cartItems, consultant, subtotal, companyName));
   }
 
+  const catalogLocked = !companyName;
+
   return (
-    <div className="app-shell">
+    <>
+    <div className={catalogLocked ? 'app-shell catalog-locked' : 'app-shell'} aria-hidden={catalogLocked ? 'true' : undefined}>
       <header className="topbar topbar-v5">
         <button type="button" className="logo-block" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <img src="/logo-z-automotiva.png" alt="Z Automotiva" className="brand-logo" />
@@ -786,6 +1685,11 @@ function App() {
         </button>
 
         <div className="header-side">
+          <div className="company-pill">
+            <span>É muito bom ter você aqui, {companyName}</span>
+            <button type="button" onClick={changeCompany}>Trocar empresa</button>
+          </div>
+
           <button type="button" className="consultant-pill" onClick={() => openWhatsapp(consultant.phone)}>
             <span className={online ? 'status-dot online' : 'status-dot offline'} />
             <span>
@@ -794,7 +1698,10 @@ function App() {
             </span>
           </button>
 
-          <button type="button" className="cart-pill" onClick={scrollToCatalog}>
+          <button type="button" className="cart-pill" onClick={() => {
+            setCartOpen(true);
+            scrollToCatalog();
+          }}>
             <small>Pedido</small>
             <strong>{cartCount}</strong>
           </button>
@@ -830,10 +1737,10 @@ function App() {
           </div>
         </div>
 
-        <div className="search-box">
+        <div className="search-box" ref={searchBoxRef}>
           <input
             ref={searchInputRef}
-            autoFocus
+            autoFocus={!catalogLocked}
             value={query}
             onFocus={() => setSuggestionsOpen(true)}
             onChange={(event) => {
@@ -890,8 +1797,8 @@ function App() {
       </section>
 
       <section className="utility-row">
-        <CompactRail title="Favoritos" items={favorites.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
-        <CompactRail title="Vistos recentemente" items={recent.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
+        <CompactRail title="Favoritos" items={favoriteProducts.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
+        <CompactRail title="Vistos recentemente" items={recentProducts.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
         <CompactRail title="Mais adicionados" items={mostAdded.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
       </section>
 
@@ -900,7 +1807,31 @@ function App() {
       <section className="catalog-layout">
         <main>
           {loading ? <div className="empty-box">Carregando catálogo...</div> : null}
-          {!loading && !paginatedProducts.length ? <div className="empty-box">Nenhum produto encontrado.</div> : null}
+          {!loading && !paginatedProducts.length && !fallbackSuggestions.length ? <div className="empty-box">Nenhum produto encontrado.</div> : null}
+
+          {!loading && hasQuery && !allFilteredProducts.length && fallbackSuggestions.length ? (
+            <section className="commercial-suggestions-block">
+              <div className="commercial-search-banner">
+                <strong>NÃO TEMOS ESTE ITEM NO MOMENTO, MAS VOCÊ PODE PRECISAR DE</strong>
+                <span>Sugestões do mesmo veículo e de famílias comerciais relacionadas.</span>
+              </div>
+
+              <div className="catalog-grid suggestion-grid">
+                {fallbackSuggestions.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    favoriteIds={favoriteIds}
+                    qty={cardQty[product.id] || 1}
+                    onQtyChange={(qty) => setCardQty((current) => ({ ...current, [product.id]: qty }))}
+                    onOpen={openDetails}
+                    onAdd={addToCart}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <div className="catalog-grid">
             {!loading && paginatedProducts.map((product) => (
@@ -917,26 +1848,31 @@ function App() {
             ))}
           </div>
 
-          <div className="pagination-shell">
+          {allFilteredProducts.length ? (
+            <div className="pagination-shell">
             <span>Mostrando {paginatedProducts.length ? (page - 1) * PAGE_SIZE + 1 : 0}–{(page - 1) * PAGE_SIZE + paginatedProducts.length} de {allFilteredProducts.length} produtos</span>
             <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-          </div>
+            </div>
+          ) : null}
         </main>
 
-        <aside className="cart">
+        <aside className={cartOpen ? 'cart cart-open' : 'cart'}>
           <div className="cart-head">
             <div>
               <small>Pedido atual</small>
               <strong>{cartCount} itens</strong>
             </div>
-            <button type="button" className="ghost-button small-button" onClick={clearCart}>Limpar</button>
+            <div className="cart-head-actions">
+              <button type="button" className="ghost-button small-button cart-close" onClick={() => setCartOpen(false)}>Fechar</button>
+              <button type="button" className="ghost-button small-button" onClick={clearCart}>Limpar</button>
+            </div>
           </div>
 
           <div className="cart-list">
-            {!cart.length ? (
+            {!cartItems.length ? (
               <div className="empty-box compact">Adicione produtos para montar o pedido.</div>
             ) : (
-              cart.map((item) => (
+              cartItems.map((item) => (
                 <article key={item.id} className="cart-item">
                   <div className="cart-copy">
                     <strong>{item.code}{item.fabCode ? ` / ${item.fabCode}` : ''}</strong>
@@ -959,30 +1895,36 @@ function App() {
               <strong>{money(subtotal)}</strong>
             </div>
             <small>Preço exibido com IPI incluso e vindo da atualização do catálogo.</small>
-            <button type="button" className="primary-button" disabled={!cart.length || !consultant.phone} onClick={finishWhatsApp}>
+            <button type="button" className="primary-button" disabled={!cartItems.length || !consultant.phone} onClick={finishWhatsApp}>
               Finalizar no WhatsApp
             </button>
           </div>
         </aside>
       </section>
 
-      {selected ? (
+      <button type="button" className="mobile-cart-toggle" onClick={() => setCartOpen(true)}>
+        <span>Pedido</span>
+        <strong>{cartCount}</strong>
+        <small>{money(subtotal)}</small>
+      </button>
+
+      {selectedProduct ? (
         <div className="modal-backdrop" onClick={() => setSelected(null)}>
           <div className="modal" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="modal-close" onClick={() => setSelected(null)}>×</button>
 
             <div className="modal-media">
-              <span className="chip modal-chip">{selected.displayBrand}</span>
+              <span className="chip modal-chip">{selectedProduct.displayBrand}</span>
               <button
                 type="button"
                 className="modal-media-box modal-media-zoom"
-                disabled={!selected.image}
-                aria-label={selected.image ? `Ampliar imagem de ${selected.name}` : 'Produto sem imagem'}
-                onClick={() => selected.image && setImageViewer({ src: selected.image, alt: selected.name, brand: selected.displayBrand })}
+                disabled={!selectedProduct.image}
+                aria-label={selectedProduct.image ? `Ampliar imagem de ${selectedProduct.name}` : 'Produto sem imagem'}
+                onClick={() => selectedProduct.image && setImageViewer({ src: selectedProduct.image, alt: selectedProduct.name, brand: selectedProduct.displayBrand })}
               >
-                {selected.image ? (
+                {selectedProduct.image ? (
                   <>
-                    <img src={selected.image} alt={selected.name} loading="eager" decoding="async" />
+                    <img src={selectedProduct.image} alt={selectedProduct.name} loading="eager" decoding="async" />
                     <span className="modal-zoom-badge">🔍 Ampliar</span>
                   </>
                 ) : <div className="no-image large">Sem imagem</div>}
@@ -991,21 +1933,21 @@ function App() {
 
             <div className="modal-content">
               <div className="modal-head">
-                <h3>{selected.name}</h3>
+                <h3>{selectedProduct.name}</h3>
               </div>
 
               <div className="modal-price">
                 <span>Valor com IPI</span>
-                <strong>{selected.priceLabel || money(selected.price)}</strong>
+                <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
               </div>
 
               <div className="modal-actions">
-                <button type="button" className="ghost-button" onClick={() => toggleFavorite(selected)}>
-                  {favoriteIds.has(selected.id) ? 'Remover favorito' : 'Favoritar'}
+                <button type="button" className="ghost-button" onClick={() => toggleFavorite(selectedProduct)}>
+                  {favoriteIds.has(selectedProduct.id) ? 'Remover favorito' : 'Favoritar'}
                 </button>
                 <div className="modal-add-line">
-                  <QuantityStepper compact value={cardQty[selected.id] || 1} onChange={(qty) => setCardQty((current) => ({ ...current, [selected.id]: qty }))} />
-                  <button type="button" className="primary-button" onClick={() => addToCart(selected, cardQty[selected.id] || 1)}>
+                  <QuantityStepper compact value={cardQty[selectedProduct.id] || 1} onChange={(qty) => setCardQty((current) => ({ ...current, [selectedProduct.id]: qty }))} />
+                  <button type="button" className="primary-button" onClick={() => addToCart(selectedProduct, cardQty[selectedProduct.id] || 1)}>
                     Adicionar
                   </button>
                 </div>
@@ -1014,19 +1956,19 @@ function App() {
               <div className="detail-grid compact">
                 <div className="detail-box">
                   <span>Código</span>
-                  <strong>{selected.code}</strong>
+                  <strong>{selectedProduct.code}</strong>
                 </div>
                 <div className="detail-box">
                   <span>Fab.</span>
-                  <strong>{selected.fabCode || '—'}</strong>
+                  <strong>{selectedProduct.fabCode || '—'}</strong>
                 </div>
                 <div className="detail-box">
                   <span>Marca</span>
-                  <strong>{selected.manufacturer || '—'}</strong>
+                  <strong>{selectedProduct.manufacturer || '—'}</strong>
                 </div>
                 <div className="detail-box">
                   <span>Aplicação</span>
-                  <strong>{selected.application || selected.vehicle || '—'}</strong>
+                  <strong>{selectedProduct.application || selectedProduct.vehicle || '—'}</strong>
                 </div>
               </div>
 
@@ -1100,6 +2042,24 @@ function App() {
         </div>
       </footer>
     </div>
+
+    {catalogLocked ? (
+      <CompanyGate
+        value={companyDraft}
+        error={companyError}
+        minimized={companyGateMinimized}
+        onChange={(value) => {
+          setCompanyDraft(value);
+          if (companyError) setCompanyError('');
+        }}
+        onClose={() => setCompanyGateMinimized(true)}
+        onRestore={() => setCompanyGateMinimized(false)}
+        onSubmit={handleCompanySubmit}
+      />
+    ) : null}
+
+    {toast ? <div className="toast-notice" role="status">{toast}</div> : null}
+    </>
   );
 }
 
