@@ -41,9 +41,9 @@ function writeQueue(queue) {
 
 function getCompanyName() {
   try {
-    return String(localStorage.getItem(COMPANY_KEY) || "").trim();
+    return String(localStorage.getItem(COMPANY_KEY) || "").trim() || "Não identificado";
   } catch {
-    return "";
+    return "Não identificado";
   }
 }
 

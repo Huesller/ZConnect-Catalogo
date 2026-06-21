@@ -26,6 +26,9 @@ const CONSULTANT_PRICE_POLICIES = {
   representante: { discount: 50, multiplier: 0.5 }
 };
 const PAGE_SIZE = 25;
+const CATALOG_TITLE = 'CATÁLOGO Z AUTOMOTIVA';
+const ANONYMOUS_COMPANY_NAME = 'Não identificado';
+const ANONYMOUS_TOAST = 'Que pena, queríamos saber quem é você 😊';
 
 const ANALYTICS_ENDPOINT = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
 
@@ -35,6 +38,10 @@ function getStoredCompanyName() {
   } catch {
     return '';
   }
+}
+
+function getAnalyticsCompanyName() {
+  return getStoredCompanyName() || ANONYMOUS_COMPANY_NAME;
 }
 
 function saveCompanyName(value) {
@@ -190,7 +197,7 @@ function trackEvent(event, payload = {}) {
       userAgent: navigator.userAgent || '',
       sessionId: getSessionId(),
       ...payload,
-      companyName: getStoredCompanyName(),
+      companyName: getAnalyticsCompanyName(),
       timestamp,
       createdAt: timestamp
     });
@@ -1007,7 +1014,7 @@ function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
 
   return [
     'Cotacao Z Automotiva',
-    `Cliente: ${companyName || 'Não informado'}`,
+    `Cliente: ${companyName || ANONYMOUS_COMPANY_NAME}`,
     `Consultor: ${consultant.name}`,
     '',
     'Itens:',
@@ -1302,7 +1309,7 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
         <div>
           <span className="eyebrow">Z Connect</span>
           <h1 id="company-gate-title">Bem-vindo ao Catálogo Z Automotiva</h1>
-          <p className="company-intro">Informe o nome da sua empresa para acessar nosso catálogo exclusivo para distribuidores e autopeças.</p>
+          <p className="company-intro">Informe o nome da sua empresa para agilizar seu atendimento ou feche esta janela para acessar sem identificação.</p>
         </div>
         <label className="company-field">
           <span>Nome da empresa</span>
@@ -1311,12 +1318,11 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder="Digite o nome da sua empresa"
-            required
           />
         </label>
         {error ? <small className="company-error">{error}</small> : null}
         <button type="submit" className="primary-button">Acessar catálogo</button>
-        <small className="company-note">Seu nome será utilizado apenas para identificar seu atendimento e agilizar seus pedidos.</small>
+        <small className="company-note">Recomendamos informar a empresa para deixar o pedido mais rápido, mas o catálogo também pode ser acessado sem identificação.</small>
       </form>
     </div>
   );
@@ -1348,10 +1354,16 @@ function App() {
   const [companyDraft, setCompanyDraft] = useState(() => getStoredCompanyName());
   const [companyError, setCompanyError] = useState('');
   const [companyGateMinimized, setCompanyGateMinimized] = useState(false);
+  const [catalogAccessGranted, setCatalogAccessGranted] = useState(() => Boolean(getStoredCompanyName()));
   const [toast, setToast] = useState(() => {
     const storedCompany = getStoredCompanyName();
     return storedCompany ? `Bem-vindo de volta, ${storedCompany}` : '';
   });
+  const catalogLocked = !catalogAccessGranted;
+
+  useEffect(() => {
+    document.title = CATALOG_TITLE;
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -1407,11 +1419,11 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = selected || imageViewer || !companyName ? 'hidden' : '';
+    document.body.style.overflow = selected || imageViewer || catalogLocked ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selected, imageViewer, companyName]);
+  }, [selected, imageViewer, catalogLocked]);
 
   useEffect(() => {
     if (companyName) return;
@@ -1518,18 +1530,18 @@ function App() {
   const related = useMemo(() => (selectedProduct ? findRelated(pricedProducts, selectedProduct, addedMap) : { complementary: [], similar: [] }), [addedMap, pricedProducts, selectedProduct]);
 
   useEffect(() => {
-    if (loading || !companyName || pageViewSentRef.current) return;
+    if (loading || catalogLocked || pageViewSentRef.current) return;
 
     pageViewSentRef.current = true;
     trackEvent('page_view', {
       ...getConsultantAnalytics(consultant),
       totalProducts: pricedProducts.length
     });
-  }, [companyName, consultant, loading, pricedProducts.length]);
+  }, [catalogLocked, consultant, loading, pricedProducts.length]);
 
   useEffect(() => {
     const normalizedQuery = deferredQuery.trim();
-    if (loading || normalizedQuery.length < 2 || !companyName) return;
+    if (loading || normalizedQuery.length < 2 || catalogLocked) return;
 
     const timeout = window.setTimeout(() => {
       const signature = `${normalizedQuery}::${filter}::${allFilteredProducts.length}::${fallbackSuggestions.length}`;
@@ -1560,7 +1572,7 @@ function App() {
     }, 850);
 
     return () => window.clearTimeout(timeout);
-  }, [deferredQuery, filter, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, companyName]);
+  }, [deferredQuery, filter, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, catalogLocked]);
 
   function scrollToCatalog() {
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1570,19 +1582,32 @@ function App() {
     document.getElementById('rodape')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function grantAnonymousAccess() {
+    saveCompanyName('');
+    setCompanyName('');
+    setCompanyDraft('');
+    setCompanyError('');
+    setCompanyGateMinimized(false);
+    setCatalogAccessGranted(true);
+    pageViewSentRef.current = false;
+    setToast(ANONYMOUS_TOAST);
+  }
+
   function handleCompanySubmit(event) {
     event.preventDefault();
     const nextCompanyName = saveCompanyName(companyDraft);
 
     if (!nextCompanyName) {
-      setCompanyError('Informe o nome da empresa para acessar o catálogo.');
+      grantAnonymousAccess();
       return;
     }
 
     setCompanyError('');
     setCompanyName(nextCompanyName);
     setCompanyGateMinimized(false);
+    setCatalogAccessGranted(true);
     pageViewSentRef.current = false;
+    setToast(`Bem-vindo, ${nextCompanyName}`);
   }
 
   function changeCompany() {
@@ -1591,6 +1616,7 @@ function App() {
     setCompanyDraft('');
     setCompanyError('');
     setCompanyGateMinimized(false);
+    setCatalogAccessGranted(false);
     setCartOpen(false);
     pageViewSentRef.current = false;
   }
@@ -1708,8 +1734,6 @@ function App() {
     openWhatsapp(consultant.phone, buildWhatsAppMessage(cartItems, consultant, subtotal, companyName));
   }
 
-  const catalogLocked = !companyName;
-
   return (
     <>
     <div className={catalogLocked ? 'app-shell catalog-locked' : 'app-shell'} aria-hidden={catalogLocked ? 'true' : undefined}>
@@ -1729,8 +1753,8 @@ function App() {
 
         <div className="header-side">
           <div className="company-pill">
-            <span>É muito bom ter você aqui, {companyName}</span>
-            <button type="button" onClick={changeCompany}>Trocar empresa</button>
+            <span>{companyName ? `É muito bom ter você aqui, ${companyName}` : 'Acesso sem identificação'}</span>
+            <button type="button" onClick={changeCompany}>{companyName ? 'Trocar empresa' : 'Informar empresa'}</button>
           </div>
 
           <button type="button" className="consultant-pill" onClick={() => openWhatsapp(consultant.phone)}>
@@ -2095,7 +2119,7 @@ function App() {
           setCompanyDraft(value);
           if (companyError) setCompanyError('');
         }}
-        onClose={() => setCompanyGateMinimized(true)}
+        onClose={grantAnonymousAccess}
         onRestore={() => setCompanyGateMinimized(false)}
         onSubmit={handleCompanySubmit}
       />
