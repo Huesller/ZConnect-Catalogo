@@ -1,6 +1,7 @@
 const SCRIPT_URL = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || "https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec";
 const STORAGE_KEY = "zconnect_analytics_queue_v7";
 const SESSION_KEY = "zconnect_session_v7";
+const COMPANY_KEY = "zconnect_company_name";
 const MAX_QUEUE = 300;
 
 export function getConsultantSlug() {
@@ -38,6 +39,14 @@ function writeQueue(queue) {
   } catch {}
 }
 
+function getCompanyName() {
+  try {
+    return String(localStorage.getItem(COMPANY_KEY) || "").trim();
+  } catch {
+    return "";
+  }
+}
+
 function compactProductList(items = []) {
   return items
     .map((item) => `${item.quantity || 1}x ${item.code || ""} ${item.name || item.description || ""}`.trim())
@@ -62,6 +71,8 @@ function toPayload(event, data = {}) {
     event,
     consultant,
     consultor: consultant,
+    companyName: getCompanyName(),
+    timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     query: String(data.query || "").trim().slice(0, 200),
     productCode: String(productCode).slice(0, 80),
@@ -70,6 +81,9 @@ function toPayload(event, data = {}) {
     price,
     quantity,
     total,
+    itemsCount: Number(data.itemsCount || data.itemCount || quantity || 0),
+    cartTotal: Number(data.cartTotal || data.cart_total || total || 0),
+    products: data.products || data.items || [],
     page: window.location.href,
     userAgent: navigator.userAgent
   };

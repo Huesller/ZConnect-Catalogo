@@ -140,8 +140,10 @@ function applyConsultantPrice(product = {}, consultant = {}) {
 
 function getConsultantAnalytics(consultant, product) {
   const pricePolicy = getConsultantTargetPolicy(consultant);
+  const slug = getCanonicalConsultantSlug(consultant);
   const analytics = {
-    consultor: getCanonicalConsultantSlug(consultant),
+    consultant: slug,
+    consultor: slug,
     pricePolicy,
     pricePolicyLabel: getPricePolicyLabel(pricePolicy),
     priceMultiplier: getPolicyMultiplier(pricePolicy)
@@ -180,6 +182,8 @@ function trackEvent(event, payload = {}) {
   try {
     const timestamp = new Date().toISOString();
     body = JSON.stringify({
+      action: 'track',
+      eventId: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       event,
       page: window.location.pathname + window.location.search,
       referrer: document.referrer || '',
@@ -1002,7 +1006,7 @@ function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
   const totalItems = cart.reduce((total, item) => total + Number(item.qty || 0), 0);
 
   return [
-    'Pedido Z Automotiva',
+    'Cotacao Z Automotiva',
     `Cliente: ${companyName || 'Não informado'}`,
     `Consultor: ${consultant.name}`,
     '',
@@ -1019,7 +1023,7 @@ function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
     `Subtotal: ${money(subtotal)}`,
     '',
     'Observação:',
-    'Preço com IPI incluso.'
+    'Preco com IPI incluso. Cotacao sujeita a confirmacao de disponibilidade e negociacao.'
   ].join('\n');
 }
 
@@ -1328,6 +1332,7 @@ function App() {
   const searchInputRef = useRef(null);
   const searchBoxRef = useRef(null);
   const pageViewSentRef = useRef(false);
+  const lastSearchEventRef = useRef('');
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
   const [page, setPage] = useState(1);
@@ -1527,18 +1532,35 @@ function App() {
     if (loading || normalizedQuery.length < 2 || !companyName) return;
 
     const timeout = window.setTimeout(() => {
+      const signature = `${normalizedQuery}::${filter}::${allFilteredProducts.length}::${fallbackSuggestions.length}`;
+      if (lastSearchEventRef.current === signature) return;
+      lastSearchEventRef.current = signature;
+
       trackEvent('search', {
         ...getConsultantAnalytics(consultant),
         query: normalizedQuery,
         total: allFilteredProducts.length,
+        resultsCount: allFilteredProducts.length,
         suggestions: fallbackSuggestions.length,
         resultType: allFilteredProducts.length ? 'direct' : fallbackSuggestions.length ? 'suggestions' : 'empty',
         page: window.location.pathname + window.location.search
       });
+
+      if (!allFilteredProducts.length && !fallbackSuggestions.length) {
+        trackEvent('search_no_results', {
+          ...getConsultantAnalytics(consultant),
+          query: normalizedQuery,
+          total: 0,
+          resultsCount: 0,
+          suggestions: 0,
+          resultType: 'empty',
+          page: window.location.pathname + window.location.search
+        });
+      }
     }, 850);
 
     return () => window.clearTimeout(timeout);
-  }, [deferredQuery, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, companyName]);
+  }, [deferredQuery, filter, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, companyName]);
 
   function scrollToCatalog() {
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1648,14 +1670,35 @@ function App() {
   }
 
   function clearCart() {
+    if (cartItems.length) {
+      trackEvent('clear_cart', {
+        ...getConsultantAnalytics(consultant),
+        itemsCount: cartCount,
+        cartTotal: subtotal,
+        quantity: cartCount,
+        total: subtotal
+      });
+    }
     setCart([]);
   }
 
   function finishWhatsApp() {
     if (!cartItems.length) return;
-    trackEvent('whatsapp_order', {
+    const products = cartItems.map((item) => ({
+      productCode: item.code || '',
+      productName: item.name || '',
+      brand: item.displayBrand || item.brand || '',
+      quantity: Number(item.qty || 1),
+      price: Number(item.price || 0),
+      total: Number(item.price || 0) * Number(item.qty || 1)
+    }));
+
+    trackEvent('whatsapp_quote', {
       ...getConsultantAnalytics(consultant),
-      quantity: cartItems.reduce((total, item) => total + Number(item.qty || 0), 0),
+      itemsCount: cartCount,
+      cartTotal: subtotal,
+      products,
+      quantity: cartCount,
       total: subtotal,
       displayedPrice: subtotal,
       displayedPriceLabel: money(subtotal),

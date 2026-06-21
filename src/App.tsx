@@ -321,7 +321,7 @@ export default function App() {
         searchMode: details.mode,
         noMain: details.noMain
       });
-      if (!details.results.length) track("sem_resultado", { query: q });
+      if (!details.results.length) track("search_no_results", { query: q });
       if (details.noMain) track("search_related_only", { query: q, resultsCount: details.results.length });
     }
   }
@@ -329,7 +329,7 @@ export default function App() {
   function viewProduct(product) {
     setSelected(product);
     setRecent((items) => [getProductKey(product), ...items.filter((id) => id !== getProductKey(product))].slice(0, 20));
-    track("view_product", product);
+    track("product_open", product);
   }
 
   function addToCart(product) {
@@ -362,7 +362,7 @@ export default function App() {
     const phone = consultantData.phone || "554733054400";
     const lines = cart.map((item) => `• ${item.quantity}x ${productTitle(item)} | Cód. ${item.code} | ${money(item.price)}`).join("%0A");
     const text = `Olá, segue pedido pelo Z Connect:%0A%0A${lines}%0A%0ATotal: ${money(total)}%0AConsultor: ${consultant}`;
-    track("whatsapp_checkout", { productName: cart.map(productTitle).join(" | "), items: cart, quantity: cartCount, total });
+    track("whatsapp_quote", { productName: cart.map(productTitle).join(" | "), products: cart, itemsCount: cartCount, cartTotal: total, quantity: cartCount, total });
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank", "noopener,noreferrer");
   }
 
