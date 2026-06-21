@@ -1,8 +1,10 @@
-const SCRIPT_URL = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || "https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec";
+const ANALYTICS_URL = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || "/api/analytics";
+const DIRECT_FALLBACK_URL = "https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec";
 const STORAGE_KEY = "zconnect_analytics_queue_v7";
 const SESSION_KEY = "zconnect_session_v7";
 const COMPANY_KEY = "zconnect_company_name";
 const MAX_QUEUE = 300;
+let flushPromise = null;
 
 export function getConsultantSlug() {
   const params = new URLSearchParams(window.location.search);
@@ -89,9 +91,14 @@ function toPayload(event, data = {}) {
   };
 }
 
-async function send(payload) {
-  const url = `${SCRIPT_URL}?action=track`;
-  const body = JSON.stringify(payload);
+function getTrackUrl(baseUrl) {
+  const url = new URL(baseUrl, window.location.origin);
+  url.searchParams.set("action", "track");
+  return url.toString();
+}
+
+function sendDirectFallback(body) {
+  const url = getTrackUrl(DIRECT_FALLBACK_URL);
 
   if (navigator.sendBeacon) {
     try {
@@ -101,27 +108,65 @@ async function send(payload) {
   }
 
   try {
-    await fetch(url, {
+    fetch(url, {
       method: "POST",
       mode: "no-cors",
+      keepalive: true,
       headers: { "Content-Type": "text/plain;charset=UTF-8" },
       body
-    });
+    }).catch(() => null);
     return true;
   } catch {
     return false;
   }
 }
 
-export async function flushAnalyticsQueue() {
-  const queue = readQueue();
-  if (!queue.length) return;
-  const pending = [];
-  for (const item of queue) {
-    const ok = await send(item);
-    if (!ok) pending.push(item);
+async function send(payload) {
+  const url = getTrackUrl(ANALYTICS_URL);
+  const fallbackUrl = getTrackUrl(DIRECT_FALLBACK_URL);
+  const body = JSON.stringify(payload);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      mode: "cors",
+      credentials: "same-origin",
+      keepalive: true,
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body
+    });
+    if (!response.ok) throw new Error(`Analytics proxy returned ${response.status}`);
+    return true;
+  } catch {
+    if (url === fallbackUrl) return false;
+    return sendDirectFallback(body);
   }
-  writeQueue(pending);
+}
+
+export async function flushAnalyticsQueue() {
+  if (flushPromise) return flushPromise;
+
+  flushPromise = (async () => {
+    const queue = readQueue();
+    if (!queue.length) return;
+
+    const pending = [];
+    const processedIds = new Set();
+    for (const item of queue) {
+      processedIds.add(item.eventId);
+      const ok = await send(item);
+      if (!ok) pending.push(item);
+    }
+
+    const currentQueue = readQueue();
+    const newItems = currentQueue.filter((item) => !processedIds.has(item.eventId));
+    writeQueue([...pending, ...newItems]);
+  })().finally(() => {
+    flushPromise = null;
+    if (readQueue().length) window.setTimeout(flushAnalyticsQueue, 1200);
+  });
+
+  return flushPromise;
 }
 
 export function track(event, data = {}) {

@@ -30,7 +30,8 @@ const CATALOG_TITLE = 'CATÁLOGO Z AUTOMOTIVA';
 const ANONYMOUS_COMPANY_NAME = 'Não identificado';
 const ANONYMOUS_TOAST = 'Que pena, queríamos saber quem é você 😊';
 
-const ANALYTICS_ENDPOINT = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
+const ANALYTICS_ENDPOINT = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || '/api/analytics';
+const ANALYTICS_DIRECT_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
 
 function getStoredCompanyName() {
   try {
@@ -182,6 +183,61 @@ function getProductAnalytics(product = {}) {
   };
 }
 
+function getAnalyticsTrackUrl(baseUrl) {
+  const url = new URL(baseUrl, window.location.origin);
+  url.searchParams.set('action', 'track');
+  return url.toString();
+}
+
+function sendDirectAnalyticsFallback(body) {
+  const fallbackUrl = getAnalyticsTrackUrl(ANALYTICS_DIRECT_FALLBACK_URL);
+
+  try {
+    if (navigator.sendBeacon) {
+      const sent = navigator.sendBeacon(fallbackUrl, new Blob([body], { type: 'text/plain;charset=utf-8' }));
+      if (sent) return;
+    }
+  } catch {
+    // Fetch fallback below.
+  }
+
+  try {
+    fetch(fallbackUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body
+    }).catch(() => null);
+  } catch {
+    // Analytics must never interrupt the catalog.
+  }
+}
+
+function sendAnalyticsInBackground(body) {
+  const primaryUrl = getAnalyticsTrackUrl(ANALYTICS_ENDPOINT);
+  const fallbackUrl = getAnalyticsTrackUrl(ANALYTICS_DIRECT_FALLBACK_URL);
+
+  try {
+    fetch(primaryUrl, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'same-origin',
+      keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Analytics proxy returned ${response.status}`);
+      })
+      .catch(() => {
+        if (primaryUrl !== fallbackUrl) sendDirectAnalyticsFallback(body);
+      });
+  } catch {
+    if (primaryUrl !== fallbackUrl) sendDirectAnalyticsFallback(body);
+  }
+}
+
 function trackEvent(event, payload = {}) {
   if (!ANALYTICS_ENDPOINT || typeof window === 'undefined') return;
 
@@ -205,26 +261,7 @@ function trackEvent(event, payload = {}) {
     return;
   }
 
-  try {
-    if (navigator.sendBeacon) {
-      const sent = navigator.sendBeacon(ANALYTICS_ENDPOINT, new Blob([body], { type: 'text/plain;charset=utf-8' }));
-      if (sent) return;
-    }
-  } catch {
-    // Fallback below.
-  }
-
-  try {
-    fetch(ANALYTICS_ENDPOINT, {
-      method: 'POST',
-      mode: 'no-cors',
-      keepalive: true,
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body
-    }).catch(() => null);
-  } catch {
-    return;
-  }
+  sendAnalyticsInBackground(body);
 }
 
 
