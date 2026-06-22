@@ -1092,24 +1092,42 @@ function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
   const totalItems = cart.reduce((total, item) => total + Number(item.qty || 0), 0);
 
   return [
-    'Cotacao Z Automotiva',
-    `Cliente: ${companyName || ANONYMOUS_COMPANY_NAME}`,
+    '🔴 Z Connect | Cotação Z Automotiva',
+    '',
+    `Empresa: ${companyName || ANONYMOUS_COMPANY_NAME}`,
     `Consultor: ${consultant.name}`,
     '',
-    'Itens:',
+    'Itens solicitados:',
     ...cart.flatMap((item, index) => [
-      `${index + 1}) ${item.qty}x ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
-      item.name,
+      `${index + 1}. ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
+      `${item.name}`,
+      `Quantidade: ${item.qty}`,
       `Valor unitário com IPI: ${item.priceLabel || money(item.price)}`,
       `Subtotal: ${money(item.price * item.qty)}`,
       ''
     ]),
-    'Resumo:',
+    'Resumo do orçamento:',
     `Total de itens: ${totalItems}`,
     `Subtotal: ${money(subtotal)}`,
     '',
     'Observação:',
-    'Preco com IPI incluso. Cotacao sujeita a confirmacao de disponibilidade e negociacao.'
+    'Preço com IPI incluso. Cotação sujeita à confirmação de disponibilidade e negociação.'
+  ].join('\n');
+}
+
+function buildNoResultLeadMessage(query, consultant, companyName) {
+  const term = String(query || '').trim();
+
+  return [
+    '🔴 Z Connect | Solicitação ao consultor',
+    '',
+    `Empresa: ${companyName || ANONYMOUS_COMPANY_NAME}`,
+    `Consultor: ${consultant.name}`,
+    '',
+    'Procurei no catálogo e não encontrei:',
+    `"${term}"`,
+    '',
+    'Pode verificar disponibilidade ou uma alternativa para este item?'
   ].join('\n');
 }
 
@@ -1855,6 +1873,21 @@ function App() {
     setCart([]);
   }
 
+  function requestNoResultLead() {
+    const term = query.trim();
+    if (!term || !consultant.phone) return;
+
+    trackEvent('busca_sem_resultado_lead', {
+      ...getConsultantAnalytics(consultant),
+      query: term,
+      resultType: fallbackSuggestions.length ? 'suggestions' : 'empty',
+      suggestions: fallbackSuggestions.length,
+      page: window.location.pathname + window.location.search
+    });
+
+    openWhatsapp(consultant.phone, buildNoResultLeadMessage(term, consultant, companyName));
+  }
+
   function finishWhatsApp() {
     if (!cartItems.length) return;
     const products = cartItems.map((item) => ({
@@ -1980,7 +2013,7 @@ function App() {
                 searchInputRef.current?.blur();
               }
             }}
-            placeholder="Buscar por código, descrição, veículo, aplicação ou fabricante"
+            placeholder="Ex: Gol G5, Farol Onix, Parachoque Corolla, 459306"
           />
           {!!query.trim() && (
             <button type="button" className="ghost-button clear-search" onClick={() => {
@@ -2028,13 +2061,30 @@ function App() {
       <section className="catalog-layout">
         <main>
           {loading ? <div className="empty-box">Carregando catálogo...</div> : null}
-          {!loading && !paginatedProducts.length && !fallbackSuggestions.length ? <div className="empty-box">Nenhum produto encontrado.</div> : null}
+          {!loading && !paginatedProducts.length && !fallbackSuggestions.length ? (
+            <div className="empty-box no-result-lead-box">
+              <strong>Nenhum produto encontrado.</strong>
+              {hasQuery ? (
+                <>
+                  <span>Não encontrou o item que procurava?</span>
+                  <button type="button" className="primary-button small-button" onClick={requestNoResultLead}>
+                    Solicitar ao consultor
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
 
           {!loading && hasQuery && !allFilteredProducts.length && fallbackSuggestions.length ? (
             <section className="commercial-suggestions-block">
               <div className="commercial-search-banner">
-                <strong>NÃO TEMOS ESTE ITEM NO MOMENTO, MAS VOCÊ PODE PRECISAR DE</strong>
-                <span>Sugestões do mesmo veículo e de famílias comerciais relacionadas.</span>
+                <div>
+                  <strong>NÃO TEMOS ESTE ITEM NO MOMENTO, MAS VOCÊ PODE PRECISAR DE</strong>
+                  <span>Sugestões do mesmo veículo e de famílias comerciais relacionadas.</span>
+                </div>
+                <button type="button" className="ghost-button small-button" onClick={requestNoResultLead}>
+                  Solicitar ao consultor
+                </button>
               </div>
 
               <div className="catalog-grid suggestion-grid">
@@ -2116,6 +2166,7 @@ function App() {
               <strong>{money(subtotal)}</strong>
             </div>
             <small>Preço exibido com IPI incluso e vindo da atualização do catálogo.</small>
+            {cartItems.length ? <div className="cart-ready-status">✔ Pronto para orçamento</div> : null}
             <button type="button" className="primary-button" disabled={!cartItems.length || !consultant.phone} onClick={finishWhatsApp}>
               Finalizar no WhatsApp
             </button>
