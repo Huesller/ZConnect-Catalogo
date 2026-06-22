@@ -121,10 +121,23 @@ function sendDirectFallback(body) {
   }
 }
 
+function sendBeacon(url, body) {
+  if (!navigator.sendBeacon) return false;
+
+  try {
+    const blob = new Blob([body], { type: "application/json;charset=UTF-8" });
+    return navigator.sendBeacon(url, blob);
+  } catch {
+    return false;
+  }
+}
+
 async function send(payload) {
   const url = getTrackUrl(ANALYTICS_URL);
   const fallbackUrl = getTrackUrl(DIRECT_FALLBACK_URL);
   const body = JSON.stringify(payload);
+
+  if (sendBeacon(url, body)) return true;
 
   try {
     const response = await fetch(url, {
@@ -132,7 +145,7 @@ async function send(payload) {
       mode: "cors",
       credentials: "same-origin",
       keepalive: true,
-      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      headers: { "Content-Type": "application/json;charset=UTF-8" },
       body
     });
     if (!response.ok) throw new Error(`Analytics proxy returned ${response.status}`);

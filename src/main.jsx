@@ -214,9 +214,20 @@ function sendDirectAnalyticsFallback(body) {
   }
 }
 
+function sendAnalyticsBeacon(url, body) {
+  try {
+    if (!navigator.sendBeacon) return false;
+    return navigator.sendBeacon(url, new Blob([body], { type: 'application/json;charset=utf-8' }));
+  } catch {
+    return false;
+  }
+}
+
 function sendAnalyticsInBackground(body) {
   const primaryUrl = getAnalyticsTrackUrl(ANALYTICS_ENDPOINT);
   const fallbackUrl = getAnalyticsTrackUrl(ANALYTICS_DIRECT_FALLBACK_URL);
+
+  if (sendAnalyticsBeacon(primaryUrl, body)) return;
 
   try {
     fetch(primaryUrl, {
@@ -224,7 +235,7 @@ function sendAnalyticsInBackground(body) {
       mode: 'cors',
       credentials: 'same-origin',
       keepalive: true,
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body
     })
       .then((response) => {

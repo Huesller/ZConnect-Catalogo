@@ -1,8 +1,36 @@
+const DEFAULT_TARGET_URL =
+  "https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec";
 const DEFAULT_TIMEOUT_MS = 8000;
 
-function setCorsHeaders(response) {
-  response.setHeader("Access-Control-Allow-Origin", "*");
-  response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+function getRequestHost(request) {
+  return String(
+    request.headers["x-forwarded-host"] ||
+    request.headers.host ||
+    ""
+  ).split(",")[0].trim();
+}
+
+function isAllowedOrigin(request) {
+  const origin = request.headers.origin;
+  if (!origin) return true;
+
+  try {
+    const originHost = new URL(origin).host;
+    return originHost === getRequestHost(request);
+  } catch {
+    return false;
+  }
+}
+
+function setCorsHeaders(request, response) {
+  const origin = request.headers.origin;
+  if (origin && isAllowedOrigin(request)) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+
+  response.setHeader("Vary", "Origin");
+  response.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type");
   response.setHeader("Cache-Control", "no-store");
 }
@@ -22,9 +50,7 @@ async function readRawBody(request) {
 }
 
 function buildTargetUrl(request) {
-  const target = process.env.ZCONNECT_ANALYTICS_TARGET_URL;
-  if (!target) return null;
-
+  const target = process.env.ZCONNECT_ANALYTICS_TARGET_URL || DEFAULT_TARGET_URL;
   const url = new URL(target);
   const query = request.query || {};
 
@@ -39,49 +65,79 @@ function buildTargetUrl(request) {
   return url;
 }
 
+function parsePayload(rawBody) {
+  if (!rawBody) return null;
+  if (typeof rawBody === "object") return rawBody;
+
+  try {
+    const payload = JSON.parse(rawBody);
+    return payload && typeof payload === "object" ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
+function hasMinimumPayload(payload) {
+  return Boolean(
+    payload &&
+    typeof payload === "object" &&
+    typeof payload.event === "string" &&
+    payload.event.trim()
+  );
+}
+
 export default async function handler(request, response) {
-  setCorsHeaders(response);
+  setCorsHeaders(request, response);
 
   if (request.method === "OPTIONS") {
     response.status(204).end();
     return;
   }
 
-  const targetUrl = buildTargetUrl(request);
-  if (!targetUrl) {
-    response.status(500).json({ ok: false, error: "ZCONNECT_ANALYTICS_TARGET_URL nao configurada." });
+  if (request.method !== "POST") {
+    response.status(405).json({ ok: false, error: "Metodo nao permitido." });
     return;
   }
+
+  if (!isAllowedOrigin(request)) {
+    response.status(403).json({ ok: false, error: "Origem nao permitida." });
+    return;
+  }
+
+  let payload = null;
+  try {
+    payload = parsePayload(await readRawBody(request));
+  } catch {
+    payload = null;
+  }
+
+  if (!hasMinimumPayload(payload)) {
+    response.status(400).json({ ok: false, error: "Payload de analytics invalido." });
+    return;
+  }
+
+  const targetUrl = buildTargetUrl(request);
+  targetUrl.searchParams.set("action", "track");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
   try {
-    const method = request.method || "POST";
-    const hasBody = !["GET", "HEAD"].includes(method);
-    const body = hasBody ? await readRawBody(request) : undefined;
-
     const upstream = await fetch(targetUrl.toString(), {
-      method,
+      method: "POST",
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        "Content-Type": request.headers["content-type"] || "text/plain;charset=utf-8"
+        "Content-Type": "application/json;charset=utf-8"
       },
-      body
+      body: JSON.stringify(payload)
     });
-
-    const text = await upstream.text();
-    response.status(upstream.status || 200);
-    response.setHeader("Content-Type", upstream.headers.get("content-type") || "application/json;charset=utf-8");
-    response.send(text);
+    if (!upstream.ok) console.warn(`Analytics upstream retornou ${upstream.status}.`);
   } catch (error) {
-    const aborted = error && error.name === "AbortError";
-    response.status(aborted ? 504 : 502).json({
-      ok: false,
-      error: aborted ? "Timeout ao enviar analytics." : "Falha ao repassar analytics."
-    });
+    console.warn("Falha ao repassar analytics.", error);
   } finally {
     clearTimeout(timeout);
   }
+
+  response.status(200).json({ ok: true });
 }
