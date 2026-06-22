@@ -29,6 +29,8 @@ const PAGE_SIZE = 25;
 const CATALOG_TITLE = 'CATÁLOGO Z AUTOMOTIVA';
 const ANONYMOUS_COMPANY_NAME = 'Não identificado';
 const ANONYMOUS_TOAST = 'Que pena, queríamos saber quem é você 😊';
+const COMPANY_BANNER_HIDDEN_UNTIL_KEY = 'zconnect:company-banner-hidden-until:v1';
+const COMPANY_BANNER_HIDE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const ANALYTICS_ENDPOINT = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || '/api/analytics';
 const ANALYTICS_DIRECT_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
@@ -58,6 +60,35 @@ function saveCompanyName(value) {
   }
 
   return companyName;
+}
+
+function getCompanyBannerHiddenUntil() {
+  try {
+    const value = Number(window.localStorage.getItem(COMPANY_BANNER_HIDDEN_UNTIL_KEY) || 0);
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setCompanyBannerHiddenUntil(timestamp) {
+  try {
+    if (timestamp > Date.now()) {
+      window.localStorage.setItem(COMPANY_BANNER_HIDDEN_UNTIL_KEY, String(timestamp));
+    } else {
+      window.localStorage.removeItem(COMPANY_BANNER_HIDDEN_UNTIL_KEY);
+    }
+  } catch {
+    // localStorage indisponivel: apenas segue sem persistir a preferencia.
+  }
+}
+
+function clearCompanyBannerHiddenUntil() {
+  try {
+    window.localStorage.removeItem(COMPANY_BANNER_HIDDEN_UNTIL_KEY);
+  } catch {
+    // Ignora falhas de storage.
+  }
 }
 
 function getSessionId() {
@@ -1338,6 +1369,35 @@ function Pagination({ page, totalPages, onChange }) {
   );
 }
 
+
+function CompanyIdentificationBanner({ onIdentify, onClose }) {
+  return (
+    <section className="company-identification-banner" aria-label="Personalizar experiência">
+      <div className="company-identification-copy">
+        <span className="eyebrow">Experiência personalizada</span>
+        <h2>Você está navegando sem identificação</h2>
+        <p>Informe sua empresa para deixar o catálogo mais útil nas próximas visitas.</p>
+
+        <div className="company-identification-benefits">
+          <span>✓ Histórico salvo automaticamente</span>
+          <span>✓ Produtos recentes sempre à mão</span>
+          <span>✓ Cotações futuras mais rápidas</span>
+          <span>✓ Atendimento mais eficiente pelo consultor</span>
+        </div>
+      </div>
+
+      <div className="company-identification-actions">
+        <button type="button" className="primary-button" onClick={onIdentify}>
+          Informar minha empresa
+        </button>
+        <button type="button" className="ghost-button" onClick={onClose}>
+          Continuar sem identificar
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, onSubmit }) {
   if (minimized) {
     return (
@@ -1357,20 +1417,20 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
         <div>
           <span className="eyebrow">Z Connect</span>
           <h1 id="company-gate-title">Bem-vindo ao Catálogo Z Automotiva</h1>
-          <p className="company-intro">Informe o nome da sua empresa para agilizar seu atendimento ou feche esta janela para acessar sem identificação.</p>
+          <p className="company-intro">Identifique sua empresa para salvar seu histórico, facilitar futuras cotações e receber um atendimento mais rápido.</p>
         </div>
         <label className="company-field">
-          <span>Nome da empresa</span>
+          <span>Nome da autopeça, oficina ou distribuidora</span>
           <input
             autoFocus
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            placeholder="Digite o nome da sua empresa"
+            placeholder="Ex.: Auto Peças Silva"
           />
         </label>
         {error ? <small className="company-error">{error}</small> : null}
-        <button type="submit" className="primary-button">Acessar catálogo</button>
-        <small className="company-note">Recomendamos informar a empresa para deixar o pedido mais rápido, mas o catálogo também pode ser acessado sem identificação.</small>
+        <button type="submit" className="primary-button">Personalizar meu acesso</button>
+        <small className="company-note">Leva menos de 5 segundos. Você também pode fechar esta janela e acessar sem identificação.</small>
       </form>
     </div>
   );
@@ -1402,12 +1462,15 @@ function App() {
   const [companyDraft, setCompanyDraft] = useState(() => getStoredCompanyName());
   const [companyError, setCompanyError] = useState('');
   const [companyGateMinimized, setCompanyGateMinimized] = useState(false);
+  const [companyBannerHiddenUntil, setCompanyBannerHiddenUntilState] = useState(() => getCompanyBannerHiddenUntil());
+  const companyBannerViewSentRef = useRef(false);
   const [catalogAccessGranted, setCatalogAccessGranted] = useState(() => Boolean(getStoredCompanyName()));
   const [toast, setToast] = useState(() => {
     const storedCompany = getStoredCompanyName();
     return storedCompany ? `Bem-vindo de volta, ${storedCompany}` : '';
   });
   const catalogLocked = !catalogAccessGranted;
+  const showCompanyIdentificationBanner = !catalogLocked && !companyName && Date.now() >= companyBannerHiddenUntil;
 
   useEffect(() => {
     document.title = CATALOG_TITLE;
@@ -1484,6 +1547,14 @@ function App() {
     const timeout = window.setTimeout(() => setToast(''), 2800);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    if (!showCompanyIdentificationBanner || companyBannerViewSentRef.current) return;
+    companyBannerViewSentRef.current = true;
+    trackEvent('identify_banner_view', {
+      source: 'company_identification_banner'
+    });
+  }, [showCompanyIdentificationBanner]);
 
   useEffect(() => {
     function onPointerDown(event) {
@@ -1652,9 +1723,15 @@ function App() {
 
     setCompanyError('');
     setCompanyName(nextCompanyName);
+    clearCompanyBannerHiddenUntil();
+    setCompanyBannerHiddenUntilState(0);
     setCompanyGateMinimized(false);
     setCatalogAccessGranted(true);
     pageViewSentRef.current = false;
+    trackEvent('identify_completed', {
+      source: catalogLocked ? 'company_gate' : 'company_identification_banner',
+      identifiedCompanyName: nextCompanyName
+    });
     setToast(`Bem-vindo, ${nextCompanyName}`);
   }
 
@@ -1667,6 +1744,28 @@ function App() {
     setCatalogAccessGranted(false);
     setCartOpen(false);
     pageViewSentRef.current = false;
+  }
+
+  function openCompanyIdentificationFromBanner() {
+    trackEvent('identify_banner_click', {
+      source: 'company_identification_banner'
+    });
+    setCompanyDraft('');
+    setCompanyError('');
+    setCompanyGateMinimized(false);
+    setCatalogAccessGranted(false);
+    setCartOpen(false);
+  }
+
+  function hideCompanyIdentificationBanner() {
+    const hiddenUntil = Date.now() + COMPANY_BANNER_HIDE_MS;
+    setCompanyBannerHiddenUntil(hiddenUntil);
+    setCompanyBannerHiddenUntilState(hiddenUntil);
+    trackEvent('identify_banner_close', {
+      source: 'company_identification_banner',
+      hiddenForDays: 7
+    });
+    setToast('Tudo bem. Você pode informar sua empresa depois, quando quiser.');
   }
 
   function rememberProduct(product) {
@@ -1843,6 +1942,13 @@ function App() {
           <span className="hero-art-red-glow" />
         </div>
       </section>
+
+      {showCompanyIdentificationBanner ? (
+        <CompanyIdentificationBanner
+          onIdentify={openCompanyIdentificationFromBanner}
+          onClose={hideCompanyIdentificationBanner}
+        />
+      ) : null}
 
       <section className="search-panel" id="catalogo">
         <div className="search-head">
