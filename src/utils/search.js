@@ -1,5 +1,27 @@
 const CACHE = new Map();
 
+const SEARCH_ALIASES = {
+  "para-ch":"parachoque",
+  "para choque":"parachoque",
+  "para-choque":"parachoque",
+  "parachoq":"parachoque",
+  "retr":"retrovisor",
+  "retro":"retrovisor",
+  "golg":"gol",
+  "gold":"gol",
+  "voyag":"voyage",
+  "amaroc":"amarok"
+};
+
+function applyAliases(text){
+  let result=text;
+  Object.entries(SEARCH_ALIASES).forEach(([a,b])=>{
+    result=result.replaceAll(a,b);
+  });
+  return result;
+}
+
+
 const STOP_WORDS = new Set([
   "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
   "a", "o", "as", "os", "um", "uma", "ao", "ate", "até"
@@ -28,7 +50,7 @@ const SIDE_TERMS = new Set([
 ]);
 
 function normalizeText(value = "") {
-  return String(value || "")
+  return applyAliases(String(value || ""))
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
