@@ -117,6 +117,28 @@ function buildField(value) {
   };
 }
 
+function levenshtein(a, b) {
+  const m = a.length;
+  const n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[m][n];
+}
+
 function tokenMatchesField(field, token) {
   if (!field || !token) return false;
 
@@ -126,8 +148,16 @@ function tokenMatchesField(field, token) {
 
   if (field.tokenSet.has(token)) return true;
 
-  // Prefixo de palavra: "parach" encontra "parachoque"; "hb2" encontra "hb20".
-  return field.tokens.some(fieldToken => fieldToken.startsWith(token));
+  if (field.tokens.some(fieldToken => fieldToken.startsWith(token))) return true;
+
+  if (token.length >= 5) {
+    return field.tokens.some(fieldToken => {
+      if (Math.abs(fieldToken.length - token.length) > 2) return false;
+      return levenshtein(fieldToken, token) <= 2;
+    });
+  }
+
+  return false;
 }
 
 function tokenPosition(field, token) {
