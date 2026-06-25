@@ -1317,7 +1317,7 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         </div>
 
         <div className="product-copy">
-          <h3>{product.name}</h3>
+          <h3 title={product.name}>{product.name}</h3>
           <p>{product.code}{product.fabCode ? ` / ${product.fabCode}` : ''}</p>
         </div>
       </button>
