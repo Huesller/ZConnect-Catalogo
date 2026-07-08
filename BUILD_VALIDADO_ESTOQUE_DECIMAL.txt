@@ -1,0 +1,11 @@
+Correção aplicada:
+- Estoque decimal do Zetta tratado como unidade inteira.
+- Exemplo: 27,0000 agora exibe 27 un.
+- Exemplo: 1.300,0000 agora exibe 1300 un.
+
+Validação:
+- Teste unitário manual da conversão: OK
+- npm run build: OK
+
+Observação:
+- npm run update-catalog depende de acesso ao Zetta no ambiente local do cliente.

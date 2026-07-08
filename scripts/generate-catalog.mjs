@@ -269,6 +269,61 @@ function parseCurrency(value) {
   return Number.isFinite(parsed) ? Math.round(parsed * 100) / 100 : null;
 }
 
+function parseStockQuantity(value) {
+  if (value === null || value === undefined || value === '') return null;
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
+  }
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const compact = raw.replace(/\s+/g, '').replace(/[^\d,.-]/g, '');
+  if (!compact) return null;
+
+  // Estoque do Zetta pode vir como "27,0000".
+  // Para estoque, a parte decimal não representa unidades vendáveis; usamos só a parte inteira.
+  let integerPart = compact;
+
+  if (compact.includes(',')) {
+    integerPart = compact.split(',')[0];
+  } else if (/^-?\d+\.\d{1,4}$/.test(compact)) {
+    integerPart = compact.split('.')[0];
+  }
+
+  const normalized = integerPart.replace(/\./g, '').replace(/,/g, '');
+  if (!normalized) return null;
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : null;
+}
+
+function extractStockQuantity(item) {
+  const stockKeyPattern = /(estoque|saldo|quantidade|qtd|qtde|disponivel|disponível|stock|inventory)/i;
+  const ignoredKeyPattern = /(valor|preco|preço|price|ipi|cod|codigo|código|fabricacao|fabricação|marca|id|pagina|page|catalogo|catálogo)/i;
+  const queue = [item];
+
+  while (queue.length) {
+    const current = queue.shift();
+    if (!current || typeof current !== 'object') continue;
+
+    for (const [key, value] of Object.entries(current)) {
+      if (value && typeof value === 'object') {
+        queue.push(value);
+        continue;
+      }
+
+      if (!stockKeyPattern.test(key) || ignoredKeyPattern.test(key)) continue;
+
+      const quantity = parseStockQuantity(value);
+      if (quantity !== null) return quantity;
+    }
+  }
+
+  return null;
+}
+
 function formatMoney(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
@@ -312,6 +367,7 @@ function sanitizeZettaProduct(item, context, config) {
   const vehicle = inferVehicle(name, manufacturer);
   const application = inferApplication(name);
   const commercialPolicy = config.commercialPolicy;
+  const stock = extractStockQuantity(item);
 
   return {
     id: productId(context.brand, code, fabCode, context.catalogId),
@@ -346,8 +402,11 @@ function sanitizeZettaProduct(item, context, config) {
     sourceUrl: context.sourceUrl,
     sourcePageUrl: context.url,
     sourcePage: context.page,
-    available: true,
-    inStock: true
+    stock,
+    stockQty: stock,
+    estoque: stock,
+    available: stock === null ? true : stock > 0,
+    inStock: stock === null ? true : stock > 0
   };
 }
 

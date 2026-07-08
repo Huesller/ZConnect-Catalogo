@@ -634,6 +634,25 @@ a {
 .price-row strong {
   font-size: 14px;
 }
+.stock-line,
+.modal-stock-line {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 26px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.modal-stock-line {
+  margin-top: -6px;
+}
+
 
 .qty-stepper {
   display: inline-flex;

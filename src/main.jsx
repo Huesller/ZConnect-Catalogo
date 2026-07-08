@@ -1030,6 +1030,34 @@ function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function getStockQuantity(product = {}) {
+  const rawStock = product.stock ?? product.stockQty ?? product.estoque ?? product.saldo ?? product.quantidade;
+  if (rawStock === null || rawStock === undefined || rawStock === '') return null;
+
+  if (typeof rawStock === 'number') {
+    return Number.isFinite(rawStock) && rawStock > 0 ? Math.trunc(rawStock) : null;
+  }
+
+  const compact = String(rawStock).trim().replace(/\s+/g, '').replace(/[^\d,.-]/g, '');
+  if (!compact) return null;
+
+  let integerPart = compact;
+  if (compact.includes(',')) {
+    integerPart = compact.split(',')[0];
+  } else if (/^-?\d+\.\d{1,4}$/.test(compact)) {
+    integerPart = compact.split('.')[0];
+  }
+
+  const normalized = integerPart.replace(/\./g, '').replace(/,/g, '');
+  const stock = Number(normalized);
+  return Number.isFinite(stock) && stock > 0 ? Math.trunc(stock) : null;
+}
+
+function getStockLabel(product = {}) {
+  const stock = getStockQuantity(product);
+  return stock ? `Estoque: ${stock} un.` : 'Consultar estoque';
+}
+
 function readStorage(key, fallback) {
   try {
     const raw = window.localStorage.getItem(key);
@@ -1326,6 +1354,8 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         <span>Valor com IPI</span>
         <strong>{product.priceLabel || money(product.price)}</strong>
       </div>
+
+      <div className="stock-line">{getStockLabel(product)}</div>
 
       <div className="product-controls">
         <QuantityStepper compact value={qty} onChange={onQtyChange} />
@@ -2213,6 +2243,8 @@ function App() {
                 <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
               </div>
 
+              <div className="modal-stock-line">{getStockLabel(selectedProduct)}</div>
+
               <div className="modal-actions">
                 <button type="button" className="ghost-button" onClick={() => toggleFavorite(selectedProduct)}>
                   {favoriteIds.has(selectedProduct.id) ? 'Remover favorito' : 'Favoritar'}
@@ -2241,6 +2273,10 @@ function App() {
                 <div className="detail-box">
                   <span>Aplicação</span>
                   <strong>{selectedProduct.application || selectedProduct.vehicle || '—'}</strong>
+                </div>
+                <div className="detail-box">
+                  <span>Estoque</span>
+                  <strong>{getStockQuantity(selectedProduct) ?? 'Consultar'}</strong>
                 </div>
               </div>
 
