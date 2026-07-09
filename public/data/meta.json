@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-07-08T14:14:49.005Z",
-  "productCount": 2173,
+  "generatedAt": "2026-07-09T20:01:46.212Z",
+  "productCount": 2127,
   "brands": [
     [
       "RETOV",
-      590
+      584
     ],
     [
       "RIDA",
-      400
+      398
     ],
     [
       "TYC",
-      658
+      625
     ],
     [
       "Z AUTO",
-      525
+      520
     ]
   ],
   "source": {
@@ -29,7 +29,7 @@
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438",
         "description": "CATÁLOGO RIDA",
         "pages": 42,
-        "productCount": 419
+        "productCount": 417
       },
       {
         "brand": "RETOV",
@@ -37,15 +37,15 @@
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436",
         "description": "CATÁLOGO RETOV",
         "pages": 62,
-        "productCount": 619
+        "productCount": 613
       },
       {
         "brand": "TYC",
         "catalogId": "1494",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494",
         "description": "CATÁLOGO TYC",
-        "pages": 48,
-        "productCount": 472
+        "pages": 66,
+        "productCount": 656
       },
       {
         "brand": "TYC",
@@ -60,8 +60,8 @@
         "catalogId": "1437",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437",
         "description": "CATÁLOGO ZATT",
-        "pages": 56,
-        "productCount": 551
+        "pages": 55,
+        "productCount": 546
       }
     ],
     "legacyFallback": {

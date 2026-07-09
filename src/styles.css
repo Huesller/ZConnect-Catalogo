@@ -4352,3 +4352,163 @@ body,
     min-height: 34px;
   }
 }
+
+
+.special-offer-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  margin: 0 0 14px;
+  border: 1px solid rgba(250, 204, 21, 0.34);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 4% 12%, rgba(250, 204, 21, 0.16), transparent 20rem),
+    radial-gradient(circle at 80% 0%, rgba(239, 35, 60, 0.22), transparent 24rem),
+    linear-gradient(135deg, rgba(69, 10, 10, 0.88), rgba(8, 22, 42, 0.96));
+  box-shadow: var(--shadow);
+}
+
+.special-offer-banner.expired {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.42), rgba(8, 22, 42, 0.96));
+}
+
+.special-offer-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #facc15, #ef233c, #991b1b);
+  box-shadow: 0 14px 34px rgba(250, 204, 21, 0.18), 0 12px 28px rgba(239, 35, 60, 0.20);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.special-offer-banner span {
+  display: block;
+  color: #fecaca;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.special-offer-banner strong {
+  display: block;
+  margin-top: 3px;
+  color: #fff;
+  font-size: clamp(18px, 2vw, 25px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.special-offer-banner p {
+  margin: 5px 0 0;
+  color: #e5e7eb;
+  font-size: 14px;
+}
+
+.company-pill button:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+@media (max-width: 760px) {
+  .special-offer-banner {
+    grid-template-columns: auto 1fr;
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .special-offer-banner .ghost-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .special-offer-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    font-size: 19px;
+  }
+
+  .special-offer-banner p {
+    font-size: 13px;
+  }
+}
+
+
+/* Link especial v2 — preço original riscado + preço exclusivo */
+.price-row-special {
+  align-items: flex-start;
+}
+
+.special-price-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  line-height: 1.08;
+}
+
+.special-price-stack del {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration-thickness: 2px;
+  opacity: 0.88;
+}
+
+.special-price-stack strong {
+  color: #f8fafc;
+}
+
+.special-price-stack small {
+  display: inline-flex;
+  margin-top: 2px;
+  padding: 3px 7px;
+  border: 1px solid rgba(250, 204, 21, 0.26);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.10);
+  color: #fde68a;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.modal-price-special {
+  align-items: flex-start;
+}
+
+.modal-special-price-stack {
+  align-items: flex-start;
+}
+
+.modal-special-price-stack del {
+  font-size: 0.95rem;
+}
+
+.modal-special-price-stack strong {
+  font-size: clamp(1.55rem, 4vw, 2.3rem);
+}
+
+.modal-special-price-stack small {
+  font-size: 0.76rem;
+}
+
+@media (max-width: 700px) {
+  .special-price-stack {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .price-row-special {
+    flex-direction: column;
+    gap: 4px;
+  }
+}

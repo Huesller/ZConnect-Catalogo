@@ -32,8 +32,200 @@ const ANONYMOUS_TOAST = 'Que pena, queríamos saber quem é você 😊';
 const COMPANY_BANNER_HIDDEN_UNTIL_KEY = 'zconnect:company-banner-hidden-until:v1';
 const COMPANY_BANNER_HIDE_MS = 7 * 24 * 60 * 60 * 1000;
 
+const SPECIAL_OFFER_QUERY_KEYS = {
+  token: 'o',
+  shortToken: 'z',
+  client: 'cliente',
+  discount: 'desconto',
+  factor: 'fator',
+  mode: 'tipo',
+  validity: 'validade',
+  expires: 'expira'
+};
+
 const ANALYTICS_ENDPOINT = import.meta.env.VITE_ZCONNECT_ANALYTICS_URL || '/api/analytics';
 const ANALYTICS_DIRECT_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
+
+
+function parseCompactOfferDate(value) {
+  const text = String(value || '').trim();
+  if (!/^\d{8}$/.test(text)) return null;
+
+  const year = Number(text.slice(0, 4));
+  const month = Number(text.slice(4, 6)) - 1;
+  const day = Number(text.slice(6, 8));
+  const date = new Date(year, month, day, 23, 59, 59, 999);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseOfferPercent(value) {
+  const normalized = String(value ?? '')
+    .trim()
+    .replace('p', '.')
+    .replace(',', '.')
+    .replace(/[^\d.-]/g, '');
+  const percent = Number(normalized);
+
+  return Number.isFinite(percent) ? Math.max(0, Math.min(95, percent)) : null;
+}
+
+function parseOfferFactor(value) {
+  const normalized = String(value ?? '')
+    .trim()
+    .replace(',', '.')
+    .replace(/[^\d.-]/g, '');
+  const factor = Number(normalized);
+
+  if (!Number.isFinite(factor)) return null;
+  return Math.max(0.05, Math.min(0.9999, factor));
+}
+
+function getOfferFactorFromDiscount(discount) {
+  const percent = parseOfferPercent(discount);
+  if (percent === null || percent <= 0) return null;
+  return Math.max(0.05, Math.min(0.9999, roundCurrency((100 - percent) / 100)));
+}
+
+function parseShortSpecialOfferToken(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+
+  const parts = text.split('~').map((part) => decodeURIComponent(part || '').trim());
+  if (parts.length < 5) return null;
+
+  const [seller, discountRaw, factorRaw, expiresRaw, ...clientParts] = parts;
+  const discount = parseOfferPercent(discountRaw);
+  let factor = null;
+
+  const numericFactor = Number(String(factorRaw || '').replace('p', '.').replace(',', '.'));
+  if (Number.isFinite(numericFactor)) {
+    factor = numericFactor > 1 ? parseOfferFactor(String(numericFactor / 100)) : parseOfferFactor(String(numericFactor));
+  }
+
+  return {
+    seller,
+    discount,
+    factor: factor ?? getOfferFactorFromDiscount(discount),
+    mode: 'discount',
+    expiresAt: parseCompactOfferDate(expiresRaw),
+    clientName: clientParts.join('~').trim()
+  };
+}
+
+function getSpecialOfferFromUrl() {
+  if (typeof window === 'undefined') return null;
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get(SPECIAL_OFFER_QUERY_KEYS.token);
+  const shortToken = params.get(SPECIAL_OFFER_QUERY_KEYS.shortToken);
+  const compactOffer = parseShortSpecialOfferToken(shortToken);
+  let seller = compactOffer?.seller || params.get('consultor') || '';
+  let discount = compactOffer?.discount ?? parseOfferPercent(params.get(SPECIAL_OFFER_QUERY_KEYS.discount));
+  let factor = compactOffer?.factor ?? parseOfferFactor(params.get(SPECIAL_OFFER_QUERY_KEYS.factor) || params.get('factor') || params.get('multiplicador'));
+  let mode = compactOffer?.mode || params.get(SPECIAL_OFFER_QUERY_KEYS.mode) || 'discount';
+  let expiresAt = compactOffer?.expiresAt || null;
+
+  if (!compactOffer && token) {
+    const parts = String(token).split('-');
+    if (parts.length >= 4) {
+      seller = seller || parts[0];
+      discount = parseOfferPercent(parts[1]);
+      mode = parts[2] === 'i' || parts[2] === 'increase' ? 'increase' : 'discount';
+      expiresAt = parseCompactOfferDate(parts[3]);
+    }
+  }
+
+  if (mode !== 'increase' && factor === null) {
+    factor = getOfferFactorFromDiscount(discount);
+  }
+
+  const expiresParam = params.get(SPECIAL_OFFER_QUERY_KEYS.expires);
+  if (expiresParam) {
+    const parsed = new Date(expiresParam);
+    if (!Number.isNaN(parsed.getTime())) expiresAt = parsed;
+  }
+
+  const validityDays = Number(params.get(SPECIAL_OFFER_QUERY_KEYS.validity) || 0);
+  if (!expiresAt && Number.isFinite(validityDays) && validityDays > 0) {
+    expiresAt = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000);
+  }
+
+  const clientName = String(compactOffer?.clientName || params.get(SPECIAL_OFFER_QUERY_KEYS.client) || '').trim();
+  const hasOffer = Boolean(shortToken || token || params.has(SPECIAL_OFFER_QUERY_KEYS.discount) || params.has(SPECIAL_OFFER_QUERY_KEYS.factor) || params.has('factor') || params.has('multiplicador') || clientName);
+  if (!hasOffer || !clientName || discount === null || discount <= 0) return null;
+
+  const expired = expiresAt ? Date.now() > expiresAt.getTime() : false;
+  const canonicalSeller = normalizeText(seller || 'huesller') || 'huesller';
+  const normalizedMode = mode === 'increase' ? 'increase' : 'discount';
+  const priceFactor = normalizedMode === 'increase'
+    ? Math.min(1.95, 1 + Number(discount || 0) / 100)
+    : (factor ?? getOfferFactorFromDiscount(discount));
+
+  if (normalizedMode !== 'increase' && (!priceFactor || priceFactor >= 1)) return null;
+
+  return {
+    active: !expired,
+    expired,
+    seller: canonicalSeller,
+    clientName,
+    discount,
+    factor: priceFactor,
+    mode: normalizedMode,
+    expiresAt: expiresAt ? expiresAt.toISOString() : '',
+    expiresLabel: expiresAt ? expiresAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '',
+    source: shortToken ? 'painel_comercial_short_token' : token ? 'painel_comercial_token' : 'url_param'
+  };
+}
+
+function getSpecialOfferAnalytics(offer) {
+  if (!offer) return {};
+
+  return {
+    specialOffer: true,
+    specialOfferActive: Boolean(offer.active),
+    specialOfferExpired: Boolean(offer.expired),
+    specialOfferClient: offer.clientName || '',
+    specialOfferSeller: offer.seller || '',
+    specialOfferMode: offer.mode || '',
+    specialOfferDiscount: offer.discount ?? '',
+    specialOfferFactor: offer.factor ?? '',
+    specialOfferExpiresAt: offer.expiresAt || '',
+    specialOfferSource: offer.source || ''
+  };
+}
+
+function applySpecialOfferPrice(product = {}, offer) {
+  if (!offer?.active) return product;
+
+  const currentCatalogPrice = Number(product.price ?? product.precoFinal ?? product.preco ?? 0);
+  if (!Number.isFinite(currentCatalogPrice) || currentCatalogPrice <= 0) return product;
+
+  const originalPrice = roundCurrency(currentCatalogPrice);
+  const originalPriceLabel = product.priceLabel || money(originalPrice);
+  const factor = offer.mode === 'increase'
+    ? Math.min(1.95, 1 + Number(offer.discount || 0) / 100)
+    : Number(offer.factor || getOfferFactorFromDiscount(offer.discount) || 1);
+  const safeFactor = offer.mode === 'increase'
+    ? Math.max(1.0001, factor)
+    : Math.max(0.05, Math.min(0.9999, factor));
+  const specialPrice = roundCurrency(originalPrice * safeFactor);
+
+  if (offer.mode !== 'increase' && specialPrice >= originalPrice) return product;
+
+  return {
+    ...product,
+    price: specialPrice,
+    priceLabel: money(specialPrice),
+    specialOffer: true,
+    specialOfferClient: offer.clientName,
+    specialOfferOriginalPrice: originalPrice,
+    specialOfferOriginalPriceLabel: originalPriceLabel,
+    pricePolicy: 'condicaoEspecial',
+    pricePolicyLabel: 'Condição especial',
+    priceMultiplier: safeFactor
+  };
+}
 
 function getStoredCompanyName() {
   try {
@@ -1098,9 +1290,9 @@ function getBusinessStatus() {
   return day >= 1 && day <= 5 && totalMinutes >= 8 * 60 && totalMinutes < 18 * 60;
 }
 
-function getConsultant(consultants) {
+function getConsultant(consultants, specialOffer = null) {
   const params = new URLSearchParams(window.location.search);
-  const requestedSlug = normalizeText(params.get('consultor') || 'huesller');
+  const requestedSlug = normalizeText(params.get('consultor') || specialOffer?.seller || 'huesller');
   const aliases = {
     ney: 'ney',
     ivoney: 'ney',
@@ -1350,9 +1542,17 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         </div>
       </button>
 
-      <div className="price-row">
+      <div className={product.specialOffer ? 'price-row price-row-special' : 'price-row'}>
         <span>Valor com IPI</span>
-        <strong>{product.priceLabel || money(product.price)}</strong>
+        {product.specialOffer ? (
+          <div className="special-price-stack">
+            <del>{product.specialOfferOriginalPriceLabel || money(product.specialOfferOriginalPrice)}</del>
+            <strong>{product.priceLabel || money(product.price)}</strong>
+            <small>Condição exclusiva</small>
+          </div>
+        ) : (
+          <strong>{product.priceLabel || money(product.price)}</strong>
+        )}
       </div>
 
       <div className="stock-line">{getStockLabel(product)}</div>
@@ -1417,6 +1617,38 @@ function Pagination({ page, totalPages, onChange }) {
   );
 }
 
+
+
+function SpecialOfferBanner({ offer, consultant }) {
+  if (!offer) return null;
+
+  if (offer.expired) {
+    return (
+      <section className="special-offer-banner expired" aria-label="Condição especial expirada">
+        <div className="special-offer-icon">⌛</div>
+        <div>
+          <span>Condição especial expirada</span>
+          <strong>Esta condição exclusiva não está mais válida.</strong>
+          <p>Fale com {consultant.name} para gerar uma nova condição comercial.</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="special-offer-banner" aria-label="Condição especial do cliente">
+      <div className="special-offer-icon">★</div>
+      <div>
+        <span>Condição especial gerada</span>
+        <strong>Oferta exclusiva para {offer.clientName}</strong>
+        <p>{offer.expiresLabel ? `Válida até ${offer.expiresLabel}. ` : ''}Os valores já foram personalizados para este atendimento.</p>
+      </div>
+      <button type="button" className="ghost-button small-button" onClick={() => openWhatsapp(consultant.phone)}>
+        Falar com {consultant.name}
+      </button>
+    </section>
+  );
+}
 
 function CompanyIdentificationBanner({ onIdentify, onClose }) {
   return (
@@ -1485,6 +1717,7 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
 }
 
 function App() {
+  const specialOffer = useMemo(() => getSpecialOfferFromUrl(), []);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [products, setProducts] = useState([]);
@@ -1506,16 +1739,16 @@ function App() {
   const [addedMap, setAddedMap] = usePersistentState(STORAGE_KEYS.added, {});
   const [cardQty, setCardQty] = useState({});
   const [cartOpen, setCartOpen] = useState(false);
-  const [companyName, setCompanyName] = useState(() => getStoredCompanyName());
-  const [companyDraft, setCompanyDraft] = useState(() => getStoredCompanyName());
+  const [companyName, setCompanyName] = useState(() => specialOffer?.active ? specialOffer.clientName : getStoredCompanyName());
+  const [companyDraft, setCompanyDraft] = useState(() => specialOffer?.active ? specialOffer.clientName : getStoredCompanyName());
   const [companyError, setCompanyError] = useState('');
   const [companyGateMinimized, setCompanyGateMinimized] = useState(false);
   const [companyBannerHiddenUntil, setCompanyBannerHiddenUntilState] = useState(() => getCompanyBannerHiddenUntil());
   const companyBannerViewSentRef = useRef(false);
-  const [catalogAccessGranted, setCatalogAccessGranted] = useState(() => Boolean(getStoredCompanyName()));
+  const [catalogAccessGranted, setCatalogAccessGranted] = useState(() => Boolean(specialOffer?.active || getStoredCompanyName()));
   const [toast, setToast] = useState(() => {
-    const storedCompany = getStoredCompanyName();
-    return storedCompany ? `Bem-vindo de volta, ${storedCompany}` : '';
+    const storedCompany = specialOffer?.active ? specialOffer.clientName : getStoredCompanyName();
+    return storedCompany ? `Bem-vindo, ${storedCompany}` : '';
   });
   const catalogLocked = !catalogAccessGranted;
   const showCompanyIdentificationBanner = !catalogLocked && !companyName && Date.now() >= companyBannerHiddenUntil;
@@ -1523,6 +1756,18 @@ function App() {
   useEffect(() => {
     document.title = CATALOG_TITLE;
   }, []);
+
+  useEffect(() => {
+    if (!specialOffer?.active) return;
+
+    saveCompanyName(specialOffer.clientName);
+    setCompanyName(specialOffer.clientName);
+    setCompanyDraft(specialOffer.clientName);
+    setCatalogAccessGranted(true);
+    setCompanyGateMinimized(false);
+    setCompanyError('');
+  }, [specialOffer]);
+
 
   useEffect(() => {
     let active = true;
@@ -1619,25 +1864,25 @@ function App() {
     setPage(1);
   }, [query, filter]);
 
-  const consultant = useMemo(() => getConsultant(consultants), [consultants]);
+  const consultant = useMemo(() => getConsultant(consultants, specialOffer), [consultants, specialOffer]);
   const online = useMemo(() => getBusinessStatus(), []);
-  const pricedProducts = useMemo(() => products.map((product) => applyConsultantPrice(product, consultant)), [consultant, products]);
+  const pricedProducts = useMemo(() => products.map((product) => applySpecialOfferPrice(applyConsultantPrice(product, consultant), specialOffer)), [consultant, products, specialOffer]);
   const productById = useMemo(() => new Map(pricedProducts.map((product) => [product.id, product])), [pricedProducts]);
   const selectedProduct = useMemo(() => {
     if (!selected) return null;
-    return productById.get(selected.id) || applyConsultantPrice(selected, consultant);
+    return productById.get(selected.id) || applySpecialOfferPrice(applyConsultantPrice(selected, consultant), specialOffer);
   }, [consultant, productById, selected]);
   const cartItems = useMemo(() => (
     cart.map((item) => ({
-      ...(productById.get(item.id) || applyConsultantPrice(item, consultant)),
+      ...(productById.get(item.id) || applySpecialOfferPrice(applyConsultantPrice(item, consultant), specialOffer)),
       qty: Math.max(1, Number(item.qty || 1))
     }))
   ), [cart, consultant, productById]);
   const favoriteProducts = useMemo(() => (
-    favorites.map((item) => productById.get(item.id) || applyConsultantPrice(item, consultant))
+    favorites.map((item) => productById.get(item.id) || applySpecialOfferPrice(applyConsultantPrice(item, consultant), specialOffer))
   ), [consultant, favorites, productById]);
   const recentProducts = useMemo(() => (
-    recent.map((item) => productById.get(item.id) || applyConsultantPrice(item, consultant))
+    recent.map((item) => productById.get(item.id) || applySpecialOfferPrice(applyConsultantPrice(item, consultant), specialOffer))
   ), [consultant, productById, recent]);
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.id)), [favorites]);
 
@@ -1702,9 +1947,10 @@ function App() {
     pageViewSentRef.current = true;
     trackEvent('page_view', {
       ...getConsultantAnalytics(consultant),
+      ...getSpecialOfferAnalytics(specialOffer),
       totalProducts: pricedProducts.length
     });
-  }, [catalogLocked, consultant, loading, pricedProducts.length]);
+  }, [catalogLocked, consultant, loading, pricedProducts.length, specialOffer]);
 
   useEffect(() => {
     const normalizedQuery = deferredQuery.trim();
@@ -1717,6 +1963,7 @@ function App() {
 
       trackEvent('search', {
         ...getConsultantAnalytics(consultant),
+        ...getSpecialOfferAnalytics(specialOffer),
         query: normalizedQuery,
         total: allFilteredProducts.length,
         resultsCount: allFilteredProducts.length,
@@ -1739,7 +1986,7 @@ function App() {
     }, 850);
 
     return () => window.clearTimeout(timeout);
-  }, [deferredQuery, filter, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, catalogLocked]);
+  }, [deferredQuery, filter, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, catalogLocked, specialOffer]);
 
   function scrollToCatalog() {
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1824,6 +2071,7 @@ function App() {
     rememberProduct(product);
     trackEvent('product_open', {
       ...getConsultantAnalytics(consultant, product),
+      ...getSpecialOfferAnalytics(specialOffer),
       ...getProductAnalytics(product)
     });
     setSelected(product);
@@ -1882,6 +2130,7 @@ function App() {
     if (item) {
       trackEvent('remove_from_cart', {
         ...getConsultantAnalytics(consultant, item),
+        ...getSpecialOfferAnalytics(specialOffer),
         quantity: item.qty || 1,
         total: Number(item.price || 0) * Number(item.qty || 1),
         ...getProductAnalytics(item)
@@ -1894,6 +2143,7 @@ function App() {
     if (cartItems.length) {
       trackEvent('clear_cart', {
         ...getConsultantAnalytics(consultant),
+        ...getSpecialOfferAnalytics(specialOffer),
         itemsCount: cartCount,
         cartTotal: subtotal,
         quantity: cartCount,
@@ -1909,6 +2159,7 @@ function App() {
 
     trackEvent('busca_sem_resultado_lead', {
       ...getConsultantAnalytics(consultant),
+      ...getSpecialOfferAnalytics(specialOffer),
       query: term,
       resultType: fallbackSuggestions.length ? 'suggestions' : 'empty',
       suggestions: fallbackSuggestions.length,
@@ -1931,6 +2182,7 @@ function App() {
 
     trackEvent('whatsapp_quote', {
       ...getConsultantAnalytics(consultant),
+      ...getSpecialOfferAnalytics(specialOffer),
       itemsCount: cartCount,
       cartTotal: subtotal,
       products,
@@ -1963,8 +2215,8 @@ function App() {
 
         <div className="header-side">
           <div className="company-pill">
-            <span>{companyName ? `É muito bom ter você aqui, ${companyName}` : 'Acesso sem identificação'}</span>
-            <button type="button" onClick={changeCompany}>{companyName ? 'Trocar empresa' : 'Informar empresa'}</button>
+            <span>{specialOffer?.active ? `Condição especial para ${companyName}` : companyName ? `É muito bom ter você aqui, ${companyName}` : 'Acesso sem identificação'}</span>
+            <button type="button" onClick={changeCompany} disabled={specialOffer?.active}>{specialOffer?.active ? 'Link especial' : companyName ? 'Trocar empresa' : 'Informar empresa'}</button>
           </div>
 
           <button type="button" className="consultant-pill" onClick={() => openWhatsapp(consultant.phone)}>
@@ -2005,6 +2257,8 @@ function App() {
           <span className="hero-art-red-glow" />
         </div>
       </section>
+
+      <SpecialOfferBanner offer={specialOffer} consultant={consultant} />
 
       {showCompanyIdentificationBanner ? (
         <CompanyIdentificationBanner
@@ -2238,9 +2492,17 @@ function App() {
                 <h3>{selectedProduct.name}</h3>
               </div>
 
-              <div className="modal-price">
+              <div className={selectedProduct.specialOffer ? 'modal-price modal-price-special' : 'modal-price'}>
                 <span>Valor com IPI</span>
-                <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
+                {selectedProduct.specialOffer ? (
+                  <div className="special-price-stack modal-special-price-stack">
+                    <del>{selectedProduct.specialOfferOriginalPriceLabel || money(selectedProduct.specialOfferOriginalPrice)}</del>
+                    <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
+                    <small>Condição exclusiva para {selectedProduct.specialOfferClient}</small>
+                  </div>
+                ) : (
+                  <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
+                )}
               </div>
 
               <div className="modal-stock-line">{getStockLabel(selectedProduct)}</div>
