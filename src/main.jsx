@@ -2599,11 +2599,11 @@ function App() {
         <div className="footer-info">
           <span>
             <strong>Site</strong>
-            <small>zautomotiva.com.br</small>
+            <small>www.zautomotiva.com.br</small>
           </span>
           <span>
             <strong>Telefone</strong>
-            <small>(47) 3305-4400</small>
+            <small>(47) 3305-4401</small>
           </span>
           <span>
             <strong>Pedido</strong>
