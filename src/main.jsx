@@ -198,24 +198,25 @@ function getSpecialOfferAnalytics(offer) {
 function applySpecialOfferPrice(product = {}, offer) {
   if (!offer?.active) return product;
 
-  const currentCatalogPrice = getPriceWithIpi(product);
-  if (!Number.isFinite(currentCatalogPrice) || currentCatalogPrice <= 0) return product;
+  const rawWithIpi = getRawPriceWithIpi(product);
+  if (!Number.isFinite(rawWithIpi) || rawWithIpi <= 0) return product;
 
-  const currentCatalogPriceWithoutIpi = getPriceWithoutIpi(product);
-  const originalPrice = roundCurrency(currentCatalogPrice);
-  const originalPriceWithoutIpi = currentCatalogPriceWithoutIpi ? roundCurrency(currentCatalogPriceWithoutIpi) : null;
+  const rawWithoutIpi = getRawPriceWithoutIpi(product);
+  const baseDiscount = toPolicyNumber(product.pricePolicy) ?? DEFAULT_COMMERCIAL_POLICY;
+  const extraDiscount = offer.mode === 'increase' ? 0 : (toPolicyNumber(offer.discount) ?? 0);
+  const finalDiscount = Math.max(0, Math.min(95, baseDiscount + extraDiscount));
+  const finalMultiplier = roundCurrency((100 - finalDiscount) / 100);
+
+  const originalPrice = getPriceWithIpi(product);
+  const originalPriceWithoutIpi = getPriceWithoutIpi(product);
   const originalPriceLabel = product.priceLabel || product.priceWithIpiLabel || product.precoComIpiLabel || money(originalPrice);
   const originalPriceWithoutIpiLabel = product.priceWithoutIpiLabel || product.precoSemIpiLabel || (originalPriceWithoutIpi ? money(originalPriceWithoutIpi) : '');
-  const factor = offer.mode === 'increase'
-    ? Math.min(1.95, 1 + Number(offer.discount || 0) / 100)
-    : Number(offer.factor || getOfferFactorFromDiscount(offer.discount) || 1);
-  const safeFactor = offer.mode === 'increase'
-    ? Math.max(1.0001, factor)
-    : Math.max(0.05, Math.min(0.9999, factor));
-  const specialPrice = roundCurrency(originalPrice * safeFactor);
-  const specialPriceWithoutIpi = originalPriceWithoutIpi ? roundCurrency(originalPriceWithoutIpi * safeFactor) : null;
 
-  if (offer.mode !== 'increase' && specialPrice >= originalPrice) return product;
+  const specialPrice = roundCurrency(rawWithIpi * finalMultiplier);
+  const specialPriceWithoutIpi = rawWithoutIpi ? roundCurrency(rawWithoutIpi * finalMultiplier) : null;
+
+  if (specialPrice <= 0) return product;
+  if (offer.mode !== 'increase' && originalPrice && specialPrice >= originalPrice) return product;
 
   return {
     ...product,
@@ -225,21 +226,28 @@ function applySpecialOfferPrice(product = {}, offer) {
     priceLabel: money(specialPrice),
     priceWithIpiLabel: money(specialPrice),
     precoComIpiLabel: money(specialPrice),
+    rawPriceWithIpi: rawWithIpi,
+    rawPriceWithoutIpi: rawWithoutIpi || 0,
     ...(specialPriceWithoutIpi ? {
       priceWithoutIpi: specialPriceWithoutIpi,
       precoSemIpi: specialPriceWithoutIpi,
       priceWithoutIpiLabel: money(specialPriceWithoutIpi),
       precoSemIpiLabel: money(specialPriceWithoutIpi),
-      specialOfferOriginalPriceWithoutIpi: originalPriceWithoutIpi,
-      specialOfferOriginalPriceWithoutIpiLabel: originalPriceWithoutIpiLabel
-    } : {}),
+      specialOfferOriginalPriceWithoutIpi: originalPriceWithoutIpi || roundCurrency(rawWithoutIpi * getPolicyMultiplier(baseDiscount)),
+      specialOfferOriginalPriceWithoutIpiLabel: originalPriceWithoutIpiLabel || money(roundCurrency(rawWithoutIpi * getPolicyMultiplier(baseDiscount)))
+    } : {
+      priceWithoutIpi: 0,
+      precoSemIpi: 0,
+      priceWithoutIpiLabel: '',
+      precoSemIpiLabel: ''
+    }),
     specialOffer: true,
     specialOfferClient: offer.clientName,
     specialOfferOriginalPrice: originalPrice,
     specialOfferOriginalPriceLabel: originalPriceLabel,
-    pricePolicy: 'condicaoEspecial',
+    pricePolicy: finalDiscount,
     pricePolicyLabel: 'Condição especial',
-    priceMultiplier: safeFactor
+    priceMultiplier: finalMultiplier
   };
 }
 
@@ -396,14 +404,18 @@ function getPriceWithIpi(product = {}) {
 
 function getRawPriceWithIpi(product = {}) {
   return parseCatalogNumber(
-    product.priceWithIpi
+    product.rawPriceWithIpi
+    ?? product.precoCheio
+    ?? product.precoZetta
+    ?? product.precoBase
+    ?? product.priceBase
+    ?? product.basePrice
+    ?? product.originalPriceWithIpi
+    ?? product.priceWithIpi
     ?? product.precoComIpi
     ?? product.valorComIpi
     ?? product.price
     ?? product.preco
-    ?? product.precoZetta
-    ?? product.precoCheio
-    ?? product.basePrice
   );
 }
 
@@ -432,7 +444,9 @@ function getPriceWithoutIpi(product = {}) {
 
 function getRawPriceWithoutIpi(product = {}) {
   const value = parseCatalogNumber(
-    product.priceWithoutIpi
+    product.rawPriceWithoutIpi
+    ?? product.originalPriceWithoutIpi
+    ?? product.priceWithoutIpi
     ?? product.precoSemIpi
     ?? product.valorSemIpi
     ?? product.priceNoIpi

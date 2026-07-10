@@ -339,6 +339,10 @@ function formatMoney(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function roundMoney(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
 function absoluteZettaUrl(value) {
   const text = cleanText(value);
   if (!text) return '';
@@ -369,22 +373,24 @@ function sanitizeZettaProduct(item, context, config) {
   const fabCode = cleanText(details.codFabricacao || '');
   const manufacturer = cleanText(details.marca || '');
   const priceWithIpi = parseCurrency(details.valorTotal);
-  const priceWithoutIpi = firstValidCurrencyFrom(details, [
+  const ipiValue = parseCurrency(details.valorIpi);
+  const calculatedPriceWithoutIpi = priceWithIpi && ipiValue && ipiValue > 0
+    ? roundMoney(priceWithIpi - ipiValue)
+    : 0;
+  const explicitPriceWithoutIpi = firstValidCurrencyFrom(details, [
     'valorSemIpi',
     'valorSemIPI',
-    'valorSemIPIIncluso',
     'valorUnitarioSemIpi',
     'valorUnitarioSemIPI',
     'precoSemIpi',
     'precoSemIPI',
     'precoUnitarioSemIpi',
     'precoUnitarioSemIPI',
-    'valorUnitario',
-    'valor',
-    'preco',
-    'precoUnitario',
     'valorLiquido'
-  ]) || priceWithIpi;
+  ]);
+  const priceWithoutIpi = explicitPriceWithoutIpi && Math.abs(explicitPriceWithoutIpi - priceWithIpi) >= 0.01
+    ? explicitPriceWithoutIpi
+    : calculatedPriceWithoutIpi;
   const price = priceWithIpi;
 
   if (!priceWithIpi || priceWithIpi <= 0) {
@@ -409,6 +415,10 @@ function sanitizeZettaProduct(item, context, config) {
     price,
     priceWithIpi,
     priceWithoutIpi,
+    rawPriceWithIpi: priceWithIpi,
+    rawPriceWithoutIpi: priceWithoutIpi,
+    valorIpi: ipiValue || 0,
+    percentualIpi: parseCurrency(details.percentualIpi) || 0,
     precoComIpi: priceWithIpi,
     precoSemIpi: priceWithoutIpi,
     priceWithIpiLabel: formatMoney(priceWithIpi),
@@ -553,7 +563,9 @@ function sanitizeLegacyProduct(item, index, config) {
     price,
     priceWithIpi,
     priceWithoutIpi,
-    precoComIpi: priceWithIpi,
+    rawPriceWithIpi: priceWithIpi,
+    rawPriceWithoutIpi: priceWithoutIpi,
+        precoComIpi: priceWithIpi,
     precoSemIpi: priceWithoutIpi,
     priceWithIpiLabel: formatMoney(priceWithIpi),
     priceWithoutIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
