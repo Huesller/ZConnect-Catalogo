@@ -4512,3 +4512,158 @@ body,
     gap: 4px;
   }
 }
+
+
+/* Preços sem/com IPI — layout compacto comercial */
+.catalog-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.price-box {
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.24);
+}
+
+.price-line {
+  display: grid;
+  grid-template-columns: minmax(58px, 0.86fr) minmax(0, 1.14fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.price-line > span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 760;
+  line-height: 1.08;
+}
+
+.price-line > strong,
+.price-values > strong {
+  color: #e2e8f0;
+  font-size: 0.92rem;
+  font-weight: 950;
+  line-height: 1.04;
+  text-align: right;
+}
+
+.price-line-featured {
+  padding-top: 7px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.price-line-featured > span {
+  color: #fecaca;
+  font-weight: 920;
+}
+
+.price-line-featured > strong,
+.price-line-featured .price-values > strong {
+  color: #ffffff;
+  font-size: 1.08rem;
+  letter-spacing: -0.03em;
+}
+
+.price-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.price-values del {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-decoration-thickness: 2px;
+  opacity: 0.88;
+}
+
+.price-values small {
+  display: inline-flex;
+  margin-top: 2px;
+  padding: 3px 7px;
+  border: 1px solid rgba(250, 204, 21, 0.26);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.10);
+  color: #fde68a;
+  font-size: 0.62rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.price-consult {
+  color: #cbd5e1 !important;
+  font-size: 0.8rem !important;
+}
+
+.modal-price.price-box {
+  margin-top: 14px;
+  padding: 14px;
+  gap: 10px;
+  border-color: rgba(239, 68, 68, 0.22);
+  background: rgba(2, 6, 23, 0.34);
+}
+
+.modal-price .price-line {
+  grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr);
+}
+
+.modal-price .price-line > span {
+  font-size: 0.82rem;
+}
+
+.modal-price .price-line > strong,
+.modal-price .price-values > strong {
+  font-size: 1.24rem;
+}
+
+.modal-price .price-line-featured > strong,
+.modal-price .price-line-featured .price-values > strong {
+  font-size: 1.62rem;
+}
+
+@media (max-width: 1320px) {
+  .catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .catalog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .price-line {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .price-line > strong,
+  .price-values {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .modal-price .price-line {
+    grid-template-columns: 1fr;
+  }
+}

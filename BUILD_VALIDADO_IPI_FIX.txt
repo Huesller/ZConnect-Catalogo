@@ -1,0 +1,1 @@
+Validado com npm install e npm run build. Correção: adicionadas funções getPriceWithIpi/getPriceWithoutIpi e componente PriceDisplay para evitar tela escura após carregar produtos.

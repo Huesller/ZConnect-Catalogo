@@ -269,6 +269,17 @@ function parseCurrency(value) {
   return Number.isFinite(parsed) ? Math.round(parsed * 100) / 100 : null;
 }
 
+
+function firstValidCurrencyFrom(source, keys) {
+  for (const key of keys) {
+    if (!source || !Object.prototype.hasOwnProperty.call(source, key)) continue;
+    const value = parseCurrency(source[key]);
+    if (value && value > 0) return value;
+  }
+
+  return null;
+}
+
 function parseStockQuantity(value) {
   if (value === null || value === undefined || value === '') return null;
 
@@ -357,9 +368,26 @@ function sanitizeZettaProduct(item, context, config) {
   const name = assertProductField(item.descricao, 'Descricao', context);
   const fabCode = cleanText(details.codFabricacao || '');
   const manufacturer = cleanText(details.marca || '');
-  const price = parseCurrency(details.valorTotal);
+  const priceWithIpi = parseCurrency(details.valorTotal);
+  const priceWithoutIpi = firstValidCurrencyFrom(details, [
+    'valorSemIpi',
+    'valorSemIPI',
+    'valorSemIPIIncluso',
+    'valorUnitarioSemIpi',
+    'valorUnitarioSemIPI',
+    'precoSemIpi',
+    'precoSemIPI',
+    'precoUnitarioSemIpi',
+    'precoUnitarioSemIPI',
+    'valorUnitario',
+    'valor',
+    'preco',
+    'precoUnitario',
+    'valorLiquido'
+  ]) || priceWithIpi;
+  const price = priceWithIpi;
 
-  if (!price || price <= 0) {
+  if (!priceWithIpi || priceWithIpi <= 0) {
     throw new Error(`Valor com IPI invalido para ${code} em ${context.url} pagina ${context.page}`);
   }
 
@@ -379,6 +407,14 @@ function sanitizeZettaProduct(item, context, config) {
     brand: context.brand,
     displayBrand: context.brand,
     price,
+    priceWithIpi,
+    priceWithoutIpi,
+    precoComIpi: priceWithIpi,
+    precoSemIpi: priceWithoutIpi,
+    priceWithIpiLabel: formatMoney(priceWithIpi),
+    priceWithoutIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
+    precoComIpiLabel: formatMoney(priceWithIpi),
+    precoSemIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
     basePrice: price,
     priceBase: price,
     precoBase: price,
@@ -497,7 +533,9 @@ function sanitizeLegacyProduct(item, index, config) {
   const description = cleanText(item.desc || item.nome || '');
   const manufacturer = cleanText(item.marca || '');
   const image = cleanText(item.imgSrc || '');
-  const price = Number(item.precoNum || 0);
+  const price = Number(item.precoNum || item.precoComIpiNum || item.precoComIpi || 0);
+  const priceWithIpi = price;
+  const priceWithoutIpi = Number(item.precoSemIpiNum || item.precoSemIpi || item.precoNormalNum || item.valorSemIpi || 0) || priceWithIpi;
   const vehicle = inferVehicle(name, manufacturer);
   const application = inferApplication(name);
   const commercialPolicy = config.commercialPolicy;
@@ -512,6 +550,14 @@ function sanitizeLegacyProduct(item, index, config) {
     brand,
     displayBrand: brand,
     price,
+    priceWithIpi,
+    priceWithoutIpi,
+    precoComIpi: priceWithIpi,
+    precoSemIpi: priceWithoutIpi,
+    priceWithIpiLabel: formatMoney(priceWithIpi),
+    priceWithoutIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
+    precoComIpiLabel: formatMoney(priceWithIpi),
+    precoSemIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
     basePrice: price,
     priceBase: price,
     precoBase: price,

@@ -198,11 +198,14 @@ function getSpecialOfferAnalytics(offer) {
 function applySpecialOfferPrice(product = {}, offer) {
   if (!offer?.active) return product;
 
-  const currentCatalogPrice = Number(product.price ?? product.precoFinal ?? product.preco ?? 0);
+  const currentCatalogPrice = getPriceWithIpi(product);
   if (!Number.isFinite(currentCatalogPrice) || currentCatalogPrice <= 0) return product;
 
+  const currentCatalogPriceWithoutIpi = getPriceWithoutIpi(product);
   const originalPrice = roundCurrency(currentCatalogPrice);
-  const originalPriceLabel = product.priceLabel || money(originalPrice);
+  const originalPriceWithoutIpi = currentCatalogPriceWithoutIpi ? roundCurrency(currentCatalogPriceWithoutIpi) : null;
+  const originalPriceLabel = product.priceLabel || product.priceWithIpiLabel || product.precoComIpiLabel || money(originalPrice);
+  const originalPriceWithoutIpiLabel = product.priceWithoutIpiLabel || product.precoSemIpiLabel || (originalPriceWithoutIpi ? money(originalPriceWithoutIpi) : '');
   const factor = offer.mode === 'increase'
     ? Math.min(1.95, 1 + Number(offer.discount || 0) / 100)
     : Number(offer.factor || getOfferFactorFromDiscount(offer.discount) || 1);
@@ -210,13 +213,26 @@ function applySpecialOfferPrice(product = {}, offer) {
     ? Math.max(1.0001, factor)
     : Math.max(0.05, Math.min(0.9999, factor));
   const specialPrice = roundCurrency(originalPrice * safeFactor);
+  const specialPriceWithoutIpi = originalPriceWithoutIpi ? roundCurrency(originalPriceWithoutIpi * safeFactor) : null;
 
   if (offer.mode !== 'increase' && specialPrice >= originalPrice) return product;
 
   return {
     ...product,
     price: specialPrice,
+    priceWithIpi: specialPrice,
+    precoComIpi: specialPrice,
     priceLabel: money(specialPrice),
+    priceWithIpiLabel: money(specialPrice),
+    precoComIpiLabel: money(specialPrice),
+    ...(specialPriceWithoutIpi ? {
+      priceWithoutIpi: specialPriceWithoutIpi,
+      precoSemIpi: specialPriceWithoutIpi,
+      priceWithoutIpiLabel: money(specialPriceWithoutIpi),
+      precoSemIpiLabel: money(specialPriceWithoutIpi),
+      specialOfferOriginalPriceWithoutIpi: originalPriceWithoutIpi,
+      specialOfferOriginalPriceWithoutIpiLabel: originalPriceWithoutIpiLabel
+    } : {}),
     specialOffer: true,
     specialOfferClient: offer.clientName,
     specialOfferOriginalPrice: originalPrice,
@@ -340,6 +356,52 @@ function getZettaBasePrice(product = {}) {
     ?? product.basePrice
     ?? product.price
     ?? 0
+  );
+}
+
+function parseCatalogNumber(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (value === null || value === undefined || value === '') return 0;
+
+  const text = String(value)
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/^R\$/i, '');
+
+  if (!text) return 0;
+
+  const normalized = text.includes(',')
+    ? text.replace(/\./g, '').replace(',', '.')
+    : text;
+
+  const number = Number(normalized.replace(/[^\d.-]/g, ''));
+  return Number.isFinite(number) ? number : 0;
+}
+
+function getPriceWithIpi(product = {}) {
+  return parseCatalogNumber(
+    product.priceWithIpi
+    ?? product.precoComIpi
+    ?? product.valorComIpi
+    ?? product.price
+    ?? product.preco
+    ?? product.precoZetta
+    ?? product.precoCheio
+    ?? product.basePrice
+  );
+}
+
+function getPriceWithoutIpi(product = {}) {
+  return parseCatalogNumber(
+    product.priceWithoutIpi
+    ?? product.precoSemIpi
+    ?? product.valorSemIpi
+    ?? product.priceNoIpi
+    ?? product.precoSemIPI
+    ?? product.semIpi
   );
 }
 
@@ -1518,6 +1580,66 @@ function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite 
   );
 }
 
+function PriceDisplay({ product, variant = 'card' }) {
+  const priceWithIpi = getPriceWithIpi(product);
+  const priceWithoutIpi = getPriceWithoutIpi(product);
+  const hasPriceWithIpi = Number.isFinite(priceWithIpi) && priceWithIpi > 0;
+  const hasPriceWithoutIpi = Number.isFinite(priceWithoutIpi) && priceWithoutIpi > 0;
+  const isSpecial = Boolean(product?.specialOffer);
+
+  const originalWithIpiLabel = product.specialOfferOriginalPriceLabel
+    || (product.specialOfferOriginalPrice ? money(product.specialOfferOriginalPrice) : '');
+
+  const originalWithoutIpiLabel = product.specialOfferOriginalPriceWithoutIpiLabel
+    || (product.specialOfferOriginalPriceWithoutIpi ? money(product.specialOfferOriginalPriceWithoutIpi) : '');
+
+  const priceWithIpiLabel = product.priceWithIpiLabel
+    || product.precoComIpiLabel
+    || product.priceLabel
+    || (hasPriceWithIpi ? money(priceWithIpi) : '');
+
+  const priceWithoutIpiLabel = product.priceWithoutIpiLabel
+    || product.precoSemIpiLabel
+    || (hasPriceWithoutIpi ? money(priceWithoutIpi) : '');
+
+  if (!hasPriceWithIpi && !hasPriceWithoutIpi) {
+    return (
+      <div className={variant === 'modal' ? 'modal-price price-box' : 'price-box'}>
+        <div className="price-line">
+          <span>Preço</span>
+          <strong className="price-consult">Consultar</strong>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={variant === 'modal' ? 'modal-price price-box' : 'price-box'}>
+      {hasPriceWithoutIpi ? (
+        <div className="price-line">
+          <span>Valor sem IPI</span>
+          <div className="price-values">
+            {isSpecial && originalWithoutIpiLabel ? <del>{originalWithoutIpiLabel}</del> : null}
+            <strong>{priceWithoutIpiLabel}</strong>
+          </div>
+        </div>
+      ) : null}
+
+      {hasPriceWithIpi ? (
+        <div className={hasPriceWithoutIpi ? 'price-line price-line-featured' : 'price-line price-line-featured'}>
+          <span>Valor com IPI</span>
+          <div className="price-values">
+            {isSpecial && originalWithIpiLabel ? <del>{originalWithIpiLabel}</del> : null}
+            <strong>{priceWithIpiLabel}</strong>
+            {isSpecial ? <small>Condição exclusiva</small> : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+
 function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, onToggleFavorite }) {
   return (
     <article className="product-card">
@@ -1542,18 +1664,7 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         </div>
       </button>
 
-      <div className={product.specialOffer ? 'price-row price-row-special' : 'price-row'}>
-        <span>Valor com IPI</span>
-        {product.specialOffer ? (
-          <div className="special-price-stack">
-            <del>{product.specialOfferOriginalPriceLabel || money(product.specialOfferOriginalPrice)}</del>
-            <strong>{product.priceLabel || money(product.price)}</strong>
-            <small>Condição exclusiva</small>
-          </div>
-        ) : (
-          <strong>{product.priceLabel || money(product.price)}</strong>
-        )}
-      </div>
+      <PriceDisplay product={product} />
 
       <div className="stock-line">{getStockLabel(product)}</div>
 
@@ -2492,18 +2603,7 @@ function App() {
                 <h3>{selectedProduct.name}</h3>
               </div>
 
-              <div className={selectedProduct.specialOffer ? 'modal-price modal-price-special' : 'modal-price'}>
-                <span>Valor com IPI</span>
-                {selectedProduct.specialOffer ? (
-                  <div className="special-price-stack modal-special-price-stack">
-                    <del>{selectedProduct.specialOfferOriginalPriceLabel || money(selectedProduct.specialOfferOriginalPrice)}</del>
-                    <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
-                    <small>Condição exclusiva para {selectedProduct.specialOfferClient}</small>
-                  </div>
-                ) : (
-                  <strong>{selectedProduct.priceLabel || money(selectedProduct.price)}</strong>
-                )}
-              </div>
+              <PriceDisplay product={selectedProduct} variant="modal" />
 
               <div className="modal-stock-line">{getStockLabel(selectedProduct)}</div>
 
