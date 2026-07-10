@@ -533,9 +533,10 @@ function sanitizeLegacyProduct(item, index, config) {
   const description = cleanText(item.desc || item.nome || '');
   const manufacturer = cleanText(item.marca || '');
   const image = cleanText(item.imgSrc || '');
-  const price = Number(item.precoNum || item.precoComIpiNum || item.precoComIpi || 0);
-  const priceWithIpi = price;
-  const priceWithoutIpi = Number(item.precoSemIpiNum || item.precoSemIpi || item.precoNormalNum || item.valorSemIpi || 0) || priceWithIpi;
+  const priceWithIpi = Number(item.precoComIpiNum || item.precoComIpi || item.precoNum || 0);
+  const rawPriceWithoutIpi = Number(item.precoSemIpiNum || item.precoSemIpi || item.precoNormalNum || item.valorSemIpi || item.valorNormal || 0);
+  const priceWithoutIpi = rawPriceWithoutIpi > 0 && Math.abs(rawPriceWithoutIpi - priceWithIpi) >= 0.01 ? rawPriceWithoutIpi : 0;
+  const price = priceWithIpi;
   const vehicle = inferVehicle(name, manufacturer);
   const application = inferApplication(name);
   const commercialPolicy = config.commercialPolicy;

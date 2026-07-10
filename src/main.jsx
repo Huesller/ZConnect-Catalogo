@@ -383,6 +383,19 @@ function parseCatalogNumber(value) {
 
 function getPriceWithIpi(product = {}) {
   return parseCatalogNumber(
+    product.price
+    ?? product.priceWithIpi
+    ?? product.precoComIpi
+    ?? product.valorComIpi
+    ?? product.preco
+    ?? product.precoZetta
+    ?? product.precoCheio
+    ?? product.basePrice
+  );
+}
+
+function getRawPriceWithIpi(product = {}) {
+  return parseCatalogNumber(
     product.priceWithIpi
     ?? product.precoComIpi
     ?? product.valorComIpi
@@ -395,7 +408,7 @@ function getPriceWithIpi(product = {}) {
 }
 
 function getPriceWithoutIpi(product = {}) {
-  return parseCatalogNumber(
+  const value = parseCatalogNumber(
     product.priceWithoutIpi
     ?? product.precoSemIpi
     ?? product.valorSemIpi
@@ -403,13 +416,46 @@ function getPriceWithoutIpi(product = {}) {
     ?? product.precoSemIPI
     ?? product.semIpi
   );
+
+  const withIpi = parseCatalogNumber(
+    product.price
+    ?? product.priceWithIpi
+    ?? product.precoComIpi
+    ?? product.valorComIpi
+  );
+
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  if (Number.isFinite(withIpi) && withIpi > 0 && Math.abs(value - withIpi) < 0.01) return 0;
+
+  return value;
+}
+
+function getRawPriceWithoutIpi(product = {}) {
+  const value = parseCatalogNumber(
+    product.priceWithoutIpi
+    ?? product.precoSemIpi
+    ?? product.valorSemIpi
+    ?? product.priceNoIpi
+    ?? product.precoSemIPI
+    ?? product.semIpi
+  );
+
+  const rawWithIpi = getRawPriceWithIpi(product);
+
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  if (Number.isFinite(rawWithIpi) && rawWithIpi > 0 && Math.abs(value - rawWithIpi) < 0.01) return 0;
+
+  return value;
 }
 
 function applyConsultantPrice(product = {}, consultant = {}) {
   const basePrice = getZettaBasePrice(product);
+  const rawWithIpi = getRawPriceWithIpi(product) || basePrice;
+  const rawWithoutIpi = getRawPriceWithoutIpi(product);
   const pricePolicy = getConsultantTargetPolicy(consultant);
   const priceMultiplier = getPolicyMultiplier(pricePolicy);
-  const price = roundCurrency(basePrice * priceMultiplier);
+  const price = roundCurrency(rawWithIpi * priceMultiplier);
+  const priceWithoutIpi = rawWithoutIpi ? roundCurrency(rawWithoutIpi * priceMultiplier) : 0;
   const basePriceLabel = product.basePriceLabel || product.precoZettaLabel || product.precoCheioLabel || product.priceLabel || money(basePrice);
 
   return {
@@ -424,7 +470,22 @@ function applyConsultantPrice(product = {}, consultant = {}) {
     precoZettaLabel: product.precoZettaLabel || basePriceLabel,
     precoCheioLabel: product.precoCheioLabel || basePriceLabel,
     price,
+    priceWithIpi: price,
+    precoComIpi: price,
     priceLabel: money(price),
+    priceWithIpiLabel: money(price),
+    precoComIpiLabel: money(price),
+    ...(priceWithoutIpi ? {
+      priceWithoutIpi,
+      precoSemIpi: priceWithoutIpi,
+      priceWithoutIpiLabel: money(priceWithoutIpi),
+      precoSemIpiLabel: money(priceWithoutIpi)
+    } : {
+      priceWithoutIpi: 0,
+      precoSemIpi: 0,
+      priceWithoutIpiLabel: '',
+      precoSemIpiLabel: ''
+    }),
     pricePolicy,
     pricePolicyLabel: getPricePolicyLabel(pricePolicy),
     priceMultiplier
