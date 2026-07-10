@@ -2585,14 +2585,14 @@ function App() {
 
       <section className="hero-panel hero-panel-v5">
         <div className="hero-copy">
-          <span className="eyebrow">Linha de colisão</span>
-          <h1>Catálogo premium para distribuidores e autopeças.</h1>
-          <p>Encontre acessórios, faróis, grades e para-choques em segundos. Monte o pedido e finalize com o consultor pelo WhatsApp.</p>
+          <span className="eyebrow">Catálogo comercial</span>
+          <h1>Busca rápida para peças automotivas.</h1>
+          <p>Produtos atualizados, estoque visível e pedido direto com o consultor.</p>
 
-          <div className="hero-actions">
-            <button type="button" className="primary-button" onClick={scrollToCatalog}>Buscar peças agora</button>
+          <div className="hero-actions hero-actions-compact">
+            <button type="button" className="primary-button" onClick={scrollToCatalog}>🔍 Buscar</button>
             <button type="button" className="ghost-button" onClick={() => openWhatsapp(consultant.phone)}>
-              Falar com {consultant.name}
+              💬 WhatsApp
             </button>
           </div>
         </div>
@@ -2616,7 +2616,7 @@ function App() {
       <section className="search-panel" id="catalogo">
         <div className="search-head">
           <div>
-            <span className="eyebrow">Catálogo</span>
+            <span className="eyebrow">Busca principal</span>
             <h2>Encontre a peça certa</h2>
           </div>
         </div>
