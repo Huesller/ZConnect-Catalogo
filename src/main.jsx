@@ -539,7 +539,9 @@ function getProductAnalytics(product = {}) {
     displayedPrice: price,
     displayedPriceLabel: product.priceLabel || money(price),
     pricePolicy: product.pricePolicy ?? product.commercialPolicy ?? '',
-    pricePolicyLabel: product.pricePolicyLabel || (product.pricePolicy ? getPricePolicyLabel(product.pricePolicy) : '')
+    pricePolicyLabel: product.pricePolicyLabel || (product.pricePolicy ? getPricePolicyLabel(product.pricePolicy) : ''),
+    stockQty: getStockQuantity(product),
+    stockStatus: getStockStatus(product).analyticsLabel
   };
 }
 
@@ -1364,7 +1366,7 @@ function getStockQuantity(product = {}) {
   if (rawStock === null || rawStock === undefined || rawStock === '') return null;
 
   if (typeof rawStock === 'number') {
-    return Number.isFinite(rawStock) && rawStock > 0 ? Math.trunc(rawStock) : null;
+    return Number.isFinite(rawStock) && rawStock >= 0 ? Math.trunc(rawStock) : null;
   }
 
   const compact = String(rawStock).trim().replace(/\s+/g, '').replace(/[^\d,.-]/g, '');
@@ -1379,12 +1381,107 @@ function getStockQuantity(product = {}) {
 
   const normalized = integerPart.replace(/\./g, '').replace(/,/g, '');
   const stock = Number(normalized);
-  return Number.isFinite(stock) && stock > 0 ? Math.trunc(stock) : null;
+  return Number.isFinite(stock) && stock >= 0 ? Math.trunc(stock) : null;
+}
+
+function getStockStatus(product = {}) {
+  const stock = getStockQuantity(product);
+
+  if (stock === null) {
+    return {
+      key: 'unknown',
+      label: 'Consultar estoque',
+      shortLabel: 'Consultar',
+      analyticsLabel: 'unknown',
+      available: true,
+      low: false,
+      out: false,
+      restocked: false
+    };
+  }
+
+  const restocked = Boolean(product.restocked || product.reposicaoRecente || product.recentlyRestocked);
+
+  if (stock <= 0) {
+    return {
+      key: 'out',
+      label: '🚚 Reposição em breve',
+      shortLabel: 'Reposição',
+      analyticsLabel: 'out_of_stock',
+      available: false,
+      low: false,
+      out: true,
+      restocked: false
+    };
+  }
+
+  if (stock <= 3) {
+    return {
+      key: 'last_units',
+      label: `🔥 Últimas unidades: ${stock} un.`,
+      shortLabel: `Últimas ${stock} un.`,
+      analyticsLabel: 'last_units',
+      available: true,
+      low: true,
+      out: false,
+      restocked
+    };
+  }
+
+  if (stock <= 5) {
+    return {
+      key: 'low',
+      label: `⚠ Poucas unidades: ${stock} un.`,
+      shortLabel: `Poucas: ${stock} un.`,
+      analyticsLabel: 'low_stock',
+      available: true,
+      low: true,
+      out: false,
+      restocked
+    };
+  }
+
+  return {
+    key: restocked ? 'restocked' : 'available',
+    label: restocked ? `🟢 Voltou ao estoque: ${stock} un.` : `Estoque: ${stock} un.`,
+    shortLabel: restocked ? 'Voltou ao estoque' : `${stock} un.`,
+    analyticsLabel: restocked ? 'restocked' : 'available',
+    available: true,
+    low: false,
+    out: false,
+    restocked
+  };
 }
 
 function getStockLabel(product = {}) {
-  const stock = getStockQuantity(product);
-  return stock ? `Estoque: ${stock} un.` : 'Consultar estoque';
+  return getStockStatus(product).label;
+}
+
+function buildOutOfStockInterestMessage(product, consultant, companyName) {
+  return [
+    '🔴 Z Connect | Interesse em reposição',
+    '',
+    `Empresa: ${companyName || ANONYMOUS_COMPANY_NAME}`,
+    `Consultor: ${consultant.name}`,
+    '',
+    'Tenho interesse neste item quando voltar ao estoque:',
+    `Código: ${product.code || ''}${product.fabCode ? ` / ${product.fabCode}` : ''}`,
+    `Produto: ${product.name || ''}`,
+    product.displayBrand || product.brand ? `Marca: ${product.displayBrand || product.brand}` : '',
+    '',
+    'Pode me avisar quando houver reposição?'
+  ].filter(Boolean).join('\n');
+}
+
+function getStockFilterMatch(product, stockFilter) {
+  const status = getStockStatus(product);
+
+  if (stockFilter === 'available') return status.available;
+  if (stockFilter === 'last_units') return status.available && status.low;
+  if (stockFilter === 'out') return status.out;
+  if (stockFilter === 'restocked') return status.restocked;
+
+  return true;
 }
 
 function readStorage(key, fallback) {
@@ -1641,8 +1738,12 @@ function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite 
                     >
                       {favorites.has(product.id) ? '★' : '☆'}
                     </button>
-                    <button type="button" className="primary-button small-button" onClick={() => onAdd(product, 1)}>
-                      Adicionar
+                    <button
+                      type="button"
+                      className={getStockStatus(product).out ? 'ghost-button small-button interest-button' : 'primary-button small-button'}
+                      onClick={() => onAdd(product, 1)}
+                    >
+                      {getStockStatus(product).out ? 'Tenho interesse' : 'Adicionar'}
                     </button>
                   </div>
                 </div>
@@ -1715,9 +1816,11 @@ function PriceDisplay({ product, variant = 'card' }) {
 }
 
 
-function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, onToggleFavorite }) {
+function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, onInterest, onToggleFavorite }) {
+  const stockStatus = getStockStatus(product);
+
   return (
-    <article className="product-card">
+    <article className={stockStatus.out ? 'product-card product-card-out-of-stock' : `product-card product-card-${stockStatus.key}`}>
       <button
         type="button"
         className={favoriteIds.has(product.id) ? 'favorite-toggle active' : 'favorite-toggle'}
@@ -1728,8 +1831,9 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
       </button>
 
       <button type="button" className="product-main" onClick={() => onOpen(product)}>
-        <div className="product-thumb">
+        <div className={stockStatus.out ? "product-thumb product-thumb-muted" : "product-thumb"}>
           <span className="chip thumb-chip">{product.displayBrand}</span>
+          {stockStatus.out ? <span className="stock-overlay-badge">🚚 Em breve</span> : null}
           {product.image ? <img src={product.image} alt={product.name} loading="lazy" decoding="async" /> : <span className="no-image">Sem imagem</span>}
         </div>
 
@@ -1741,13 +1845,21 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
 
       <PriceDisplay product={product} />
 
-      <div className="stock-line">{getStockLabel(product)}</div>
+      <div className={`stock-line stock-${stockStatus.key}`}>{stockStatus.label}</div>
 
       <div className="product-controls">
-        <QuantityStepper compact value={qty} onChange={onQtyChange} />
-        <button type="button" className="primary-button small-button flex-grow" onClick={() => onAdd(product, qty)}>
-          Adicionar
-        </button>
+        {stockStatus.out ? (
+          <button type="button" className="ghost-button small-button flex-grow interest-button" onClick={() => onInterest(product)}>
+            Tenho interesse
+          </button>
+        ) : (
+          <>
+            <QuantityStepper compact value={qty} onChange={onQtyChange} />
+            <button type="button" className="primary-button small-button flex-grow" onClick={() => onAdd(product, qty)}>
+              Adicionar
+            </button>
+          </>
+        )}
       </div>
 
       <button type="button" className="ghost-button tiny-link" onClick={() => onOpen(product)}>
@@ -1916,6 +2028,7 @@ function App() {
   const lastSearchEventRef = useRef('');
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
+  const [stockFilter, setStockFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [imageViewer, setImageViewer] = useState(null);
@@ -2077,7 +2190,7 @@ function App() {
 
   const matchedProducts = useMemo(() => {
     return pricedProducts
-      .filter((product) => filter === 'Todos' || product.brand === filter)
+      .filter((product) => (filter === 'Todos' || product.brand === filter) && getStockFilterMatch(product, stockFilter))
       .map((product) => ({ product, ...getSearchMatch(product, deferredQuery) }))
       .filter((match) => (!hasQuery && match.score > 0) || (hasQuery && match.direct && match.score > 0))
       .sort((a, b) => {
@@ -2085,20 +2198,20 @@ function App() {
         if (b.score !== a.score) return b.score - a.score;
         return a.product.name.localeCompare(b.product.name, 'pt-BR');
       });
-  }, [deferredQuery, filter, hasQuery, pricedProducts]);
+  }, [deferredQuery, filter, hasQuery, pricedProducts, stockFilter]);
 
   const allFilteredProducts = useMemo(() => matchedProducts.map(({ product }) => product), [matchedProducts]);
   const fallbackSuggestions = useMemo(() => {
     if (!hasQuery || allFilteredProducts.length) return [];
 
     return pricedProducts
-      .filter((product) => filter === 'Todos' || product.brand === filter)
+      .filter((product) => (filter === 'Todos' || product.brand === filter) && getStockFilterMatch(product, stockFilter))
       .map((product) => ({ product, ...getSearchMatch(product, deferredQuery) }))
       .filter(({ suggestionScore }) => suggestionScore > 0)
       .sort((a, b) => b.suggestionScore - a.suggestionScore || a.product.name.localeCompare(b.product.name, 'pt-BR'))
       .slice(0, 12)
       .map(({ product }) => product);
-  }, [allFilteredProducts.length, deferredQuery, filter, hasQuery, pricedProducts]);
+  }, [allFilteredProducts.length, deferredQuery, filter, hasQuery, pricedProducts, stockFilter]);
   const suggestions = useMemo(() => (
     suggestionsOpen && queryText && allFilteredProducts.length ? allFilteredProducts.slice(0, 6) : []
   ), [allFilteredProducts, queryText, suggestionsOpen]);
@@ -2255,11 +2368,27 @@ function App() {
 
   function openDetails(product) {
     rememberProduct(product);
+    const stockStatus = getStockStatus(product);
     trackEvent('product_open', {
       ...getConsultantAnalytics(consultant, product),
       ...getSpecialOfferAnalytics(specialOffer),
       ...getProductAnalytics(product)
     });
+
+    if (stockStatus.out) {
+      trackEvent('view_out_of_stock_product', {
+        ...getConsultantAnalytics(consultant, product),
+        ...getSpecialOfferAnalytics(specialOffer),
+        ...getProductAnalytics(product)
+      });
+    } else if (stockStatus.low) {
+      trackEvent('view_low_stock_product', {
+        ...getConsultantAnalytics(consultant, product),
+        ...getSpecialOfferAnalytics(specialOffer),
+        ...getProductAnalytics(product)
+      });
+    }
+
     setSelected(product);
   }
 
@@ -2286,6 +2415,12 @@ function App() {
   }
 
   function addToCart(product, quantity = 1) {
+    const stockStatus = getStockStatus(product);
+    if (stockStatus.out) {
+      requestStockInterest(product);
+      return;
+    }
+
     const qty = Math.max(1, Number(quantity || 1));
     trackEvent('add_to_cart', {
       ...getConsultantAnalytics(consultant, product),
@@ -2293,6 +2428,16 @@ function App() {
       total: Number(product.price || 0) * qty,
       ...getProductAnalytics(product)
     });
+
+    if (stockStatus.low) {
+      trackEvent('add_to_cart_low_stock', {
+        ...getConsultantAnalytics(consultant, product),
+        quantity: qty,
+        total: Number(product.price || 0) * qty,
+        ...getProductAnalytics(product)
+      });
+    }
+
     rememberProduct(product);
     setAddedMap((current) => ({ ...current, [product.id]: (current[product.id] || 0) + qty }));
     setCart((current) => {
@@ -2353,6 +2498,21 @@ function App() {
     });
 
     openWhatsapp(consultant.phone, buildNoResultLeadMessage(term, consultant, companyName));
+  }
+
+  function requestStockInterest(product) {
+    if (!product || !consultant.phone) return;
+
+    const stockStatus = getStockStatus(product);
+    trackEvent('interest_out_of_stock', {
+      ...getConsultantAnalytics(consultant, product),
+      ...getSpecialOfferAnalytics(specialOffer),
+      ...getProductAnalytics(product),
+      stockStatus: stockStatus.analyticsLabel,
+      stockQty: getStockQuantity(product)
+    });
+
+    openWhatsapp(consultant.phone, buildOutOfStockInterestMessage(product, consultant, companyName));
   }
 
   function finishWhatsApp() {
@@ -2518,6 +2678,33 @@ function App() {
             </button>
           ))}
         </div>
+
+        <div className="filters stock-filters" aria-label="Filtros de estoque">
+          {[
+            { key: 'all', label: 'Todos', count: pricedProducts.length },
+            { key: 'available', label: 'Disponíveis', count: pricedProducts.filter((product) => getStockStatus(product).available).length },
+            { key: 'last_units', label: 'Últimas unidades', count: pricedProducts.filter((product) => getStockStatus(product).available && getStockStatus(product).low).length },
+            { key: 'out', label: 'Reposição em breve', count: pricedProducts.filter((product) => getStockStatus(product).out).length }
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={stockFilter === item.key ? 'filter-button stock-filter-button active' : 'filter-button stock-filter-button'}
+              onClick={() => {
+                setStockFilter(item.key);
+                trackEvent('stock_filter', {
+                  ...getConsultantAnalytics(consultant),
+                  ...getSpecialOfferAnalytics(specialOffer),
+                  stockFilter: item.key,
+                  resultCount: item.count
+                });
+              }}
+            >
+              <strong>{item.label}</strong>
+              <span>{item.count}</span>
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="utility-row">
@@ -2567,6 +2754,7 @@ function App() {
                     onQtyChange={(qty) => setCardQty((current) => ({ ...current, [product.id]: qty }))}
                     onOpen={openDetails}
                     onAdd={addToCart}
+                    onInterest={requestStockInterest}
                     onToggleFavorite={toggleFavorite}
                   />
                 ))}
@@ -2584,6 +2772,7 @@ function App() {
                 onQtyChange={(qty) => setCardQty((current) => ({ ...current, [product.id]: qty }))}
                 onOpen={openDetails}
                 onAdd={addToCart}
+                onInterest={requestStockInterest}
                 onToggleFavorite={toggleFavorite}
               />
             ))}
@@ -2659,7 +2848,7 @@ function App() {
               <span className="chip modal-chip">{selectedProduct.displayBrand}</span>
               <button
                 type="button"
-                className="modal-media-box modal-media-zoom"
+                className={getStockStatus(selectedProduct).out ? 'modal-media-box modal-media-zoom modal-media-muted' : 'modal-media-box modal-media-zoom'}
                 disabled={!selectedProduct.image}
                 aria-label={selectedProduct.image ? `Ampliar imagem de ${selectedProduct.name}` : 'Produto sem imagem'}
                 onClick={() => selectedProduct.image && setImageViewer({ src: selectedProduct.image, alt: selectedProduct.name, brand: selectedProduct.displayBrand })}
@@ -2676,21 +2865,34 @@ function App() {
             <div className="modal-content">
               <div className="modal-head">
                 <h3>{selectedProduct.name}</h3>
+                <p className="modal-title-meta">
+                  {selectedProduct.code}{selectedProduct.fabCode ? ` • ${selectedProduct.fabCode}` : ''}{selectedProduct.manufacturer ? ` • ${selectedProduct.manufacturer}` : ''}
+                </p>
               </div>
 
               <PriceDisplay product={selectedProduct} variant="modal" />
 
-              <div className="modal-stock-line">{getStockLabel(selectedProduct)}</div>
+              <div className={`modal-stock-line stock-${getStockStatus(selectedProduct).key}`}>
+                {getStockStatus(selectedProduct).out ? 'Produto em reposição — clique em Tenho interesse para avisarmos no WhatsApp.' : getStockLabel(selectedProduct)}
+              </div>
 
               <div className="modal-actions">
                 <button type="button" className="ghost-button" onClick={() => toggleFavorite(selectedProduct)}>
                   {favoriteIds.has(selectedProduct.id) ? 'Remover favorito' : 'Favoritar'}
                 </button>
                 <div className="modal-add-line">
-                  <QuantityStepper compact value={cardQty[selectedProduct.id] || 1} onChange={(qty) => setCardQty((current) => ({ ...current, [selectedProduct.id]: qty }))} />
-                  <button type="button" className="primary-button" onClick={() => addToCart(selectedProduct, cardQty[selectedProduct.id] || 1)}>
-                    Adicionar
-                  </button>
+                  {getStockStatus(selectedProduct).out ? (
+                    <button type="button" className="ghost-button interest-button" onClick={() => requestStockInterest(selectedProduct)}>
+                      💬 Tenho interesse
+                    </button>
+                  ) : (
+                    <>
+                      <QuantityStepper compact value={cardQty[selectedProduct.id] || 1} onChange={(qty) => setCardQty((current) => ({ ...current, [selectedProduct.id]: qty }))} />
+                      <button type="button" className="primary-button" onClick={() => addToCart(selectedProduct, cardQty[selectedProduct.id] || 1)}>
+                        Adicionar
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -2713,13 +2915,13 @@ function App() {
                 </div>
                 <div className="detail-box">
                   <span>Estoque</span>
-                  <strong>{getStockQuantity(selectedProduct) ?? 'Consultar'}</strong>
+                  <strong>{getStockStatus(selectedProduct).shortLabel}</strong>
                 </div>
               </div>
 
               <div className="related-group">
                 <section className="related-block">
-                  <h4>Produtos complementares</h4>
+                  <h4>Produtos complementares <span>{related.complementary.length}</span></h4>
                   <div className="related-list scrollable">
                     {related.complementary.length ? related.complementary.map((product) => (
                       <button key={product.id} type="button" className="related-item" onClick={() => openDetails(product)}>
@@ -2731,7 +2933,7 @@ function App() {
                 </section>
 
                 <section className="related-block">
-                  <h4>Mesmo veículo / aplicação</h4>
+                  <h4>Mesmo veículo / aplicação <span>{related.similar.length}</span></h4>
                   <div className="related-list scrollable related-list-tall">
                     {related.similar.length ? related.similar.map((product) => (
                       <button key={product.id} type="button" className="related-item" onClick={() => openDetails(product)}>

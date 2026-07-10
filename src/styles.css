@@ -4667,3 +4667,425 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Inteligência de estoque — produtos indisponíveis, urgência e filtros */
+.stock-filters {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.stock-filter-button {
+  border-style: dashed;
+}
+
+.stock-filter-button.active {
+  border-style: solid;
+}
+
+.product-card-out-of-stock {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.78));
+}
+
+.product-card-out-of-stock .product-copy h3,
+.product-card-out-of-stock .product-copy p,
+.product-card-out-of-stock .price-box {
+  opacity: 0.78;
+}
+
+.product-thumb-muted {
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.72), rgba(148, 163, 184, 0.62));
+}
+
+.product-thumb-muted img {
+  opacity: 0.48;
+  filter: grayscale(0.72) contrast(0.88) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.14));
+}
+
+.stock-overlay-badge {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  max-width: calc(100% - 18px);
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(127, 29, 29, 0.86);
+  color: #fee2e2;
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 20px rgba(127, 29, 29, 0.22);
+}
+
+.stock-line.stock-available,
+.modal-stock-line.stock-available {
+  border-color: rgba(34, 197, 94, 0.24);
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.stock-line.stock-restocked,
+.modal-stock-line.stock-restocked {
+  border-color: rgba(59, 130, 246, 0.30);
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.10);
+}
+
+.stock-line.stock-low,
+.stock-line.stock-last_units,
+.modal-stock-line.stock-low,
+.modal-stock-line.stock-last_units {
+  border-color: rgba(250, 204, 21, 0.34);
+  color: #fde68a;
+  background: rgba(250, 204, 21, 0.10);
+}
+
+.stock-line.stock-out,
+.modal-stock-line.stock-out {
+  border-color: rgba(239, 68, 68, 0.34);
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.10);
+}
+
+.interest-button {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.interest-button:hover {
+  border-color: rgba(239, 68, 68, 0.62);
+  background: rgba(239, 68, 68, 0.14);
+}
+
+.product-card-last_units {
+  border-color: rgba(250, 204, 21, 0.24);
+}
+
+.product-card-low {
+  border-color: rgba(250, 204, 21, 0.18);
+}
+
+.product-card-restocked {
+  border-color: rgba(59, 130, 246, 0.22);
+}
+
+@media (max-width: 760px) {
+  .stock-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stock-overlay-badge {
+    font-size: 0.6rem;
+    padding: 3px 7px;
+  }
+}
+
+
+/* Product Modal V2 — compacto e focado em venda cruzada */
+.modal {
+  grid-template-columns: minmax(300px, 0.76fr) minmax(520px, 1.24fr);
+  width: min(1180px, calc(100vw - 28px));
+  max-height: min(86vh, 820px);
+  border-radius: 22px;
+}
+
+.modal-close {
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+}
+
+.modal-media {
+  gap: 8px;
+  padding: 18px;
+}
+
+.modal-media-box {
+  min-height: 255px;
+  height: min(44vh, 380px);
+  max-height: 390px;
+  border-radius: 20px;
+}
+
+.modal-media-muted img {
+  opacity: 0.46;
+  filter: grayscale(0.34) contrast(0.88);
+}
+
+.modal-zoom-badge {
+  right: 12px;
+  bottom: 12px;
+  padding: 7px 10px;
+  font-size: 0.74rem;
+}
+
+.modal-content {
+  gap: 8px;
+  padding: 22px 22px 18px;
+  align-content: start;
+}
+
+.modal-head {
+  padding-right: 42px;
+}
+
+.modal-head h3 {
+  margin: 0;
+  font-size: clamp(16px, 1.75vw, 22px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.modal-title-meta {
+  margin: 5px 0 0 !important;
+  color: var(--muted);
+  font-size: 0.72rem !important;
+  line-height: 1.2;
+}
+
+.modal-price.price-box {
+  padding: 9px 12px;
+  border-radius: 14px;
+}
+
+.modal-price .price-line {
+  min-height: 30px;
+  padding: 3px 0;
+}
+
+.modal-price .price-line span {
+  font-size: 0.72rem;
+}
+
+.modal-price .price-values strong {
+  font-size: 1rem;
+}
+
+.modal-price .price-line-featured .price-values strong {
+  font-size: 1.28rem;
+}
+
+.modal-stock-line {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.modal-actions .ghost-button,
+.modal-actions .primary-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+}
+
+.modal-add-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.detail-grid.compact {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.detail-grid.compact .detail-box {
+  min-height: 44px;
+  padding: 7px 9px;
+  border-radius: 12px;
+}
+
+.detail-box span {
+  margin-bottom: 3px;
+  font-size: 8px !important;
+  letter-spacing: 0.08em;
+}
+
+.detail-box strong {
+  font-size: 10px !important;
+  line-height: 1.12;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.related-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-height: 0;
+  margin-top: 2px;
+}
+
+.related-block {
+  min-height: 0;
+}
+
+.related-block h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px !important;
+  color: #f8fafc;
+  font-size: 0.78rem !important;
+  letter-spacing: -0.01em;
+}
+
+.related-block h4 span {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.10);
+  font-size: 0.68rem;
+}
+
+.related-list.scrollable,
+.related-list.scrollable.related-list-tall {
+  max-height: clamp(210px, 31vh, 330px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.related-list {
+  gap: 5px;
+}
+
+.related-item {
+  padding: 8px 10px;
+  border-radius: 11px;
+}
+
+.related-item strong {
+  font-size: 0.68rem;
+  color: #f8fafc;
+}
+
+.related-item span {
+  margin-top: 2px;
+  font-size: 0.68rem;
+  line-height: 1.18;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.related-empty {
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* Estoque zerado — aparência comercial sem parecer erro */
+.product-thumb-muted {
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.64), rgba(100, 116, 139, 0.52));
+}
+
+.product-thumb-muted img {
+  opacity: 0.38;
+  filter: grayscale(0.34) contrast(0.86) saturate(0.78) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.14));
+}
+
+.stock-overlay-badge {
+  border-color: rgba(245, 158, 11, 0.42);
+  background: linear-gradient(135deg, rgba(146, 64, 14, 0.92), rgba(120, 53, 15, 0.86));
+  color: #ffedd5;
+  box-shadow: 0 8px 20px rgba(146, 64, 14, 0.22);
+}
+
+.stock-line.stock-out,
+.modal-stock-line.stock-out {
+  border-color: rgba(245, 158, 11, 0.34);
+  color: #fed7aa;
+  background: rgba(245, 158, 11, 0.10);
+}
+
+.interest-button {
+  border-color: rgba(245, 158, 11, 0.36);
+  color: #fed7aa;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.interest-button:hover {
+  border-color: rgba(245, 158, 11, 0.62);
+  background: rgba(245, 158, 11, 0.14);
+}
+
+@media (max-width: 980px) {
+  .modal {
+    grid-template-columns: 1fr;
+    width: min(720px, calc(100vw - 20px));
+    max-height: 92vh;
+    overflow: auto;
+  }
+
+  .modal-media {
+    position: relative;
+    padding: 14px 14px 0;
+  }
+
+  .modal-media-box {
+    height: 280px;
+    min-height: 220px;
+  }
+
+  .modal-content {
+    padding: 14px;
+  }
+
+  .detail-grid.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .related-group {
+    grid-template-columns: 1fr;
+  }
+
+  .related-list.scrollable,
+  .related-list.scrollable.related-list-tall {
+    max-height: 220px;
+  }
+}

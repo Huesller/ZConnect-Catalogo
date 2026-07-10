@@ -7,6 +7,7 @@ const outputDir = path.join(rootDir, 'public', 'data');
 const outputCatalogPath = path.join(outputDir, 'catalog.v5.json');
 const outputConsultantsPath = path.join(outputDir, 'consultants.json');
 const outputMetaPath = path.join(outputDir, 'meta.json');
+const outputStockAuditPath = path.join(outputDir, 'stock-audit.json');
 
 const ZETTA_ORIGIN = 'https://sistema.zettabrasil.com.br';
 const FETCH_TIMEOUT_MS = 30000;
@@ -16,27 +17,27 @@ const DEFAULT_OFFICIAL_SOURCES = [
   {
     brand: 'RIDA',
     catalogId: '1438',
-    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438'
+    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true'
   },
   {
     brand: 'RETOV',
     catalogId: '1436',
-    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436'
+    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true'
   },
   {
     brand: 'TYC',
     catalogId: '1494',
-    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494'
+    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true'
   },
   {
     brand: 'TYC',
     catalogId: '1493',
-    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493'
+    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true'
   },
   {
     brand: 'Z AUTO',
     catalogId: '1437',
-    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437'
+    url: 'https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true'
   }
 ];
 
@@ -192,11 +193,19 @@ function ensureConfig() {
   return normalizeConfig(JSON.parse(fs.readFileSync(configPath, 'utf8')));
 }
 
-function getPageUrl(url, page) {
-  if (page === 1) return url;
+function ensurePublicCatalogUrl(url) {
+  const publicUrl = new URL(url);
+  if (!publicUrl.searchParams.has('p')) {
+    publicUrl.searchParams.set('p', 'true');
+  }
+  return publicUrl.href;
+}
 
-  const pageUrl = new URL(url);
-  pageUrl.searchParams.set('page', String(page));
+function getPageUrl(url, page) {
+  const pageUrl = new URL(ensurePublicCatalogUrl(url));
+  if (page > 1) {
+    pageUrl.searchParams.set('page', String(page));
+  }
   return pageUrl.href;
 }
 
@@ -284,7 +293,7 @@ function parseStockQuantity(value) {
   if (value === null || value === undefined || value === '') return null;
 
   if (typeof value === 'number') {
-    return Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
+    return Number.isFinite(value) && value >= 0 ? Math.trunc(value) : null;
   }
 
   const raw = String(value).trim();
@@ -307,7 +316,7 @@ function parseStockQuantity(value) {
   if (!normalized) return null;
 
   const parsed = Number(normalized);
-  return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : null;
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.trunc(parsed) : null;
 }
 
 function extractStockQuantity(item) {
@@ -457,8 +466,9 @@ function sanitizeZettaProduct(item, context, config) {
 }
 
 async function scrapeSource(source, config) {
-  const firstHtml = await fetchText(source.url);
-  const firstParsed = parseZettaPage(firstHtml, source.url);
+  const firstPageUrl = getPageUrl(source.url, 1);
+  const firstHtml = await fetchText(firstPageUrl);
+  const firstParsed = parseZettaPage(firstHtml, firstPageUrl);
   const products = [];
   const pages = firstParsed.pages;
 
@@ -469,15 +479,21 @@ async function scrapeSource(source, config) {
       : parseZettaPage(await fetchText(pageUrl), pageUrl);
 
     parsed.catalogo.itens.forEach((item, index) => {
-      products.push(sanitizeZettaProduct(item, {
-        brand: source.brand,
-        catalogId: String(source.catalogId),
-        catalogDescription: parsed.catalogo.descricao,
-        sourceUrl: source.url,
-        url: pageUrl,
-        page,
-        index
-      }, config));
+      try {
+        products.push(sanitizeZettaProduct(item, {
+          brand: source.brand,
+          catalogId: String(source.catalogId),
+          catalogDescription: parsed.catalogo.descricao,
+          sourceUrl: ensurePublicCatalogUrl(source.url),
+          url: pageUrl,
+          page,
+          index
+        }, config));
+      } catch (error) {
+        const details = item?.detalhes || {};
+        const code = cleanText(details.proCodOri || '');
+        console.warn(`[Zetta] Item ignorado em ${pageUrl} pagina ${page}, item ${index + 1}${code ? `, codigo ${code}` : ''}: ${error.message}`);
+      }
     });
   }
 
@@ -488,7 +504,7 @@ async function scrapeSource(source, config) {
   const summary = {
     brand: source.brand,
     catalogId: String(source.catalogId),
-    url: source.url,
+    url: ensurePublicCatalogUrl(source.url),
     description: firstParsed.catalogo.descricao,
     pages,
     productCount: products.length
@@ -617,6 +633,84 @@ function loadExplicitLegacyFallback(config, officialError) {
   };
 }
 
+
+function productHistoryKey(product) {
+  return [product.brand, product.code, product.fabCode]
+    .map((part) => cleanText(part || '').toUpperCase())
+    .join('|');
+}
+
+function loadPreviousCatalogMap() {
+  if (!fs.existsSync(outputCatalogPath)) return new Map();
+
+  try {
+    const previous = JSON.parse(fs.readFileSync(outputCatalogPath, 'utf8'));
+    if (!Array.isArray(previous)) return new Map();
+
+    return new Map(previous.map((product) => [productHistoryKey(product), product]));
+  } catch {
+    return new Map();
+  }
+}
+
+function applyStockHistory(products, previousMap) {
+  if (!previousMap.size) return products;
+
+  return products.map((product) => {
+    const previous = previousMap.get(productHistoryKey(product));
+    if (!previous) return product;
+
+    const previousStock = parseStockQuantity(previous.stock ?? previous.stockQty ?? previous.estoque);
+    const currentStock = parseStockQuantity(product.stock ?? product.stockQty ?? product.estoque);
+    const wasUnavailable = previousStock !== null && previousStock <= 0;
+    const isAvailableNow = currentStock !== null && currentStock > 0;
+
+    if (!wasUnavailable || !isAvailableNow) return product;
+
+    return {
+      ...product,
+      restocked: true,
+      reposicaoRecente: true,
+      recentlyRestocked: true
+    };
+  });
+}
+
+function buildStockAudit(products, summaries) {
+  const toQty = (product) => parseStockQuantity(product.stock ?? product.stockQty ?? product.estoque);
+  const total = products.length;
+  const outOfStockItems = products.filter((product) => {
+    const stock = toQty(product);
+    return stock !== null && stock <= 0;
+  });
+  const availableItems = products.filter((product) => {
+    const stock = toQty(product);
+    return stock === null || stock > 0;
+  });
+  const lowStockItems = products.filter((product) => {
+    const stock = toQty(product);
+    return stock !== null && stock > 0 && stock <= 5;
+  });
+
+  return {
+    generatedAt: new Date().toISOString(),
+    total,
+    available: availableItems.length,
+    outOfStock: outOfStockItems.length,
+    lowStock: lowStockItems.length,
+    sources: summaries,
+    sampleOutOfStock: outOfStockItems.slice(0, 25).map((product) => ({
+      id: product.id,
+      code: product.code,
+      fabCode: product.fabCode,
+      name: product.name,
+      brand: product.brand,
+      stock: toQty(product),
+      sourcePageUrl: product.sourcePageUrl
+    }))
+  };
+}
+
 function countByBrand(products) {
   return Object.entries(products.reduce((acc, item) => {
     acc[item.brand] = (acc[item.brand] || 0) + 1;
@@ -651,6 +745,9 @@ async function main() {
     throw new Error('Catalogo gerado sem produtos.');
   }
 
+  const previousCatalogMap = loadPreviousCatalogMap();
+  result.products = applyStockHistory(result.products, previousCatalogMap);
+
   const meta = {
     generatedAt: new Date().toISOString(),
     productCount: result.products.length,
@@ -667,11 +764,14 @@ async function main() {
     }
   };
 
+  fs.writeFileSync(outputStockAuditPath, JSON.stringify(buildStockAudit(result.products, result.summaries), null, 2));
   fs.writeFileSync(outputCatalogPath, JSON.stringify(result.products));
   fs.writeFileSync(outputConsultantsPath, JSON.stringify(DEFAULT_CONSULTANTS, null, 2));
   fs.writeFileSync(outputMetaPath, JSON.stringify(meta, null, 2));
 
+  const stockAudit = buildStockAudit(result.products, result.summaries);
   console.log(`[Zetta] catalog.v5.json gerado com ${result.products.length} produtos.`);
+  console.log(`[Zetta] Auditoria estoque: ${stockAudit.available} disponiveis, ${stockAudit.outOfStock} reposicao em breve, ${stockAudit.lowStock} ultimas unidades.`);
   console.log(`[Zetta] Fallback usado: ${fallbackUsed ? 'sim' : 'nao'}.`);
 }
 
