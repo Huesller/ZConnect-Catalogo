@@ -225,7 +225,7 @@
       <span class="brand-mark">Z</span>
       <span><strong>Z Automotiva</strong><small>Painel comercial interno</small></span>
     </div>
-    <span class="version">Ofertas assinadas · Build 1</span>
+    <span class="version">Ofertas assinadas · Build 2</span>
   </header>
 
   <main class="shell">
@@ -269,13 +269,13 @@
           <p class="policy-note">A regra soma pontos percentuais ao desconto-base. Não existe desconto em cascata.</p>
         </div>
 
-        <button class="primary" type="submit">Gerar link protegido</button>
+        <button class="primary" id="generateButton" type="submit">Gerar link curto e protegido</button>
       </form>
     </section>
 
     <aside class="side">
       <section class="card result-card" id="result" hidden>
-        <div class="section-head"><div><h2>Oferta pronta</h2><small>Link assinado e validado pelo catálogo</small></div></div>
+        <div class="section-head"><div><h2>Oferta pronta</h2><small>Link curto; desconto e validade não aparecem no endereço</small></div></div>
         <div class="offer-summary">
           <strong id="resultClient"></strong>
           <span id="resultRule"></span>
@@ -304,6 +304,7 @@
       'use strict';
 
       var CATALOG_URL = 'https://catalogo-zautomotiva.vercel.app/';
+      var OFFER_API_URL = new URL('api/offer', CATALOG_URL).href;
       var ANALYTICS_URL = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
       var HISTORY_KEY = 'zautomotiva_signed_offer_history_v2';
       var PRIVATE_KEY_JWK = {
@@ -326,6 +327,7 @@
       var clientEl = document.getElementById('client');
       var discountEl = document.getElementById('discount');
       var validityEl = document.getElementById('validity');
+      var generateButtonEl = document.getElementById('generateButton');
       var resultEl = document.getElementById('result');
       var resultLinkEl = document.getElementById('resultLink');
       var historyEl = document.getElementById('history');
@@ -388,6 +390,41 @@
         var bytes = new Uint8Array(8);
         crypto.getRandomValues(bytes);
         return 'OF-' + Array.from(bytes).map(function (byte) { return byte.toString(16).padStart(2, '0'); }).join('').toUpperCase();
+      }
+
+      function createShortCode() {
+        var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        var bytes = new Uint8Array(8);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes).map(function (byte) { return alphabet[byte % alphabet.length]; }).join('');
+      }
+
+      function slugifyClient(value) {
+        var slug = String(value || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toUpperCase()
+          .replace(/[^A-Z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 40)
+          .replace(/-+$/g, '');
+        return slug || 'CLIENTE';
+      }
+
+      async function registerShortOffer(details) {
+        var response = await fetch(OFFER_API_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+          body: JSON.stringify(details)
+        });
+        var result = await response.json().catch(function () { return {}; });
+        if (!response.ok || !result.ok) {
+          var error = new Error(result.error || 'Não foi possível registrar o link curto.');
+          error.code = response.status;
+          throw error;
+        }
+        return result;
       }
 
       async function signPayload(payload) {
@@ -492,6 +529,8 @@
           specialOfferSeller: offer.seller,
           specialOfferDiscount: offer.discount,
           specialOfferExpiresAt: offer.expiresAt,
+          specialOfferSource: 'signed_short_link_v1',
+          specialOfferCode: offer.shortCode,
           page: 'painel-comercial-local'
         };
         var url = ANALYTICS_URL + '?action=track';
@@ -540,9 +579,17 @@
         };
 
         try {
+          generateButtonEl.disabled = true;
+          generateButtonEl.textContent = 'Protegendo e encurtando...';
           var token = await signPayload(payload);
-          var url = new URL(CATALOG_URL);
-          url.searchParams.set('s', token);
+          var shortCode = createShortCode();
+          var clientSlug = slugifyClient(clientName);
+          await registerShortOffer({
+            shortCode: shortCode,
+            clientSlug: clientSlug,
+            signedToken: token
+          });
+          var url = new URL('/o/' + encodeURIComponent(clientSlug) + '/' + shortCode, CATALOG_URL);
           var offer = {
             id: payload.i,
             seller: seller.id,
@@ -553,15 +600,20 @@
             finalDiscount: finalDiscount,
             createdAt: new Date(createdAt).toISOString(),
             expiresAt: new Date(expiresAt).toISOString(),
+            shortCode: shortCode,
+            clientSlug: clientSlug,
             url: url.href
           };
           saveHistory([offer].concat(loadHistory().filter(function (item) { return item.id !== offer.id; })));
           setCurrentOffer(offer);
           renderHistory();
           trackOfferCreated(offer);
-          showToast('Link protegido gerado.');
+          showToast('Link curto e protegido gerado.');
         } catch (error) {
-          showToast(error.message || 'Não foi possível assinar a oferta.');
+          showToast(error.message || 'Não foi possível gerar o link curto.');
+        } finally {
+          generateButtonEl.disabled = false;
+          generateButtonEl.textContent = 'Gerar link curto e protegido';
         }
       });
 

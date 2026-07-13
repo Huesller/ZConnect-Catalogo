@@ -2898,3 +2898,81 @@ p {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* V12.2 — estados de carregamento, compartilhamento e atualização */
+.catalog-update {
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, .18);
+}
+
+.image-fallback {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  width: 88%;
+  height: 88%;
+  color: #8a8985;
+  background: repeating-linear-gradient(-45deg, rgba(35,37,41,.035) 0 8px, transparent 8px 16px);
+}
+.image-fallback small { font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+
+.catalog-skeleton { pointer-events: none; }
+.skeleton-card { display: grid; align-content: start; gap: 10px; }
+.skeleton-block { display: block; overflow: hidden; background: #e4e2dc; position: relative; }
+.skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.7) 48%, transparent 75%);
+  transform: translateX(-100%);
+  animation: skeleton-shine 1.35s infinite;
+}
+.skeleton-image { height: clamp(156px, 13vw, 206px); }
+.skeleton-code { width: 36%; height: 9px; }
+.skeleton-title { width: 92%; height: 13px; }
+.skeleton-title.short { width: 62%; }
+.skeleton-price { height: 54px; margin-top: 8px; }
+.skeleton-button { height: 35px; margin-top: 5px; }
+@keyframes skeleton-shine { to { transform: translateX(100%); } }
+
+.cart-item { grid-template-columns: 52px minmax(0, 1fr); }
+.cart-thumb {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  background: #f1f0ec;
+  border: 1px solid #34373d;
+}
+.cart-thumb img { width: 92%; height: 92%; object-fit: contain; }
+.cart-thumb .image-fallback { color: #777; }
+.cart-thumb .image-fallback small { display: none; }
+.cart-actions-line { grid-column: 2; }
+
+.modal-replenishment-ribbon {
+  position: absolute;
+  top: 86px;
+  left: -54px;
+  z-index: 5;
+  width: 235px;
+  padding: 9px 0;
+  color: #fff;
+  background: var(--red);
+  box-shadow: 0 5px 16px rgba(178, 13, 29, .25);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-38deg);
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .catalog-update { width: 100%; padding: 6px 0 0; border-top: 1px solid rgba(255,255,255,.12); border-left: 0; }
+  .modal-replenishment-ribbon { top: 65px; }
+}

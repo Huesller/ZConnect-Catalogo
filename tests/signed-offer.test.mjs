@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { verifySignedOfferToken } from '../src/utils/signedOffer.js';
+import {
+  getShortOfferReferenceFromUrl,
+  resolveShortOfferToken,
+  verifySignedOfferToken
+} from '../src/utils/signedOffer.js';
 
 function bytesToBase64Url(bytes) {
   return Buffer.from(bytes)
@@ -79,4 +83,30 @@ test('mantém a assinatura válida, mas marca a oferta vencida', async () => {
 
   assert.equal(offer.active, false);
   assert.equal(offer.expired, true);
+});
+
+test('reconhece somente o caminho curto cliente e código', () => {
+  assert.deepEqual(
+    getShortOfferReferenceFromUrl('/o/AUTO-PECAS-SILVA/7K2M9QPX'),
+    { clientSlug: 'AUTO-PECAS-SILVA', code: '7K2M9QPX' }
+  );
+  assert.equal(getShortOfferReferenceFromUrl('/o/CLIENTE/codigo-invalido'), null);
+  assert.equal(getShortOfferReferenceFromUrl('/produtos/7K2M9QPX'), null);
+});
+
+test('resolve o token de uma oferta curta pelo backend', async () => {
+  const calls = [];
+  const token = await resolveShortOfferToken(
+    { clientSlug: 'CLIENTE', code: '7K2M9QPX' },
+    {
+      baseUrl: 'https://catalogo.exemplo.com',
+      fetchApi: async (url) => {
+        calls.push(url);
+        return { ok: true, json: async () => ({ ok: true, token: 'payload.assinatura' }) };
+      }
+    }
+  );
+
+  assert.equal(token, 'payload.assinatura');
+  assert.equal(calls[0], 'https://catalogo.exemplo.com/api/offer?code=7K2M9QPX');
 });

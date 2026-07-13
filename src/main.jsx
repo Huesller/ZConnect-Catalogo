@@ -12,7 +12,9 @@ import {
   toPolicyNumber
 } from './domain/pricing-core.js';
 import {
+  getShortOfferReferenceFromUrl,
   getSignedOfferTokenFromUrl,
+  resolveShortOfferToken,
   verifySignedOfferToken
 } from './utils/signedOffer.js';
 
@@ -124,7 +126,7 @@ function getSpecialOfferFromUrl() {
   if (typeof window === 'undefined') return null;
 
   const params = new URLSearchParams(window.location.search);
-  if (getSignedOfferTokenFromUrl(window.location.search)) return null;
+  if (getSignedOfferTokenFromUrl(window.location.search) || getShortOfferReferenceFromUrl(window.location.pathname)) return null;
 
   const token = params.get(SPECIAL_OFFER_QUERY_KEYS.token);
   const shortToken = params.get(SPECIAL_OFFER_QUERY_KEYS.shortToken);
@@ -1368,6 +1370,18 @@ function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function formatCatalogUpdate(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return 'Atualização diária';
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
 function getStockQuantity(product = {}) {
   const rawStock = product.stock ?? product.stockQty ?? product.estoque ?? product.saldo ?? product.quantidade;
   if (rawStock === null || rawStock === undefined || rawStock === '') return null;
@@ -1710,7 +1724,8 @@ function Icon({ name, size = 18 }) {
     arrow: <><path d="M5 12h14" /><path d="m14 7 5 5-5 5" /></>,
     zoom: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.2 4.2M11 8v6M8 11h6" /></>,
     building: <><path d="M5 21V4h10v17M15 9h4v12M8 8h1M11 8h1M8 12h1M11 12h1M8 16h1M11 16h1M3 21h18" /></>,
-    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>,
+    share: <><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/></>
   };
 
   return (
@@ -1728,6 +1743,18 @@ function QuantityStepper({ value, onChange, compact = false }) {
       <button type="button" aria-label="Aumentar quantidade" onClick={() => onChange(value + 1)}><Icon name="plus" size={14} /></button>
     </div>
   );
+}
+
+function ProductImage({ src, alt, className = '', loading = 'lazy' }) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => setFailed(false), [src]);
+
+  if (!src || failed) {
+    return <span className={`no-image image-fallback ${className}`.trim()}><Icon name="search" size={18}/><small>Imagem indisponível</small></span>;
+  }
+
+  return <img className={className} src={src} alt={alt} loading={loading} decoding="async" onError={() => setFailed(true)}/>;
 }
 
 function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite }) {
@@ -1862,7 +1889,7 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         <div className={stockStatus.out ? "product-thumb product-thumb-muted" : "product-thumb"}>
           <span className="chip thumb-chip">{product.displayBrand}</span>
           {stockStatus.out ? <span className="stock-replenishment-ribbon">Breve reposição</span> : null}
-          {product.image ? <img src={product.image} alt={product.name} loading="lazy" decoding="async" /> : <span className="no-image">Sem imagem</span>}
+          <ProductImage src={product.image} alt={product.name}/>
         </div>
 
         <div className="product-copy">
@@ -1894,6 +1921,23 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         Detalhes
       </button>
     </article>
+  );
+}
+
+function CatalogSkeleton() {
+  return (
+    <div className="catalog-grid catalog-skeleton" aria-label="Carregando produtos" aria-busy="true">
+      {Array.from({ length: 8 }, (_, index) => (
+        <article className="product-card skeleton-card" key={index}>
+          <span className="skeleton-block skeleton-image"/>
+          <span className="skeleton-block skeleton-code"/>
+          <span className="skeleton-block skeleton-title"/>
+          <span className="skeleton-block skeleton-title short"/>
+          <span className="skeleton-block skeleton-price"/>
+          <span className="skeleton-block skeleton-button"/>
+        </article>
+      ))}
+    </div>
   );
 }
 
@@ -2044,15 +2088,17 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
 
 function App() {
   const signedOfferToken = useMemo(() => getSignedOfferTokenFromUrl(), []);
+  const shortOfferReference = useMemo(() => getShortOfferReferenceFromUrl(), []);
   const initialSpecialOffer = useMemo(
-    () => (signedOfferToken ? null : getSpecialOfferFromUrl()),
-    [signedOfferToken]
+    () => (signedOfferToken || shortOfferReference ? null : getSpecialOfferFromUrl()),
+    [shortOfferReference, signedOfferToken]
   );
   const [specialOffer, setSpecialOffer] = useState(initialSpecialOffer);
-  const [offerVerificationPending, setOfferVerificationPending] = useState(Boolean(signedOfferToken));
+  const [offerVerificationPending, setOfferVerificationPending] = useState(Boolean(signedOfferToken || shortOfferReference));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [products, setProducts] = useState([]);
+  const [catalogMeta, setCatalogMeta] = useState(null);
   const [consultants, setConsultants] = useState(FALLBACK_CONSULTANTS);
   const [query, setQuery] = useState('');
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -2060,6 +2106,7 @@ function App() {
   const searchBoxRef = useRef(null);
   const pageViewSentRef = useRef(false);
   const specialOfferOpenSentRef = useRef(false);
+  const deepLinkOpenedRef = useRef(false);
   const lastSearchEventRef = useRef('');
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
@@ -2092,34 +2139,49 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!signedOfferToken) return undefined;
+    if (!signedOfferToken && !shortOfferReference) return undefined;
 
     let active = true;
     setOfferVerificationPending(true);
 
-    verifySignedOfferToken(signedOfferToken).then((verifiedOffer) => {
+    const tokenPromise = signedOfferToken
+      ? Promise.resolve(signedOfferToken)
+      : resolveShortOfferToken(shortOfferReference);
+
+    tokenPromise
+      .then((token) => token ? verifySignedOfferToken(token) : null)
+      .then((verifiedOffer) => {
       if (!active) return;
 
-      setSpecialOffer(verifiedOffer);
+      const resolvedOffer = verifiedOffer && shortOfferReference
+        ? { ...verifiedOffer, source: 'signed_short_link_v1', shortCode: shortOfferReference.code }
+        : verifiedOffer;
+      setSpecialOffer(resolvedOffer);
       setOfferVerificationPending(false);
 
-      if (!verifiedOffer) {
-        setToast('Este link especial é inválido ou foi alterado. O catálogo seguirá com a condição normal.');
+      if (!resolvedOffer) {
+        setToast('Este link especial não existe, expirou ou foi alterado. O catálogo seguirá com a condição normal.');
         return;
       }
 
-      if (verifiedOffer.expired) {
-        setCompanyName(verifiedOffer.clientName);
-        setCompanyDraft(verifiedOffer.clientName);
+      if (resolvedOffer.expired) {
+        setCompanyName(resolvedOffer.clientName);
+        setCompanyDraft(resolvedOffer.clientName);
         setCatalogAccessGranted(true);
         setCompanyGateMinimized(false);
       }
-    });
+    })
+      .catch(() => {
+        if (!active) return;
+        setSpecialOffer(null);
+        setOfferVerificationPending(false);
+        setToast('Não foi possível validar este link especial agora. Tente novamente em instantes.');
+      });
 
     return () => {
       active = false;
     };
-  }, [signedOfferToken]);
+  }, [shortOfferReference, signedOfferToken]);
 
   useEffect(() => {
     if (!specialOffer?.active) return;
@@ -2138,24 +2200,27 @@ function App() {
 
     async function loadCatalog() {
       try {
-        const [catalogResponse, consultantsResponse] = await Promise.all([
+        const [catalogResponse, consultantsResponse, metaResponse] = await Promise.all([
           fetch('/data/catalog.v5.json'),
-          fetch('/data/consultants.json')
+          fetch('/data/consultants.json'),
+          fetch('/data/meta.json')
         ]);
 
         if (!catalogResponse.ok) {
           throw new Error('Não foi possível carregar o catálogo atualizado.');
         }
 
-        const [catalogData, consultantsData] = await Promise.all([
+        const [catalogData, consultantsData, metaData] = await Promise.all([
           catalogResponse.json(),
-          consultantsResponse.ok ? consultantsResponse.json() : FALLBACK_CONSULTANTS
+          consultantsResponse.ok ? consultantsResponse.json() : FALLBACK_CONSULTANTS,
+          metaResponse.ok ? metaResponse.json() : null
         ]);
 
         if (!active) return;
 
         setProducts(Array.isArray(catalogData) ? catalogData.map(prepareProduct) : []);
         setConsultants(consultantsData && typeof consultantsData === 'object' ? consultantsData : FALLBACK_CONSULTANTS);
+        setCatalogMeta(metaData && typeof metaData === 'object' ? metaData : null);
         setLoadError('');
       } catch (error) {
         if (!active) return;
@@ -2467,6 +2532,46 @@ function App() {
     setSelected(product);
   }
 
+  async function shareProduct(product) {
+    if (!product) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('produto', product.code || product.id);
+    const shareData = {
+      title: `${product.code} · ${product.name}`,
+      text: `Veja este produto no Catálogo Z Automotiva: ${product.code} — ${product.name}`,
+      url: url.href
+    };
+
+    trackEvent('share_product', {
+      ...getConsultantAnalytics(consultant, product),
+      ...getSpecialOfferAnalytics(specialOffer),
+      ...getProductAnalytics(product)
+    });
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url.href);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = url.href;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+    setToast('Link deste produto copiado.');
+  }
+
   function toggleFavorite(product) {
     setFavorites((current) => {
       const exists = current.some((item) => item.id === product.id);
@@ -2617,6 +2722,21 @@ function App() {
     openWhatsapp(consultant.phone, buildWhatsAppMessage(cartItems, consultant, subtotal, companyName));
   }
 
+  useEffect(() => {
+    if (deepLinkOpenedRef.current || !catalogAccessGranted || !pricedProducts.length) return;
+    const productReference = new URLSearchParams(window.location.search).get('produto');
+    if (!productReference) return;
+
+    const reference = compactCode(productReference);
+    const product = pricedProducts.find((item) => (
+      compactCode(item.code) === reference
+      || compactCode(item.fabCode) === reference
+      || String(item.id) === productReference
+    ));
+    deepLinkOpenedRef.current = true;
+    if (product) openDetails(product);
+  }, [catalogAccessGranted, pricedProducts]);
+
   if (offerVerificationPending) {
     return (
       <main className="offer-verification-screen" aria-live="polite">
@@ -2689,6 +2809,7 @@ function App() {
             <span><strong>{products.length.toLocaleString('pt-BR')}</strong> produtos</span>
             <span><strong>{BRANDS.length - 1}</strong> marcas</span>
             <span><strong>Estoque</strong> visível</span>
+            <span className="catalog-update"><strong>Atualizado</strong> {formatCatalogUpdate(catalogMeta?.generatedAt)}</span>
           </div>
         </div>
 
@@ -2840,7 +2961,7 @@ function App() {
 
       <section className="catalog-layout">
         <main>
-          {loading ? <div className="empty-box">Carregando catálogo...</div> : null}
+          {loading ? <CatalogSkeleton/> : null}
           {!loading && !paginatedProducts.length && !fallbackSuggestions.length ? (
             <div className="empty-box no-result-lead-box">
               <strong>Nenhum produto encontrado.</strong>
@@ -2927,6 +3048,7 @@ function App() {
             ) : (
               cartItems.map((item) => (
                 <article key={item.id} className="cart-item">
+                  <div className="cart-thumb"><ProductImage src={item.image} alt={item.name}/></div>
                   <div className="cart-copy">
                     <strong>{item.code}{item.fabCode ? ` / ${item.fabCode}` : ''}</strong>
                     <span>{item.name}</span>
@@ -2970,6 +3092,7 @@ function App() {
 
             <div className="modal-media">
               <span className="chip modal-chip">{selectedProduct.displayBrand}</span>
+              {getStockStatus(selectedProduct).out ? <span className="modal-replenishment-ribbon">Breve reposição</span> : null}
               <button
                 type="button"
                 className={getStockStatus(selectedProduct).out ? 'modal-media-box modal-media-zoom modal-media-muted' : 'modal-media-box modal-media-zoom'}
@@ -2979,7 +3102,7 @@ function App() {
               >
                 {selectedProduct.image ? (
                   <>
-                    <img src={selectedProduct.image} alt={selectedProduct.name} loading="eager" decoding="async" />
+                    <ProductImage src={selectedProduct.image} alt={selectedProduct.name} loading="eager"/>
                     <span className="modal-zoom-badge"><Icon name="zoom" size={15} /> Ampliar</span>
                   </>
                 ) : <div className="no-image large">Sem imagem</div>}
@@ -3003,6 +3126,9 @@ function App() {
               <div className="modal-actions">
                 <button type="button" className="ghost-button" onClick={() => toggleFavorite(selectedProduct)}>
                   {favoriteIds.has(selectedProduct.id) ? 'Remover favorito' : 'Favoritar'}
+                </button>
+                <button type="button" className="ghost-button" onClick={() => shareProduct(selectedProduct)}>
+                  <Icon name="share" size={16}/> Compartilhar
                 </button>
                 <div className="modal-add-line">
                   {getStockStatus(selectedProduct).out ? (

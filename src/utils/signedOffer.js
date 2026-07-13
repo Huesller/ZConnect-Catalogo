@@ -1,4 +1,6 @@
 export const SIGNED_OFFER_QUERY_KEY = 's';
+export const SHORT_OFFER_PATH_PREFIX = 'o';
+export const SHORT_OFFER_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/;
 
 export const OFFER_PUBLIC_KEY_JWK = Object.freeze({
   key_ops: ['verify'],
@@ -84,6 +86,35 @@ function normalizeVerifiedPayload(payload, now) {
 
 export function getSignedOfferTokenFromUrl(search = window.location.search) {
   return new URLSearchParams(search).get(SIGNED_OFFER_QUERY_KEY) || '';
+}
+
+export function getShortOfferReferenceFromUrl(pathname = window.location.pathname) {
+  const parts = String(pathname || '').split('/').filter(Boolean);
+  if (parts.length !== 3 || parts[0].toLowerCase() !== SHORT_OFFER_PATH_PREFIX) return null;
+
+  const clientSlug = decodeURIComponent(parts[1] || '').trim().toUpperCase();
+  const code = decodeURIComponent(parts[2] || '').trim().toUpperCase();
+  if (!/^[A-Z0-9][A-Z0-9-]{0,39}$/.test(clientSlug) || !SHORT_OFFER_CODE_PATTERN.test(code)) return null;
+  return { clientSlug, code };
+}
+
+export async function resolveShortOfferToken(reference, options = {}) {
+  if (!reference?.code || !SHORT_OFFER_CODE_PATTERN.test(reference.code)) return '';
+
+  const fetchApi = options.fetchApi || globalThis.fetch;
+  if (typeof fetchApi !== 'function') return '';
+
+  try {
+    const endpoint = options.endpoint || '/api/offer';
+    const url = new URL(endpoint, options.baseUrl || globalThis.location?.origin || 'https://localhost');
+    url.searchParams.set('code', reference.code);
+    const response = await fetchApi(url.toString(), { headers: { Accept: 'application/json' } });
+    if (!response.ok) return '';
+    const result = await response.json();
+    return result?.ok && typeof result.token === 'string' ? result.token : '';
+  } catch {
+    return '';
+  }
 }
 
 export async function verifySignedOfferToken(token, options = {}) {

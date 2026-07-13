@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## V12.2.0 - LINK CURTO E OPERAÇÃO DIÁRIA
+
+- Link especial curto no formato `/o/NOME-DO-CLIENTE/CODIGO`.
+- Desconto, validade e assinatura removidos do endereço compartilhado.
+- Compatibilidade preservada para links assinados antigos com `?s=`.
+- Endpoint seguro para registrar e resolver ofertas assinadas.
+- Link individual de produto com compartilhamento nativo ou cópia.
+- Data e hora da última atualização visíveis no catálogo.
+- Atualização diária automatizada com testes e build antes da publicação.
+- Skeleton de carregamento, estado de imagem indisponível e miniatura no pedido.
+- Faixa de reposição também no modal do produto.
+
+As fórmulas e políticas de preço permanecem inalteradas e cobertas por testes.
+
 ## V12.1.0 - AJUSTE DE ESCALA E CONTEXTO DO CLIENTE
 
 - Hero limitado a aproximadamente 300 px em telas de 1366 px, mantendo a busca visível na primeira dobra.
