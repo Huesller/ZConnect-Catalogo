@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "10.1.0",
-  "release": "DEV-01",
+  "version": "12.1.0",
+  "release": "CATALOGO-TECNICO-EDITORIAL-COMPACTO",
   "status": "stable",
-  "description": "Infraestrutura limpa com DevKit, Gitignore, docs e scripts de manutenção.",
-  "updatedAt": "2026-06-19T22:43:31"
+  "description": "Refatoração editorial compacta com troca de cliente acessível e sinal visual de reposição.",
+  "updatedAt": "2026-07-13T18:15:00-03:00"
 }

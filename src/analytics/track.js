@@ -86,6 +86,18 @@ function toPayload(event, data = {}) {
     itemsCount: Number(data.itemsCount || data.itemCount || quantity || 0),
     cartTotal: Number(data.cartTotal || data.cart_total || total || 0),
     products: data.products || data.items || [],
+    specialOffer: Boolean(data.specialOffer),
+    specialOfferId: String(data.specialOfferId || "").slice(0, 80),
+    specialOfferSigned: Boolean(data.specialOfferSigned),
+    specialOfferActive: Boolean(data.specialOfferActive),
+    specialOfferExpired: Boolean(data.specialOfferExpired),
+    specialOfferClient: String(data.specialOfferClient || "").slice(0, 160),
+    specialOfferSeller: String(data.specialOfferSeller || "").slice(0, 80),
+    specialOfferMode: String(data.specialOfferMode || "").slice(0, 40),
+    specialOfferDiscount: Number(data.specialOfferDiscount || 0),
+    specialOfferFactor: Number(data.specialOfferFactor || 0),
+    specialOfferExpiresAt: String(data.specialOfferExpiresAt || "").slice(0, 80),
+    specialOfferSource: String(data.specialOfferSource || "").slice(0, 80),
     page: window.location.href,
     userAgent: navigator.userAgent
   };

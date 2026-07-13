@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Painel Comercial | Z Automotiva</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b12;
+      --surface: #101722;
+      --surface-2: #151f2d;
+      --line: #2b394b;
+      --text: #f8fafc;
+      --muted: #9cacbf;
+      --red: #e52b30;
+      --red-dark: #a9161b;
+      --green: #25d366;
+      --amber: #f59e0b;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .38);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0, rgba(229, 43, 48, .16), transparent 30rem),
+        linear-gradient(180deg, #0b111b, var(--bg));
+      color: var(--text);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 58px;
+      padding: 9px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 11, 18, .9);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      font-weight: 950;
+    }
+    .brand strong { display: block; font-size: 13px; }
+    .brand small, .version { color: var(--muted); font-size: 11px; }
+
+    .shell {
+      width: min(1120px, calc(100% - 28px));
+      margin: 26px auto 50px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(160deg, rgba(21, 31, 45, .98), rgba(10, 16, 25, .98));
+      box-shadow: var(--shadow);
+    }
+
+    .form-card { padding: 22px; }
+    .eyebrow {
+      display: block;
+      margin-bottom: 6px;
+      color: #fca5a5;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(24px, 4vw, 36px); line-height: 1; letter-spacing: -.04em; }
+    .intro { margin: 9px 0 18px; color: var(--muted); }
+    .warning {
+      margin-bottom: 18px;
+      padding: 10px 12px;
+      border: 1px solid rgba(245, 158, 11, .34);
+      border-radius: 13px;
+      background: rgba(245, 158, 11, .08);
+      color: #fde8bd;
+      font-size: 12px;
+    }
+
+    .fields { display: grid; gap: 13px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: grid; gap: 6px; color: #dbe6f3; font-weight: 800; font-size: 12px; }
+    label small { color: var(--muted); font-weight: 600; }
+    input, select, textarea {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      background: #080d15;
+      color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(229, 43, 48, .14);
+    }
+
+    .policy-preview {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .policy-box {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(8, 13, 21, .72);
+    }
+    .policy-box span { display: block; color: var(--muted); font-size: 10px; font-weight: 800; }
+    .policy-box strong { display: block; margin-top: 3px; font-size: 20px; }
+    .policy-box.final { border-color: rgba(229, 43, 48, .5); background: rgba(229, 43, 48, .09); }
+    .policy-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
+
+    .primary, .secondary, .whatsapp, .danger, .history-actions button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 9px 13px;
+      color: #fff;
+      font-weight: 900;
+    }
+    .primary { width: 100%; margin-top: 2px; background: linear-gradient(135deg, var(--red), var(--red-dark)); }
+    .secondary, .history-actions button { border-color: var(--line); background: var(--surface-2); }
+    .whatsapp { background: linear-gradient(135deg, var(--green), #168f43); }
+    .danger { border-color: rgba(239, 68, 68, .32); background: rgba(239, 68, 68, .08); color: #fecaca; }
+    button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+    .side { display: grid; gap: 16px; }
+    .result-card, .history-card { padding: 18px; }
+    .result-card[hidden] { display: none; }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .section-head h2 { margin: 0; font-size: 16px; }
+    .section-head small { color: var(--muted); }
+    .offer-summary {
+      display: grid;
+      gap: 5px;
+      padding: 12px;
+      border: 1px solid rgba(229, 43, 48, .34);
+      border-radius: 14px;
+      background: rgba(229, 43, 48, .08);
+    }
+    .offer-summary strong { font-size: 16px; }
+    .offer-summary span { color: #d7e0eb; font-size: 12px; }
+    textarea { min-height: 86px; margin-top: 10px; resize: vertical; color: #cbd5e1; font-size: 11px; }
+    .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 9px; }
+    .result-actions .whatsapp { grid-column: 1 / -1; }
+
+    .history-list { display: grid; gap: 8px; max-height: 480px; overflow: auto; padding-right: 3px; }
+    .history-empty { color: var(--muted); padding: 8px 0; }
+    .history-item { padding: 11px; border: 1px solid var(--line); border-radius: 14px; background: rgba(8, 13, 21, .62); }
+    .history-title { display: flex; justify-content: space-between; gap: 8px; }
+    .history-title strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .status { flex: 0 0 auto; color: #bbf7d0; font-size: 10px; font-weight: 900; }
+    .status.expired { color: #fcd34d; }
+    .history-item p { margin: 5px 0; color: #d3deeb; font-size: 11px; }
+    .history-item small { color: var(--muted); font-size: 10px; }
+    .history-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .history-actions button { min-height: 32px; padding: 6px 9px; font-size: 10px; }
+    .history-card > .danger { width: 100%; margin-top: 10px; }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      max-width: min(390px, calc(100vw - 32px));
+      padding: 11px 13px;
+      border: 1px solid rgba(37, 211, 102, .5);
+      border-radius: 12px;
+      background: #0d2c1a;
+      color: #dcfce7;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: .18s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 840px) {
+      .shell { grid-template-columns: 1fr; margin-top: 14px; }
+      .side { grid-row: 2; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 18px, 1120px); }
+      .form-card, .result-card, .history-card { padding: 15px; border-radius: 17px; }
+      .two, .policy-preview, .result-actions { grid-template-columns: 1fr; }
+      .result-actions .whatsapp { grid-column: auto; }
+      .policy-preview { grid-template-columns: repeat(3, 1fr); }
+      .policy-box { padding: 8px; }
+      .policy-box strong { font-size: 16px; }
+      .version { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">Z</span>
+      <span><strong>Z Automotiva</strong><small>Painel comercial interno</small></span>
+    </div>
+    <span class="version">Ofertas assinadas · Build 1</span>
+  </header>
+
+  <main class="shell">
+    <section class="card form-card">
+      <span class="eyebrow">Ferramenta interna</span>
+      <h1>Gerar condição especial</h1>
+      <p class="intro">Defina cliente, consultor, desconto adicional e validade. Confira a condição final antes de gerar.</p>
+      <div class="warning"><strong>Não envie este arquivo ao cliente.</strong> O cliente recebe somente o link assinado.</div>
+
+      <form id="offerForm" class="fields">
+        <label>Consultor
+          <select id="seller" required></select>
+        </label>
+
+        <label>Nome do cliente
+          <input id="client" maxlength="100" autocomplete="off" placeholder="Ex.: Auto Peças Silva" required>
+          <small>Obrigatório porque será exibido no catálogo e usado no Analytics.</small>
+        </label>
+
+        <div class="two">
+          <label>Desconto adicional
+            <input id="discount" type="number" min="0.01" max="95" step="0.01" inputmode="decimal" placeholder="Ex.: 5" required>
+          </label>
+          <label>Validade exata
+            <select id="validity">
+              <option value="1">24 horas</option>
+              <option value="3">3 dias</option>
+              <option value="7" selected>7 dias</option>
+              <option value="15">15 dias</option>
+              <option value="30">30 dias</option>
+            </select>
+          </label>
+        </div>
+
+        <div>
+          <div class="policy-preview" aria-live="polite">
+            <div class="policy-box"><span>Política-base</span><strong id="basePolicy">45%</strong></div>
+            <div class="policy-box"><span>Adicional</span><strong id="extraPolicy">0%</strong></div>
+            <div class="policy-box final"><span>Condição final</span><strong id="finalPolicy">45%</strong></div>
+          </div>
+          <p class="policy-note">A regra soma pontos percentuais ao desconto-base. Não existe desconto em cascata.</p>
+        </div>
+
+        <button class="primary" type="submit">Gerar link protegido</button>
+      </form>
+    </section>
+
+    <aside class="side">
+      <section class="card result-card" id="result" hidden>
+        <div class="section-head"><div><h2>Oferta pronta</h2><small>Link assinado e validado pelo catálogo</small></div></div>
+        <div class="offer-summary">
+          <strong id="resultClient"></strong>
+          <span id="resultRule"></span>
+          <span id="resultExpiry"></span>
+        </div>
+        <textarea id="resultLink" readonly></textarea>
+        <div class="result-actions">
+          <button class="secondary" id="copyLink" type="button">Copiar link</button>
+          <button class="secondary" id="openLink" type="button">Abrir catálogo</button>
+          <button class="whatsapp" id="copyMessage" type="button">Copiar mensagem para WhatsApp</button>
+        </div>
+      </section>
+
+      <section class="card history-card">
+        <div class="section-head"><div><h2>Histórico local</h2><small>Últimas 30 ofertas deste dispositivo</small></div></div>
+        <div class="history-list" id="history"></div>
+        <button class="danger" id="clearHistory" type="button">Limpar histórico</button>
+      </section>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var CATALOG_URL = 'https://catalogo-zautomotiva.vercel.app/';
+      var ANALYTICS_URL = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
+      var HISTORY_KEY = 'zautomotiva_signed_offer_history_v2';
+      var PRIVATE_KEY_JWK = {
+        key_ops: ['sign'],
+        ext: true,
+        kty: 'EC',
+        x: 'ZO1Zs56p0ajqfCIpZ6gEa7ckQ5Hqzr1qlp9iNz5kc4M',
+        y: 'BVoESZjC1ShNIKiqZUpc_rS1Ivh_VgdPmMVONJtvMf4',
+        crv: 'P-256',
+        d: 'ZNKKCzPcxPXOWNcxankMcpYJNmhrqkj3jjAl0YPFNdo'
+      };
+      var SELLERS = [
+        { id: 'huesller', name: 'Huesller', baseDiscount: 45 },
+        { id: 'ney', name: 'Ivoney', baseDiscount: 45 },
+        { id: 'representante', name: 'Francisco', baseDiscount: 50 }
+      ];
+
+      var form = document.getElementById('offerForm');
+      var sellerEl = document.getElementById('seller');
+      var clientEl = document.getElementById('client');
+      var discountEl = document.getElementById('discount');
+      var validityEl = document.getElementById('validity');
+      var resultEl = document.getElementById('result');
+      var resultLinkEl = document.getElementById('resultLink');
+      var historyEl = document.getElementById('history');
+      var toastEl = document.getElementById('toast');
+      var currentOffer = null;
+      var toastTimer = null;
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function showToast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+      }
+
+      function getSeller() {
+        return SELLERS.find(function (item) { return item.id === sellerEl.value; }) || SELLERS[0];
+      }
+
+      function getExtraDiscount() {
+        var value = Number(String(discountEl.value || '').replace(',', '.'));
+        return Number.isFinite(value) ? Math.max(0, Math.min(95, value)) : 0;
+      }
+
+      function formatPercent(value) {
+        return Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + '%';
+      }
+
+      function formatDateTime(value) {
+        return new Intl.DateTimeFormat('pt-BR', {
+          timeZone: 'America/Sao_Paulo',
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        }).format(new Date(value));
+      }
+
+      function updatePolicyPreview() {
+        var seller = getSeller();
+        var extra = getExtraDiscount();
+        var finalDiscount = Math.min(95, seller.baseDiscount + extra);
+        document.getElementById('basePolicy').textContent = formatPercent(seller.baseDiscount);
+        document.getElementById('extraPolicy').textContent = formatPercent(extra);
+        document.getElementById('finalPolicy').textContent = formatPercent(finalDiscount);
+      }
+
+      function bytesToBase64Url(bytes) {
+        var binary = '';
+        bytes.forEach(function (byte) { binary += String.fromCharCode(byte); });
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+
+      function createOfferId() {
+        var bytes = new Uint8Array(8);
+        crypto.getRandomValues(bytes);
+        return 'OF-' + Array.from(bytes).map(function (byte) { return byte.toString(16).padStart(2, '0'); }).join('').toUpperCase();
+      }
+
+      async function signPayload(payload) {
+        if (!crypto || !crypto.subtle) throw new Error('Este navegador não oferece assinatura segura.');
+        var key = await crypto.subtle.importKey(
+          'jwk', PRIVATE_KEY_JWK,
+          { name: 'ECDSA', namedCurve: 'P-256' },
+          false, ['sign']
+        );
+        var payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
+        var encodedPayload = bytesToBase64Url(payloadBytes);
+        var signature = await crypto.subtle.sign(
+          { name: 'ECDSA', hash: 'SHA-256' },
+          key,
+          new TextEncoder().encode(encodedPayload)
+        );
+        return encodedPayload + '.' + bytesToBase64Url(new Uint8Array(signature));
+      }
+
+      function loadHistory() {
+        try {
+          var value = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+          return Array.isArray(value) ? value : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function saveHistory(items) {
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 30))); } catch (_) {}
+      }
+
+      function setCurrentOffer(offer) {
+        currentOffer = offer;
+        resultLinkEl.value = offer.url;
+        document.getElementById('resultClient').textContent = offer.clientName;
+        document.getElementById('resultRule').textContent = offer.sellerName + ' · ' + formatPercent(offer.baseDiscount) + ' base + ' + formatPercent(offer.discount) + ' adicional = ' + formatPercent(offer.finalDiscount) + ' final';
+        document.getElementById('resultExpiry').textContent = 'Válida até ' + formatDateTime(offer.expiresAt);
+        resultEl.hidden = false;
+      }
+
+      function renderHistory() {
+        var items = loadHistory();
+        if (!items.length) {
+          historyEl.innerHTML = '<div class="history-empty">Nenhuma oferta gerada neste dispositivo.</div>';
+          return;
+        }
+
+        historyEl.innerHTML = items.map(function (item) {
+          var expired = Date.now() > new Date(item.expiresAt).getTime();
+          return '<article class="history-item">' +
+            '<div class="history-title"><strong>' + escapeHtml(item.clientName) + '</strong><span class="status ' + (expired ? 'expired' : '') + '">' + (expired ? 'EXPIRADA' : 'ATIVA') + '</span></div>' +
+            '<p>' + escapeHtml(item.sellerName) + ' · condição final ' + escapeHtml(formatPercent(item.finalDiscount)) + '</p>' +
+            '<small>Válida até ' + escapeHtml(formatDateTime(item.expiresAt)) + ' · ' + escapeHtml(item.id) + '</small>' +
+            '<div class="history-actions">' +
+              '<button type="button" data-action="copy" data-id="' + escapeHtml(item.id) + '">Copiar</button>' +
+              '<button type="button" data-action="open" data-id="' + escapeHtml(item.id) + '">Abrir</button>' +
+              '<button type="button" data-action="duplicate" data-id="' + escapeHtml(item.id) + '">Duplicar</button>' +
+            '</div></article>';
+        }).join('');
+      }
+
+      async function copyText(value, successMessage) {
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch (_) {
+          resultLinkEl.value = value;
+          resultLinkEl.select();
+          document.execCommand('copy');
+        }
+        showToast(successMessage);
+      }
+
+      function buildWhatsappMessage(offer) {
+        return [
+          'Olá, ' + offer.clientName + '!',
+          '',
+          'Preparei uma condição especial e exclusiva para sua empresa no Catálogo Z Automotiva.',
+          'A oferta é válida até ' + formatDateTime(offer.expiresAt) + '.',
+          '',
+          offer.url,
+          '',
+          'Se precisar, estou à disposição. — ' + offer.sellerName
+        ].join('\n');
+      }
+
+      function trackOfferCreated(offer) {
+        var payload = {
+          action: 'track',
+          event: 'special_offer_created',
+          eventId: Date.now() + '-' + Math.random().toString(36).slice(2, 9),
+          sessionId: 'painel-local-' + offer.seller,
+          timestamp: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          consultant: offer.seller,
+          consultor: offer.seller,
+          companyName: offer.clientName,
+          specialOffer: true,
+          specialOfferId: offer.id,
+          specialOfferSigned: true,
+          specialOfferClient: offer.clientName,
+          specialOfferSeller: offer.seller,
+          specialOfferDiscount: offer.discount,
+          specialOfferExpiresAt: offer.expiresAt,
+          page: 'painel-comercial-local'
+        };
+        var url = ANALYTICS_URL + '?action=track';
+        var body = JSON.stringify(payload);
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(url, new Blob([body], { type: 'text/plain;charset=UTF-8' }));
+            return;
+          }
+          fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true, body: body }).catch(function () {});
+        } catch (_) {}
+      }
+
+      SELLERS.forEach(function (seller) {
+        var option = document.createElement('option');
+        option.value = seller.id;
+        option.textContent = seller.name;
+        sellerEl.appendChild(option);
+      });
+
+      sellerEl.addEventListener('change', updatePolicyPreview);
+      discountEl.addEventListener('input', updatePolicyPreview);
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        var seller = getSeller();
+        var clientName = String(clientEl.value || '').trim().replace(/\s+/g, ' ');
+        var discount = getExtraDiscount();
+        var validityDays = Math.max(1, Math.min(30, Number(validityEl.value || 7)));
+        var finalDiscount = Math.min(95, seller.baseDiscount + discount);
+
+        if (!clientName) { showToast('Informe o nome do cliente.'); clientEl.focus(); return; }
+        if (!discount) { showToast('Informe um desconto adicional maior que zero.'); discountEl.focus(); return; }
+        if (finalDiscount >= 70 && !confirm('A condição final será ' + formatPercent(finalDiscount) + '. Confirma a geração?')) return;
+
+        var createdAt = Date.now();
+        var expiresAt = createdAt + validityDays * 24 * 60 * 60 * 1000;
+        var payload = {
+          v: 2,
+          i: createOfferId(),
+          s: seller.id,
+          c: clientName,
+          d: discount,
+          a: Math.floor(createdAt / 1000),
+          e: Math.floor(expiresAt / 1000)
+        };
+
+        try {
+          var token = await signPayload(payload);
+          var url = new URL(CATALOG_URL);
+          url.searchParams.set('s', token);
+          var offer = {
+            id: payload.i,
+            seller: seller.id,
+            sellerName: seller.name,
+            clientName: clientName,
+            baseDiscount: seller.baseDiscount,
+            discount: discount,
+            finalDiscount: finalDiscount,
+            createdAt: new Date(createdAt).toISOString(),
+            expiresAt: new Date(expiresAt).toISOString(),
+            url: url.href
+          };
+          saveHistory([offer].concat(loadHistory().filter(function (item) { return item.id !== offer.id; })));
+          setCurrentOffer(offer);
+          renderHistory();
+          trackOfferCreated(offer);
+          showToast('Link protegido gerado.');
+        } catch (error) {
+          showToast(error.message || 'Não foi possível assinar a oferta.');
+        }
+      });
+
+      document.getElementById('copyLink').addEventListener('click', function () {
+        if (currentOffer) copyText(currentOffer.url, 'Link copiado.');
+      });
+      document.getElementById('openLink').addEventListener('click', function () {
+        if (currentOffer) window.open(currentOffer.url, '_blank', 'noopener,noreferrer');
+      });
+      document.getElementById('copyMessage').addEventListener('click', function () {
+        if (currentOffer) copyText(buildWhatsappMessage(currentOffer), 'Mensagem para WhatsApp copiada.');
+      });
+
+      historyEl.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-action][data-id]');
+        if (!button) return;
+        var item = loadHistory().find(function (offer) { return offer.id === button.dataset.id; });
+        if (!item) return;
+        if (button.dataset.action === 'copy') copyText(item.url, 'Link copiado.');
+        if (button.dataset.action === 'open') window.open(item.url, '_blank', 'noopener,noreferrer');
+        if (button.dataset.action === 'duplicate') {
+          sellerEl.value = item.seller;
+          clientEl.value = item.clientName;
+          discountEl.value = item.discount;
+          updatePolicyPreview();
+          clientEl.focus();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      document.getElementById('clearHistory').addEventListener('click', function () {
+        if (!loadHistory().length) return;
+        if (!confirm('Apagar todo o histórico local de ofertas?')) return;
+        saveHistory([]);
+        renderHistory();
+        showToast('Histórico local apagado.');
+      });
+
+      updatePolicyPreview();
+      renderHistory();
+    })();
+  </script>
+</body>
+</html>

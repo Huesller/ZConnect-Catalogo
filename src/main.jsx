@@ -2,6 +2,19 @@
 import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles.css';
+import {
+  CONSULTANT_PRICE_POLICIES,
+  DEFAULT_COMMERCIAL_POLICY,
+  calculateConsultantPriceValues,
+  calculateSpecialOfferPriceValues,
+  getPolicyMultiplier,
+  roundCurrency,
+  toPolicyNumber
+} from './domain/pricing-core.js';
+import {
+  getSignedOfferTokenFromUrl,
+  verifySignedOfferToken
+} from './utils/signedOffer.js';
 
 const STORAGE_KEYS = {
   cart: 'zconnect:cart:v11',
@@ -18,19 +31,13 @@ const FALLBACK_CONSULTANTS = {
   francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
 };
-const DEFAULT_COMMERCIAL_POLICY = 45;
-const CONSULTANT_PRICE_POLICIES = {
-  huesller: { discount: 45, multiplier: 0.55 },
-  ney: { discount: 45, multiplier: 0.55 },
-  francisco: { discount: 50, multiplier: 0.5 },
-  representante: { discount: 50, multiplier: 0.5 }
-};
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 24;
 const CATALOG_TITLE = 'CATÁLOGO Z AUTOMOTIVA';
 const ANONYMOUS_COMPANY_NAME = 'Não identificado';
 const ANONYMOUS_TOAST = 'Que pena, queríamos saber quem é você 😊';
 const COMPANY_BANNER_HIDDEN_UNTIL_KEY = 'zconnect:company-banner-hidden-until:v1';
 const COMPANY_BANNER_HIDE_MS = 7 * 24 * 60 * 60 * 1000;
+const LEGACY_SPECIAL_OFFER_CUTOFF_MS = Date.parse('2026-08-13T02:59:59.999Z');
 
 const SPECIAL_OFFER_QUERY_KEYS = {
   token: 'o',
@@ -117,6 +124,8 @@ function getSpecialOfferFromUrl() {
   if (typeof window === 'undefined') return null;
 
   const params = new URLSearchParams(window.location.search);
+  if (getSignedOfferTokenFromUrl(window.location.search)) return null;
+
   const token = params.get(SPECIAL_OFFER_QUERY_KEYS.token);
   const shortToken = params.get(SPECIAL_OFFER_QUERY_KEYS.shortToken);
   const compactOffer = parseShortSpecialOfferToken(shortToken);
@@ -154,6 +163,7 @@ function getSpecialOfferFromUrl() {
   const clientName = String(compactOffer?.clientName || params.get(SPECIAL_OFFER_QUERY_KEYS.client) || '').trim();
   const hasOffer = Boolean(shortToken || token || params.has(SPECIAL_OFFER_QUERY_KEYS.discount) || params.has(SPECIAL_OFFER_QUERY_KEYS.factor) || params.has('factor') || params.has('multiplicador') || clientName);
   if (!hasOffer || !clientName || discount === null || discount <= 0) return null;
+  if (Date.now() > LEGACY_SPECIAL_OFFER_CUTOFF_MS) return null;
 
   const expired = expiresAt ? Date.now() > expiresAt.getTime() : false;
   const canonicalSeller = normalizeText(seller || 'huesller') || 'huesller';
@@ -167,6 +177,8 @@ function getSpecialOfferFromUrl() {
   return {
     active: !expired,
     expired,
+    signed: false,
+    id: '',
     seller: canonicalSeller,
     clientName,
     discount,
@@ -174,7 +186,7 @@ function getSpecialOfferFromUrl() {
     mode: normalizedMode,
     expiresAt: expiresAt ? expiresAt.toISOString() : '',
     expiresLabel: expiresAt ? expiresAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '',
-    source: shortToken ? 'painel_comercial_short_token' : token ? 'painel_comercial_token' : 'url_param'
+    source: shortToken ? 'legacy_unsigned_short_token' : token ? 'legacy_unsigned_token' : 'legacy_unsigned_url_param'
   };
 }
 
@@ -183,6 +195,8 @@ function getSpecialOfferAnalytics(offer) {
 
   return {
     specialOffer: true,
+    specialOfferId: offer.id || '',
+    specialOfferSigned: Boolean(offer.signed),
     specialOfferActive: Boolean(offer.active),
     specialOfferExpired: Boolean(offer.expired),
     specialOfferClient: offer.clientName || '',
@@ -204,16 +218,22 @@ function applySpecialOfferPrice(product = {}, offer) {
   const rawWithoutIpi = getRawPriceWithoutIpi(product);
   const baseDiscount = toPolicyNumber(product.pricePolicy) ?? DEFAULT_COMMERCIAL_POLICY;
   const extraDiscount = offer.mode === 'increase' ? 0 : (toPolicyNumber(offer.discount) ?? 0);
-  const finalDiscount = Math.max(0, Math.min(95, baseDiscount + extraDiscount));
-  const finalMultiplier = roundCurrency((100 - finalDiscount) / 100);
+  const {
+    finalDiscount,
+    finalMultiplier,
+    specialPrice,
+    specialPriceWithoutIpi
+  } = calculateSpecialOfferPriceValues({
+    rawWithIpi,
+    rawWithoutIpi,
+    baseDiscount,
+    extraDiscount
+  });
 
   const originalPrice = getPriceWithIpi(product);
   const originalPriceWithoutIpi = getPriceWithoutIpi(product);
   const originalPriceLabel = product.priceLabel || product.priceWithIpiLabel || product.precoComIpiLabel || money(originalPrice);
   const originalPriceWithoutIpiLabel = product.priceWithoutIpiLabel || product.precoSemIpiLabel || (originalPriceWithoutIpi ? money(originalPriceWithoutIpi) : '');
-
-  const specialPrice = roundCurrency(rawWithIpi * finalMultiplier);
-  const specialPriceWithoutIpi = rawWithoutIpi ? roundCurrency(rawWithoutIpi * finalMultiplier) : null;
 
   if (specialPrice <= 0) return product;
   if (offer.mode !== 'increase' && originalPrice && specialPrice >= originalPrice) return product;
@@ -326,11 +346,6 @@ function getCanonicalConsultantSlug(consultant) {
   return slug === 'ivoney' ? 'ney' : slug;
 }
 
-function toPolicyNumber(value) {
-  const policy = Number(value);
-  return Number.isFinite(policy) && policy >= 0 && policy < 100 ? policy : null;
-}
-
 function getConsultantTargetPolicy(consultant = {}) {
   const slug = getCanonicalConsultantSlug(consultant);
   if (CONSULTANT_PRICE_POLICIES[slug]) {
@@ -343,16 +358,6 @@ function getConsultantTargetPolicy(consultant = {}) {
 
 function getPricePolicyLabel(policy) {
   return `Desconto ${policy}%`;
-}
-
-function roundCurrency(value) {
-  return Math.round(Number(value || 0) * 100) / 100;
-}
-
-function getPolicyMultiplier(policy) {
-  const discount = toPolicyNumber(policy) ?? DEFAULT_COMMERCIAL_POLICY;
-  const consultantPolicy = Object.values(CONSULTANT_PRICE_POLICIES).find((item) => item.discount === discount);
-  return consultantPolicy?.multiplier ?? roundCurrency((100 - discount) / 100);
 }
 
 function getZettaBasePrice(product = {}) {
@@ -466,10 +471,12 @@ function applyConsultantPrice(product = {}, consultant = {}) {
   const basePrice = getZettaBasePrice(product);
   const rawWithIpi = getRawPriceWithIpi(product) || basePrice;
   const rawWithoutIpi = getRawPriceWithoutIpi(product);
-  const pricePolicy = getConsultantTargetPolicy(consultant);
-  const priceMultiplier = getPolicyMultiplier(pricePolicy);
-  const price = roundCurrency(rawWithIpi * priceMultiplier);
-  const priceWithoutIpi = rawWithoutIpi ? roundCurrency(rawWithoutIpi * priceMultiplier) : 0;
+  const calculatedPrice = calculateConsultantPriceValues({
+    rawWithIpi,
+    rawWithoutIpi,
+    discount: getConsultantTargetPolicy(consultant)
+  });
+  const { pricePolicy, priceMultiplier, price, priceWithoutIpi } = calculatedPrice;
   const basePriceLabel = product.basePriceLabel || product.precoZettaLabel || product.precoCheioLabel || product.priceLabel || money(basePrice);
 
   return {
@@ -1405,7 +1412,7 @@ function getStockStatus(product = {}) {
   if (stock <= 0) {
     return {
       key: 'out',
-      label: '🚚 Reposição em breve',
+      label: 'Reposição em breve',
       shortLabel: 'Reposição',
       analyticsLabel: 'out_of_stock',
       available: false,
@@ -1418,7 +1425,7 @@ function getStockStatus(product = {}) {
   if (stock <= 3) {
     return {
       key: 'last_units',
-      label: `🔥 Últimas unidades: ${stock} un.`,
+      label: `Últimas unidades: ${stock} un.`,
       shortLabel: `Últimas ${stock} un.`,
       analyticsLabel: 'last_units',
       available: true,
@@ -1431,7 +1438,7 @@ function getStockStatus(product = {}) {
   if (stock <= 5) {
     return {
       key: 'low',
-      label: `⚠ Poucas unidades: ${stock} un.`,
+      label: `Poucas unidades: ${stock} un.`,
       shortLabel: `Poucas: ${stock} un.`,
       analyticsLabel: 'low_stock',
       available: true,
@@ -1443,7 +1450,7 @@ function getStockStatus(product = {}) {
 
   return {
     key: restocked ? 'restocked' : 'available',
-    label: restocked ? `🟢 Voltou ao estoque: ${stock} un.` : `Estoque: ${stock} un.`,
+    label: restocked ? `Voltou ao estoque: ${stock} un.` : `Estoque: ${stock} un.`,
     shortLabel: restocked ? 'Voltou ao estoque' : `${stock} un.`,
     analyticsLabel: restocked ? 'restocked' : 'available',
     available: true,
@@ -1692,12 +1699,33 @@ function openWhatsapp(phone, text) {
   window.open(`https://wa.me/${phone}${encodedText}`, '_blank', 'noopener,noreferrer');
 }
 
+function Icon({ name, size = 18 }) {
+  const paths = {
+    search: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.2 4.2" /></>,
+    message: <><path d="M20 11.4a8.2 8.2 0 0 1-8.6 8.1 9 9 0 0 1-3.5-.9L3 20l1.5-4.5a8.2 8.2 0 1 1 15.5-4.1Z" /><path d="M8.2 9.4h.1M11.8 9.4h.1M15.4 9.4h.1" /></>,
+    cart: <><path d="M3 4h2l1.8 10.2a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 1.9-1.4L20 8H6" /><circle cx="9" cy="20" r="1" /><circle cx="17" cy="20" r="1" /></>,
+    heart: <path d="M20.8 8.8c0 5.2-8.8 10.1-8.8 10.1S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.4a4.7 4.7 0 0 1 8.8 2.4Z" />,
+    plus: <><path d="M12 5v14M5 12h14" /></>,
+    minus: <path d="M5 12h14" />,
+    arrow: <><path d="M5 12h14" /><path d="m14 7 5 5-5 5" /></>,
+    zoom: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.2 4.2M11 8v6M8 11h6" /></>,
+    building: <><path d="M5 21V4h10v17M15 9h4v12M8 8h1M11 8h1M8 12h1M11 12h1M8 16h1M11 16h1M3 21h18" /></>,
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></>
+  };
+
+  return (
+    <svg className="ui-icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[name] || paths.arrow}
+    </svg>
+  );
+}
+
 function QuantityStepper({ value, onChange, compact = false }) {
   return (
     <div className={compact ? 'qty-stepper compact' : 'qty-stepper'}>
-      <button type="button" onClick={() => onChange(Math.max(1, value - 1))}>−</button>
+      <button type="button" aria-label="Diminuir quantidade" onClick={() => onChange(Math.max(1, value - 1))}><Icon name="minus" size={14} /></button>
       <span>{value}</span>
-      <button type="button" onClick={() => onChange(value + 1)}>+</button>
+      <button type="button" aria-label="Aumentar quantidade" onClick={() => onChange(value + 1)}><Icon name="plus" size={14} /></button>
     </div>
   );
 }
@@ -1736,7 +1764,7 @@ function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite 
                       aria-label={favorites.has(product.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                       onClick={() => onToggleFavorite(product)}
                     >
-                      {favorites.has(product.id) ? '★' : '☆'}
+                      <Icon name="heart" size={16} />
                     </button>
                     <button
                       type="button"
@@ -1827,19 +1855,19 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
         aria-label={favoriteIds.has(product.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         onClick={() => onToggleFavorite(product)}
       >
-        {favoriteIds.has(product.id) ? '★' : '☆'}
+        <Icon name="heart" size={18} />
       </button>
 
       <button type="button" className="product-main" onClick={() => onOpen(product)}>
         <div className={stockStatus.out ? "product-thumb product-thumb-muted" : "product-thumb"}>
           <span className="chip thumb-chip">{product.displayBrand}</span>
-          {stockStatus.out ? <span className="stock-overlay-badge">🚚 Em breve</span> : null}
+          {stockStatus.out ? <span className="stock-replenishment-ribbon">Breve reposição</span> : null}
           {product.image ? <img src={product.image} alt={product.name} loading="lazy" decoding="async" /> : <span className="no-image">Sem imagem</span>}
         </div>
 
         <div className="product-copy">
+          <span className="product-code">{product.code}{product.fabCode ? ` / ${product.fabCode}` : ''}</span>
           <h3 title={product.name}>{product.name}</h3>
-          <p>{product.code}{product.fabCode ? ` / ${product.fabCode}` : ''}</p>
         </div>
       </button>
 
@@ -2015,7 +2043,13 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
 }
 
 function App() {
-  const specialOffer = useMemo(() => getSpecialOfferFromUrl(), []);
+  const signedOfferToken = useMemo(() => getSignedOfferTokenFromUrl(), []);
+  const initialSpecialOffer = useMemo(
+    () => (signedOfferToken ? null : getSpecialOfferFromUrl()),
+    [signedOfferToken]
+  );
+  const [specialOffer, setSpecialOffer] = useState(initialSpecialOffer);
+  const [offerVerificationPending, setOfferVerificationPending] = useState(Boolean(signedOfferToken));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [products, setProducts] = useState([]);
@@ -2025,6 +2059,7 @@ function App() {
   const searchInputRef = useRef(null);
   const searchBoxRef = useRef(null);
   const pageViewSentRef = useRef(false);
+  const specialOfferOpenSentRef = useRef(false);
   const lastSearchEventRef = useRef('');
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
@@ -2055,6 +2090,36 @@ function App() {
   useEffect(() => {
     document.title = CATALOG_TITLE;
   }, []);
+
+  useEffect(() => {
+    if (!signedOfferToken) return undefined;
+
+    let active = true;
+    setOfferVerificationPending(true);
+
+    verifySignedOfferToken(signedOfferToken).then((verifiedOffer) => {
+      if (!active) return;
+
+      setSpecialOffer(verifiedOffer);
+      setOfferVerificationPending(false);
+
+      if (!verifiedOffer) {
+        setToast('Este link especial é inválido ou foi alterado. O catálogo seguirá com a condição normal.');
+        return;
+      }
+
+      if (verifiedOffer.expired) {
+        setCompanyName(verifiedOffer.clientName);
+        setCompanyDraft(verifiedOffer.clientName);
+        setCatalogAccessGranted(true);
+        setCompanyGateMinimized(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [signedOfferToken]);
 
   useEffect(() => {
     if (!specialOffer?.active) return;
@@ -2250,6 +2315,16 @@ function App() {
       totalProducts: pricedProducts.length
     });
   }, [catalogLocked, consultant, loading, pricedProducts.length, specialOffer]);
+
+  useEffect(() => {
+    if (!specialOffer?.active || !specialOffer.signed || specialOfferOpenSentRef.current) return;
+
+    specialOfferOpenSentRef.current = true;
+    trackEvent('special_offer_opened', {
+      ...getConsultantAnalytics(consultant),
+      ...getSpecialOfferAnalytics(specialOffer)
+    });
+  }, [consultant, specialOffer]);
 
   useEffect(() => {
     const normalizedQuery = deferredQuery.trim();
@@ -2542,6 +2617,17 @@ function App() {
     openWhatsapp(consultant.phone, buildWhatsAppMessage(cartItems, consultant, subtotal, companyName));
   }
 
+  if (offerVerificationPending) {
+    return (
+      <main className="offer-verification-screen" aria-live="polite">
+        <img src="/logo-z-automotiva.png" alt="Z Automotiva" />
+        <span className="offer-verification-spinner" aria-hidden="true" />
+        <strong>Validando sua condição especial...</strong>
+        <small>Isso leva apenas alguns segundos.</small>
+      </main>
+    );
+  }
+
   return (
     <>
     <div className={catalogLocked ? 'app-shell catalog-locked' : 'app-shell'} aria-hidden={catalogLocked ? 'true' : undefined}>
@@ -2555,21 +2641,23 @@ function App() {
         </button>
 
         <button type="button" className="header-search-trigger" onClick={scrollToCatalog}>
-          <span>⌕</span>
-          <strong>Buscar código, veículo, aplicação ou descrição</strong>
+          <Icon name="search" size={18} />
+          <strong>Buscar peça, veículo ou código</strong>
+          <kbd>/</kbd>
         </button>
 
         <div className="header-side">
           <div className="company-pill">
-            <span>{specialOffer?.active ? `Condição especial para ${companyName}` : companyName ? `É muito bom ter você aqui, ${companyName}` : 'Acesso sem identificação'}</span>
+            <Icon name="building" size={17} />
+            <span>{specialOffer?.active ? `Condição especial · ${companyName}` : companyName || 'Acesso sem identificação'}</span>
             <button type="button" onClick={changeCompany} disabled={specialOffer?.active}>{specialOffer?.active ? 'Link especial' : companyName ? 'Trocar empresa' : 'Informar empresa'}</button>
           </div>
 
           <button type="button" className="consultant-pill" onClick={() => openWhatsapp(consultant.phone)}>
             <span className={online ? 'status-dot online' : 'status-dot offline'} />
             <span>
-              <small>{online ? 'Online agora' : 'Offline agora'}</small>
-              <strong>Falar com {consultant.name}</strong>
+              <small>{online ? 'Consultor online' : 'Consultor offline'}</small>
+              <strong>{consultant.name}</strong>
             </span>
           </button>
 
@@ -2577,6 +2665,7 @@ function App() {
             setCartOpen(true);
             scrollToCatalog();
           }}>
+            <Icon name="cart" size={18} />
             <small>Pedido</small>
             <strong>{cartCount}</strong>
           </button>
@@ -2585,15 +2674,21 @@ function App() {
 
       <section className="hero-panel hero-panel-v5">
         <div className="hero-copy">
-          <span className="eyebrow">Catálogo comercial</span>
-          <h1>Busca rápida para peças automotivas.</h1>
-          <p>Produtos atualizados, estoque visível e pedido direto com o consultor.</p>
+          <div className="hero-kicker"><span>Catálogo atacadista</span><i /> <span>2026</span></div>
+          <h1>A peça certa.<br /><em>Sem perder tempo.</em></h1>
+          <p>Consulte aplicação, estoque e condição comercial em uma única tela.</p>
 
           <div className="hero-actions hero-actions-compact">
-            <button type="button" className="primary-button" onClick={scrollToCatalog}>🔍 Buscar</button>
+            <button type="button" className="primary-button" onClick={scrollToCatalog}><Icon name="search" /> Buscar produto</button>
             <button type="button" className="ghost-button" onClick={() => openWhatsapp(consultant.phone)}>
-              💬 WhatsApp
+              <Icon name="message" /> Falar com {consultant.name}
             </button>
+          </div>
+
+          <div className="hero-specs" aria-label="Informações do catálogo">
+            <span><strong>{products.length.toLocaleString('pt-BR')}</strong> produtos</span>
+            <span><strong>{BRANDS.length - 1}</strong> marcas</span>
+            <span><strong>Estoque</strong> visível</span>
           </div>
         </div>
 
@@ -2602,6 +2697,14 @@ function App() {
           <span className="hero-art-shine" />
           <span className="hero-art-red-glow" />
         </div>
+
+        {!specialOffer?.active ? (
+          <button type="button" className="hero-client-switch" onClick={changeCompany}>
+            <Icon name="building" size={15} />
+            <span>{companyName || 'Cliente não identificado'}</span>
+            <strong>Trocar</strong>
+          </button>
+        ) : null}
       </section>
 
       <SpecialOfferBanner offer={specialOffer} consultant={consultant} />
@@ -2616,12 +2719,15 @@ function App() {
       <section className="search-panel" id="catalogo">
         <div className="search-head">
           <div>
-            <span className="eyebrow">Busca principal</span>
-            <h2>Encontre a peça certa</h2>
+            <span className="search-index">01</span>
+            <span className="eyebrow">Consulta rápida</span>
+            <h2>O que você procura?</h2>
           </div>
+          <p>Nome da peça, veículo, aplicação ou código.</p>
         </div>
 
         <div className="search-box" ref={searchBoxRef}>
+          <Icon name="search" size={22} />
           <input
             ref={searchInputRef}
             autoFocus={!catalogLocked}
@@ -2643,13 +2749,13 @@ function App() {
                 searchInputRef.current?.blur();
               }
             }}
-            placeholder="Ex: Gol G5, Farol Onix, Parachoque Corolla, 459306"
+            placeholder="Ex.: farol Onix 2020, parachoque Corolla ou 459306"
           />
           {!!query.trim() && (
             <button type="button" className="ghost-button clear-search" onClick={() => {
               setQuery('');
               setSuggestionsOpen(false);
-            }}>Limpar</button>
+            }} aria-label="Limpar busca">×</button>
           )}
 
           {!!suggestions.length && (
@@ -2670,16 +2776,21 @@ function App() {
           )}
         </div>
 
-        <div className="filters">
+        <div className="filter-group">
+          <span className="filter-label">Marca</span>
+          <div className="filters">
           {BRANDS.map((brand) => (
             <button key={brand} type="button" className={filter === brand ? 'filter-button active' : 'filter-button'} onClick={() => setFilter(brand)}>
               <strong>{brand}</strong>
               <span>{brandCounts[brand] || 0}</span>
             </button>
           ))}
+          </div>
         </div>
 
-        <div className="filters stock-filters" aria-label="Filtros de estoque">
+        <div className="filter-group filter-group-stock">
+          <span className="filter-label">Disponibilidade</span>
+          <div className="filters stock-filters" aria-label="Filtros de estoque">
           {[
             { key: 'all', label: 'Todos', count: pricedProducts.length },
             { key: 'available', label: 'Disponíveis', count: pricedProducts.filter((product) => getStockStatus(product).available).length },
@@ -2704,6 +2815,7 @@ function App() {
               <span>{item.count}</span>
             </button>
           ))}
+          </div>
         </div>
       </section>
 
@@ -2711,6 +2823,17 @@ function App() {
         <CompactRail title="Favoritos" items={favoriteProducts.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
         <CompactRail title="Vistos recentemente" items={recentProducts.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
         <CompactRail title="Mais adicionados" items={mostAdded.slice(0, 4)} favorites={favoriteIds} onOpen={openDetails} onAdd={addToCart} onToggleFavorite={toggleFavorite} />
+      </section>
+
+      <section className="catalog-heading">
+        <div>
+          <span className="section-index">02</span>
+          <div>
+            <span className="eyebrow">Seleção de produtos</span>
+            <h2>{hasQuery ? `Resultados para “${query.trim()}”` : filter === 'Todos' ? 'Catálogo completo' : `Linha ${filter}`}</h2>
+          </div>
+        </div>
+        <p><strong>{allFilteredProducts.length.toLocaleString('pt-BR')}</strong> produtos encontrados</p>
       </section>
 
       {loadError ? <div className="message-box">{loadError}</div> : null}
@@ -2827,13 +2950,14 @@ function App() {
             <small>Preço exibido com IPI incluso e vindo da atualização do catálogo.</small>
             {cartItems.length ? <div className="cart-ready-status">✔ Pronto para orçamento</div> : null}
             <button type="button" className="primary-button" disabled={!cartItems.length || !consultant.phone} onClick={finishWhatsApp}>
-              Finalizar no WhatsApp
+              Finalizar no WhatsApp <Icon name="arrow" />
             </button>
           </div>
         </aside>
       </section>
 
       <button type="button" className="mobile-cart-toggle" onClick={() => setCartOpen(true)}>
+        <Icon name="cart" />
         <span>Pedido</span>
         <strong>{cartCount}</strong>
         <small>{money(subtotal)}</small>
@@ -2856,7 +2980,7 @@ function App() {
                 {selectedProduct.image ? (
                   <>
                     <img src={selectedProduct.image} alt={selectedProduct.name} loading="eager" decoding="async" />
-                    <span className="modal-zoom-badge">🔍 Ampliar</span>
+                    <span className="modal-zoom-badge"><Icon name="zoom" size={15} /> Ampliar</span>
                   </>
                 ) : <div className="no-image large">Sem imagem</div>}
               </button>
@@ -2883,13 +3007,13 @@ function App() {
                 <div className="modal-add-line">
                   {getStockStatus(selectedProduct).out ? (
                     <button type="button" className="ghost-button interest-button" onClick={() => requestStockInterest(selectedProduct)}>
-                      💬 Tenho interesse
+                      <Icon name="message" /> Tenho interesse
                     </button>
                   ) : (
                     <>
                       <QuantityStepper compact value={cardQty[selectedProduct.id] || 1} onChange={(qty) => setCardQty((current) => ({ ...current, [selectedProduct.id]: qty }))} />
                       <button type="button" className="primary-button" onClick={() => addToCart(selectedProduct, cardQty[selectedProduct.id] || 1)}>
-                        Adicionar
+                        Adicionar <Icon name="plus" />
                       </button>
                     </>
                   )}
