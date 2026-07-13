@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-10T17:29:32.322Z",
+  "generatedAt": "2026-07-13T18:37:57.475Z",
   "total": 2704,
-  "available": 2123,
-  "outOfStock": 581,
-  "lowStock": 494,
+  "available": 2127,
+  "outOfStock": 577,
+  "lowStock": 499,
   "sources": [
     {
       "brand": "RIDA",
@@ -201,15 +201,6 @@
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
     },
     {
-      "id": "RETOV-336928-RI4527",
-      "code": "336928",
-      "fabCode": "RI4527",
-      "name": "GRADE CENTRAL PARACHOQUE FIAT PALIO SIENA G4 2008 A 2011 CINZA ESCURO SEM FURO MILHA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=3"
-    },
-    {
       "id": "RETOV-655010-RJ5322",
       "code": "655010",
       "fabCode": "RJ5322",
@@ -271,6 +262,15 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=31"
+    },
+    {
+      "id": "RETOV-455804-PW0131",
+      "code": "455804",
+      "fabCode": "PW0131",
+      "name": "GRADE DIANTEIRA GOL PARATI SAVEIRO G3 1999 A 2002 FASE 1 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=11"
     }
   ]
 }

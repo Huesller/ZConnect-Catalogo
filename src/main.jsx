@@ -17,6 +17,17 @@ import {
   resolveShortOfferToken,
   verifySignedOfferToken
 } from './utils/signedOffer.js';
+import {
+  RESERVATION_HEARTBEAT_MS,
+  RESERVATION_POLL_MS,
+  fetchReservationSnapshot,
+  getReservationAvailability,
+  getReservationSessionId,
+  indexReservationProducts,
+  normalizeReservationSnapshot,
+  quoteReservations as quoteCartReservations,
+  syncReservations as syncCartReservations
+} from './utils/reservations.js';
 
 const STORAGE_KEYS = {
   cart: 'zconnect:cart:v11',
@@ -1563,7 +1574,7 @@ function getConsultant(consultants, specialOffer = null) {
     || FALLBACK_CONSULTANTS.huesller;
 }
 
-function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
+function buildWhatsAppMessage(cart, consultant, subtotal, companyName, reservationProducts = {}) {
   const totalItems = cart.reduce((total, item) => total + Number(item.qty || 0), 0);
 
   return [
@@ -1573,14 +1584,25 @@ function buildWhatsAppMessage(cart, consultant, subtotal, companyName) {
     `Consultor: ${consultant.name}`,
     '',
     'Itens solicitados:',
-    ...cart.flatMap((item, index) => [
-      `${index + 1}. ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
-      `${item.name}`,
-      `Quantidade: ${item.qty}`,
-      `Valor unitário com IPI: ${item.priceLabel || money(item.price)}`,
-      `Subtotal: ${money(item.price * item.qty)}`,
-      ''
-    ]),
+    ...cart.flatMap((item, index) => {
+      const reservation = reservationProducts[item.code || item.id];
+      const availability = getReservationAvailability(item, reservation);
+      const availabilityLine = reservation
+        ? availability.ownExcessQty > 0
+          ? `Disponibilidade: ${availability.ownReservedQty} reservada(s) · ${availability.ownExcessQty} sob consulta`
+          : `Disponibilidade: ${availability.ownReservedQty} reservada(s)`
+        : '';
+
+      return [
+        `${index + 1}. ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
+        `${item.name}`,
+        `Quantidade: ${item.qty}`,
+        availabilityLine,
+        `Valor unitário com IPI: ${item.priceLabel || money(item.price)}`,
+        `Subtotal: ${money(item.price * item.qty)}`,
+        ''
+      ].filter(Boolean);
+    }),
     'Resumo do orçamento:',
     `Total de itens: ${totalItems}`,
     `Subtotal: ${money(subtotal)}`,
@@ -1871,7 +1893,37 @@ function PriceDisplay({ product, variant = 'card' }) {
 }
 
 
-function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, onInterest, onToggleFavorite }) {
+function ReservationStatus({ product, reservation, variant = 'product' }) {
+  if (!reservation) return null;
+  const availability = getReservationAvailability(product, reservation);
+  if (availability.stockQty === null || availability.stockQty <= 0) return null;
+
+  if (variant === 'cart') {
+    if (!availability.ownRequestedQty) return null;
+    const hasExcess = availability.ownExcessQty > 0;
+    return (
+      <div className={hasExcess ? 'reservation-status cart-reservation-status reservation-warning' : 'reservation-status cart-reservation-status'}>
+        <span className="reservation-dot" aria-hidden="true" />
+        {hasExcess
+          ? `${availability.ownReservedQty} reservada(s) · ${availability.ownExcessQty} sob consulta`
+          : reservation.ownStatus === 'quoted'
+            ? `${availability.ownReservedQty} reservada(s) · cotação em atendimento`
+            : `${availability.ownReservedQty} reservada(s) por 20 min`}
+      </div>
+    );
+  }
+
+  if (!availability.totalReservedQty) return null;
+  const soldOutByCarts = availability.availableNow === 0;
+  return (
+    <div className={soldOutByCarts ? 'reservation-status reservation-warning' : 'reservation-status'}>
+      <span className="reservation-dot" aria-hidden="true" />
+      Em carrinhos: {availability.totalReservedQty} · Disponível agora: {availability.availableNow}
+    </div>
+  );
+}
+
+function ProductCard({ product, reservation, favoriteIds, qty, onQtyChange, onOpen, onAdd, onInterest, onToggleFavorite }) {
   const stockStatus = getStockStatus(product);
 
   return (
@@ -1901,6 +1953,7 @@ function ProductCard({ product, favoriteIds, qty, onQtyChange, onOpen, onAdd, on
       <PriceDisplay product={product} />
 
       <div className={`stock-line stock-${stockStatus.key}`}>{stockStatus.label}</div>
+      <ReservationStatus product={product} reservation={reservation} />
 
       <div className="product-controls">
         {stockStatus.out ? (
@@ -2131,6 +2184,11 @@ function App() {
     const storedCompany = specialOffer?.active ? specialOffer.clientName : getStoredCompanyName();
     return storedCompany ? `Bem-vindo, ${storedCompany}` : '';
   });
+  const reservationSessionId = useMemo(() => getReservationSessionId(), []);
+  const [reservationProducts, setReservationProducts] = useState({});
+  const [reservationOnline, setReservationOnline] = useState(false);
+  const quotedReservationSignatureRef = useRef('');
+  const lastReservationWarningRef = useRef('');
   const catalogLocked = !catalogAccessGranted;
   const showCompanyIdentificationBanner = !catalogLocked && !companyName && Date.now() >= companyBannerHiddenUntil;
 
@@ -2368,7 +2426,116 @@ function App() {
 
   const cartCount = useMemo(() => cartItems.reduce((total, item) => total + item.qty, 0), [cartItems]);
   const subtotal = useMemo(() => cartItems.reduce((total, item) => total + item.price * item.qty, 0), [cartItems]);
+  const reservationSnapshot = useMemo(() => normalizeReservationSnapshot(
+    cartItems.map((item) => ({ ...item, stockQty: getStockQuantity(item) }))
+  ), [cartItems]);
+  const reservationSignature = useMemo(() => JSON.stringify(reservationSnapshot), [reservationSnapshot]);
+  const cartReservationTotals = useMemo(() => cartItems.reduce((totals, item) => {
+    const availability = getReservationAvailability(item, reservationProducts[item.code || item.id]);
+    totals.reserved += availability.ownReservedQty;
+    totals.excess += availability.ownExcessQty;
+    return totals;
+  }, { reserved: 0, excess: 0 }), [cartItems, reservationProducts]);
   const related = useMemo(() => (selectedProduct ? findRelated(pricedProducts, selectedProduct, addedMap) : { complementary: [], similar: [] }), [addedMap, pricedProducts, selectedProduct]);
+
+  function applyReservationResult(result, showAllocationWarning = false) {
+    const indexed = indexReservationProducts(result);
+    setReservationProducts(indexed);
+    setReservationOnline(true);
+
+    if (!showAllocationWarning) return;
+    const excessItems = Object.values(indexed).filter((item) => item.ownExcessQty > 0);
+    if (!excessItems.length) {
+      lastReservationWarningRef.current = '';
+      return;
+    }
+
+    const signature = excessItems
+      .map((item) => `${item.productCode}:${item.ownReservedQty}:${item.ownExcessQty}`)
+      .sort()
+      .join('|');
+    if (lastReservationWarningRef.current === signature) return;
+    lastReservationWarningRef.current = signature;
+    const totalExcess = excessItems.reduce((total, item) => total + item.ownExcessQty, 0);
+    setToast(`${totalExcess} unidade(s) acima do disponível foram mantidas sob consulta.`);
+  }
+
+  useEffect(() => {
+    if (loading || catalogLocked) return undefined;
+    let active = true;
+
+    if (quotedReservationSignatureRef.current && quotedReservationSignatureRef.current !== reservationSignature) {
+      quotedReservationSignatureRef.current = '';
+    }
+
+    const timeout = window.setTimeout(() => {
+      syncCartReservations({
+        sessionId: reservationSessionId,
+        companyName: companyName || ANONYMOUS_COMPANY_NAME,
+        consultant: getCanonicalConsultantSlug(consultant),
+        items: reservationSnapshot
+      }).then((result) => {
+        if (active) applyReservationResult(result, true);
+      }).catch(() => {
+        if (active) setReservationOnline(false);
+      });
+    }, 350);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeout);
+    };
+  }, [catalogLocked, companyName, consultant, loading, reservationSessionId, reservationSignature]);
+
+  useEffect(() => {
+    if (loading || catalogLocked) return undefined;
+    let active = true;
+
+    const refresh = () => {
+      fetchReservationSnapshot(reservationSessionId)
+        .then((result) => {
+          if (active) applyReservationResult(result, false);
+        })
+        .catch(() => {
+          if (active) setReservationOnline(false);
+        });
+    };
+
+    const interval = window.setInterval(refresh, RESERVATION_POLL_MS);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [catalogLocked, loading, reservationSessionId]);
+
+  useEffect(() => {
+    if (loading || catalogLocked || !reservationSnapshot.length) return undefined;
+    let active = true;
+
+    const heartbeat = () => {
+      if (document.visibilityState !== 'visible') return;
+      const quoted = quotedReservationSignatureRef.current === reservationSignature;
+      const request = quoted
+        ? fetchReservationSnapshot(reservationSessionId)
+        : syncCartReservations({
+          sessionId: reservationSessionId,
+          companyName: companyName || ANONYMOUS_COMPANY_NAME,
+          consultant: getCanonicalConsultantSlug(consultant),
+          items: reservationSnapshot
+        });
+      request.then((result) => {
+        if (active) applyReservationResult(result, !quoted);
+      }).catch(() => {
+        if (active) setReservationOnline(false);
+      });
+    };
+
+    const interval = window.setInterval(heartbeat, RESERVATION_HEARTBEAT_MS);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [catalogLocked, companyName, consultant, loading, reservationSessionId, reservationSignature]);
 
   useEffect(() => {
     if (loading || catalogLocked || pageViewSentRef.current) return;
@@ -2594,6 +2761,24 @@ function App() {
     });
   }
 
+  function warnIfQuantityExceedsAvailable(product, desiredQty) {
+    const reservation = reservationProducts[product.code || product.id];
+    const availability = getReservationAvailability(product, reservation);
+    if (availability.availableForSession === null || desiredQty <= availability.availableForSession) return;
+
+    const excessQty = desiredQty - availability.availableForSession;
+    setToast(`Temos ${availability.availableForSession} un. disponível(is). As ${excessQty} excedente(s) seguirão sob consulta.`);
+    trackEvent('cart_exceeds_available_stock', {
+      ...getConsultantAnalytics(consultant, product),
+      ...getSpecialOfferAnalytics(specialOffer),
+      ...getProductAnalytics(product),
+      quantity: desiredQty,
+      availableForSession: availability.availableForSession,
+      reservedByOthers: availability.otherReservedQty,
+      excessQty
+    });
+  }
+
   function addToCart(product, quantity = 1) {
     const stockStatus = getStockStatus(product);
     if (stockStatus.out) {
@@ -2602,6 +2787,8 @@ function App() {
     }
 
     const qty = Math.max(1, Number(quantity || 1));
+    const existingQty = cartItems.find((item) => item.id === product.id)?.qty || 0;
+    warnIfQuantityExceedsAvailable(product, existingQty + qty);
     trackEvent('add_to_cart', {
       ...getConsultantAnalytics(consultant, product),
       quantity: qty,
@@ -2633,6 +2820,8 @@ function App() {
 
   function changeQty(id, nextQty) {
     const qty = Math.max(1, Number(nextQty || 1));
+    const item = cartItems.find((cartItem) => cartItem.id === id);
+    if (item) warnIfQuantityExceedsAvailable(item, qty);
     setCart((current) => current.map((item) => (item.id === id ? { ...item, qty } : item)));
   }
 
@@ -2714,12 +2903,18 @@ function App() {
       products,
       quantity: cartCount,
       total: subtotal,
+      reservedQty: cartReservationTotals.reserved,
+      excessQty: cartReservationTotals.excess,
       displayedPrice: subtotal,
       displayedPriceLabel: money(subtotal),
       productCode: cartItems.map((item) => item.code).filter(Boolean).join(', '),
       productName: cartItems.map((item) => `${item.qty || 1}x ${item.code || ''} ${item.name || ''} - ${item.priceLabel || money(item.price)}`.trim()).join(' | ')
     });
-    openWhatsapp(consultant.phone, buildWhatsAppMessage(cartItems, consultant, subtotal, companyName));
+    quotedReservationSignatureRef.current = reservationSignature;
+    quoteCartReservations({ sessionId: reservationSessionId })
+      .then((result) => applyReservationResult(result, false))
+      .catch(() => setReservationOnline(false));
+    openWhatsapp(consultant.phone, buildWhatsAppMessage(cartItems, consultant, subtotal, companyName, reservationProducts));
   }
 
   useEffect(() => {
@@ -2993,6 +3188,7 @@ function App() {
                   <ProductCard
                     key={product.id}
                     product={product}
+                    reservation={reservationProducts[product.code || product.id]}
                     favoriteIds={favoriteIds}
                     qty={cardQty[product.id] || 1}
                     onQtyChange={(qty) => setCardQty((current) => ({ ...current, [product.id]: qty }))}
@@ -3011,6 +3207,7 @@ function App() {
               <ProductCard
                 key={product.id}
                 product={product}
+                reservation={reservationProducts[product.code || product.id]}
                 favoriteIds={favoriteIds}
                 qty={cardQty[product.id] || 1}
                 onQtyChange={(qty) => setCardQty((current) => ({ ...current, [product.id]: qty }))}
@@ -3053,6 +3250,7 @@ function App() {
                     <strong>{item.code}{item.fabCode ? ` / ${item.fabCode}` : ''}</strong>
                     <span>{item.name}</span>
                     <small>{item.priceLabel || money(item.price)}</small>
+                    <ReservationStatus product={item} reservation={reservationProducts[item.code || item.id]} variant="cart" />
                   </div>
 
                   <div className="cart-actions-line">
@@ -3070,6 +3268,12 @@ function App() {
               <strong>{money(subtotal)}</strong>
             </div>
             <small>Preço exibido com IPI incluso e vindo da atualização do catálogo.</small>
+            {cartItems.length && reservationOnline ? (
+              <div className={cartReservationTotals.excess ? 'cart-reservation-summary reservation-warning' : 'cart-reservation-summary'}>
+                <strong>{cartReservationTotals.reserved} un. reservada(s)</strong>
+                <span>{cartReservationTotals.excess ? `${cartReservationTotals.excess} sob consulta` : 'Reserva temporária por 20 min'}</span>
+              </div>
+            ) : null}
             {cartItems.length ? <div className="cart-ready-status">✔ Pronto para orçamento</div> : null}
             <button type="button" className="primary-button" disabled={!cartItems.length || !consultant.phone} onClick={finishWhatsApp}>
               Finalizar no WhatsApp <Icon name="arrow" />
@@ -3122,6 +3326,7 @@ function App() {
               <div className={`modal-stock-line stock-${getStockStatus(selectedProduct).key}`}>
                 {getStockStatus(selectedProduct).out ? 'Produto em reposição — clique em Tenho interesse para avisarmos no WhatsApp.' : getStockLabel(selectedProduct)}
               </div>
+              <ReservationStatus product={selectedProduct} reservation={reservationProducts[selectedProduct.code || selectedProduct.id]} />
 
               <div className="modal-actions">
                 <button type="button" className="ghost-button" onClick={() => toggleFavorite(selectedProduct)}>

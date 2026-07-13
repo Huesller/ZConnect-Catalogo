@@ -1354,6 +1354,36 @@ p {
   color: #797a7d;
 }
 
+.reservation-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  margin: 0 2px;
+  color: #53606a;
+  font-size: 8.5px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.reservation-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  background: #168b67;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(22, 139, 103, 0.1);
+}
+
+.reservation-status.reservation-warning {
+  color: #b14a18;
+}
+
+.reservation-warning .reservation-dot {
+  background: #d4541b;
+  box-shadow: 0 0 0 3px rgba(212, 84, 27, 0.12);
+}
+
 .stock-out::before,
 .stock-unavailable::before {
   box-shadow: 0 0 0 3px rgba(121, 122, 125, 0.1);
@@ -1587,6 +1617,17 @@ p {
   font-weight: 750;
 }
 
+.cart-reservation-status {
+  min-height: 18px;
+  margin: 3px 0 0;
+  color: #75d8b2;
+  font-size: 8.5px;
+}
+
+.cart-reservation-status.reservation-warning {
+  color: #ffad7f;
+}
+
 .cart-actions-line {
   display: flex;
   align-items: center;
@@ -1657,6 +1698,30 @@ p {
   font-weight: 750;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.cart-reservation-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  color: #68d2a8;
+  background: rgba(39, 161, 114, 0.1);
+  border: 1px solid rgba(74, 190, 145, 0.2);
+  border-radius: 3px;
+  font-size: 9px;
+}
+
+.cart-reservation-summary span {
+  color: #9da8a4;
+  text-align: right;
+}
+
+.cart-reservation-summary.reservation-warning {
+  color: #ffb085;
+  background: rgba(210, 83, 28, 0.11);
+  border-color: rgba(255, 137, 82, 0.24);
 }
 
 .cart-footer .primary-button {
@@ -1902,6 +1967,19 @@ p {
   min-height: 32px;
   margin-top: 7px;
   font-size: 10px;
+}
+
+.modal-content > .reservation-status {
+  min-height: 30px;
+  margin: 0;
+  padding: 7px 10px;
+  background: #f3f2ee;
+  border-left: 3px solid #168b67;
+  font-size: 10px;
+}
+
+.modal-content > .reservation-status.reservation-warning {
+  border-left-color: #d4541b;
 }
 
 .modal-actions {
@@ -2758,6 +2836,10 @@ p {
   }
 
   .stock-line {
+    grid-column: 2;
+  }
+
+  .product-card > .reservation-status {
     grid-column: 2;
   }
 
