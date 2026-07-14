@@ -41,6 +41,7 @@ const BRANDS = ['Todos', 'RETOV', 'RIDA', 'TYC', 'Z AUTO'];
 const FALLBACK_CONSULTANTS = {
   huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
   ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
+  junior: { slug: 'junior', name: 'Junior', phone: import.meta.env.VITE_JUNIOR_WHATSAPP || '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
   francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
 };
@@ -1562,6 +1563,7 @@ function getConsultant(consultants, specialOffer = null) {
   const aliases = {
     ney: 'ney',
     ivoney: 'ney',
+    junior: 'junior',
     francisco: 'francisco',
     representante: 'representante',
     huesller: 'huesller'

@@ -11,7 +11,7 @@ export const OFFER_PUBLIC_KEY_JWK = Object.freeze({
   crv: 'P-256'
 });
 
-const ALLOWED_SELLERS = new Set(['huesller', 'ney', 'francisco', 'representante']);
+const ALLOWED_SELLERS = new Set(['huesller', 'ney', 'junior', 'francisco', 'representante']);
 
 function base64UrlToBytes(value) {
   const base64 = String(value || '').replace(/-/g, '+').replace(/_/g, '/');

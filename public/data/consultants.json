@@ -15,6 +15,14 @@
     "baseDiscount": 45,
     "targetDiscount": 45
   },
+  "junior": {
+    "slug": "junior",
+    "name": "Junior",
+    "phone": "554733054400",
+    "policyType": "politicaDesconto",
+    "baseDiscount": 45,
+    "targetDiscount": 45
+  },
   "francisco": {
     "slug": "francisco",
     "name": "Francisco",

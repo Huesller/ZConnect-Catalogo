@@ -50,6 +50,24 @@ O painel é de uso interno e gera somente links que o catálogo consegue autenti
 npm run update-daily
 ```
 
+## Estoque automático no Analytics
+
+O Catálogo envia um snapshot compacto (código, descrição, marca, estoque e presença de imagem) ao Analytics depois de cada build/publicação. Nenhum preço ou desconto faz parte dessa integração.
+
+Na Vercel deste projeto, configure:
+
+- `ZCONNECT_ANALYTICS_TARGET_URL`: URL `/exec` do Apps Script usado pelo Analytics.
+- `CATALOG_SYNC_TOKEN`: exatamente o mesmo token configurado nas propriedades do Apps Script e na Vercel do Analytics.
+- `VITE_JUNIOR_WHATSAPP`: WhatsApp do Junior no formato `55DDDNUMERO`. Enquanto essa variável não for definida, o link do Junior usa temporariamente o telefone comercial padrão `554733054400`.
+
+Na máquina que executa `npm run update-daily`, use também `ZCONNECT_JUNIOR_WHATSAPP` com o mesmo número para que `consultants.json` seja regenerado corretamente.
+
+Depois faça um novo deploy. O comando `npm run build` executa a sincronização automaticamente. Para reenviar manualmente:
+
+```bash
+npm run sync-analytics
+```
+
 ## DevKit
 
 Os comandos de rotina estão em:

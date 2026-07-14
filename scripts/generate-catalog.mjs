@@ -74,6 +74,14 @@ const DEFAULT_CONSULTANTS = {
     baseDiscount: 45,
     targetDiscount: 45
   },
+  junior: {
+    slug: 'junior',
+    name: 'Junior',
+    phone: process.env.ZCONNECT_JUNIOR_WHATSAPP || '554733054400',
+    policyType: 'politicaDesconto',
+    baseDiscount: 45,
+    targetDiscount: 45
+  },
   francisco: {
     slug: 'francisco',
     name: 'Francisco',
