@@ -1008,13 +1008,13 @@ p {
   border-bottom: 1px solid var(--line-strong);
 }
 
-.catalog-heading > div {
+.catalog-heading-title {
   display: flex;
   align-items: center;
   gap: 13px;
 }
 
-.catalog-heading > div > div {
+.catalog-heading-title > div {
   display: grid;
   gap: 3px;
 }
@@ -1029,13 +1029,54 @@ p {
   white-space: nowrap;
 }
 
-.catalog-heading > p {
-  color: var(--muted);
-  font-size: 11px;
+.catalog-heading-actions {
+  display: flex;
+  align-items: end;
+  gap: 14px;
 }
 
-.catalog-heading > p strong {
+.catalog-heading-actions > p {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.catalog-heading-actions > p strong {
   color: var(--ink);
+}
+
+.sort-control {
+  display: grid;
+  gap: 4px;
+  min-width: 205px;
+}
+
+.sort-control > span {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sort-control select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 34px 0 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.sort-control select:hover,
+.sort-control select:focus {
+  border-color: #8e8a82;
+  outline: none;
 }
 
 .catalog-layout {
@@ -2785,7 +2826,9 @@ p {
   }
 
   .catalog-heading {
-    align-items: start;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
     margin-top: 24px;
   }
 
@@ -2794,9 +2837,18 @@ p {
     font-size: 18px;
   }
 
-  .catalog-heading > p {
-    max-width: 75px;
-    text-align: right;
+  .catalog-heading-actions {
+    align-items: end;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .catalog-heading-actions > p {
+    white-space: normal;
+  }
+
+  .sort-control {
+    min-width: min(210px, 62vw);
   }
 
   .catalog-grid {

@@ -48,7 +48,9 @@ function loadReservationsScript() {
     PropertiesService: { getScriptProperties: () => ({ getProperty: () => '' }) },
     console
   });
-  const source = fs.readFileSync(new URL('../../ZConnect-Analytics/GOOGLE_APPS_SCRIPT_V3_CLIENTES.js', import.meta.url), 'utf8');
+  const scriptPath = process.env.ZCONNECT_APPS_SCRIPT_PATH
+    || new URL('../../ZConnect-Analytics/GOOGLE_APPS_SCRIPT_V3_CLIENTES.js', import.meta.url);
+  const source = fs.readFileSync(scriptPath, 'utf8');
   vm.runInContext(source, context);
   return { context, sheets };
 }

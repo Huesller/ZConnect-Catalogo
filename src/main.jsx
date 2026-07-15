@@ -46,6 +46,13 @@ const FALLBACK_CONSULTANTS = {
   representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
 };
 const PAGE_SIZE = 24;
+const SORT_OPTIONS = [
+  { key: 'stock_desc', label: 'Maior estoque' },
+  { key: 'popular', label: 'Mais procurados · 30 dias', metric: 'popular' },
+  { key: 'quoted', label: 'Mais cotados · 30 dias', metric: 'quoted' },
+  { key: 'added', label: 'Mais adicionados · 30 dias', metric: 'added' },
+  { key: 'name_asc', label: 'Nome · A–Z' }
+];
 const CATALOG_TITLE = 'CATÁLOGO Z AUTOMOTIVA';
 const ANONYMOUS_COMPANY_NAME = 'Não identificado';
 const ANONYMOUS_TOAST = 'Que pena, queríamos saber quem é você 😊';
@@ -1517,6 +1524,54 @@ function getStockFilterMatch(product, stockFilter) {
   return true;
 }
 
+function emptyRankingMaps() {
+  return { popular: new Map(), added: new Map(), quoted: new Map() };
+}
+
+function buildRankingMaps(data) {
+  const rankings = data && data.rankings && typeof data.rankings === 'object' ? data.rankings : {};
+  const maps = emptyRankingMaps();
+  Object.keys(maps).forEach((metric) => {
+    const codes = Array.isArray(rankings[metric]) ? rankings[metric] : [];
+    codes.forEach((code, index) => {
+      const normalized = String(code || '').trim();
+      if (normalized && !maps[metric].has(normalized)) maps[metric].set(normalized, index);
+    });
+  });
+  return maps;
+}
+
+function compareStockThenName(a, b) {
+  const stockA = getStockQuantity(a);
+  const stockB = getStockQuantity(b);
+  const safeStockA = stockA === null ? -1 : stockA;
+  const safeStockB = stockB === null ? -1 : stockB;
+  if (safeStockB !== safeStockA) return safeStockB - safeStockA;
+  return String(a.name || '').localeCompare(String(b.name || ''), 'pt-BR');
+}
+
+function compareProductMatches(a, b, sortBy, hasQuery, rankingMaps) {
+  if (hasQuery) {
+    if (a.tier !== b.tier) return a.tier - b.tier;
+    if (b.score !== a.score) return b.score - a.score;
+  }
+
+  if (sortBy === 'name_asc') {
+    return String(a.product.name || '').localeCompare(String(b.product.name || ''), 'pt-BR');
+  }
+
+  if (sortBy === 'stock_desc') return compareStockThenName(a.product, b.product);
+
+  const rankMap = rankingMaps[sortBy];
+  if (rankMap) {
+    const rankA = rankMap.has(String(a.product.code || '').trim()) ? rankMap.get(String(a.product.code || '').trim()) : Number.MAX_SAFE_INTEGER;
+    const rankB = rankMap.has(String(b.product.code || '').trim()) ? rankMap.get(String(b.product.code || '').trim()) : Number.MAX_SAFE_INTEGER;
+    if (rankA !== rankB) return rankA - rankB;
+  }
+
+  return compareStockThenName(a.product, b.product);
+}
+
 function readStorage(key, fallback) {
   try {
     const raw = window.localStorage.getItem(key);
@@ -2166,6 +2221,9 @@ function App() {
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
   const [stockFilter, setStockFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('stock_desc');
+  const [rankingMaps, setRankingMaps] = useState(emptyRankingMaps);
+  const [rankingStatus, setRankingStatus] = useState('loading');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [imageViewer, setImageViewer] = useState(null);
@@ -2298,6 +2356,26 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    fetch('/api/product-rankings')
+      .then((response) => {
+        if (!response.ok) throw new Error('ranking_unavailable');
+        return response.json();
+      })
+      .then((data) => {
+        if (!active || !data?.ok) return;
+        setRankingMaps(buildRankingMaps(data));
+        setRankingStatus('ready');
+      })
+      .catch(() => {
+        if (active) setRankingStatus('error');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     function onKeyDown(event) {
       if (event.key === 'Escape') {
         setImageViewer(null);
@@ -2351,7 +2429,7 @@ function App() {
 
   useEffect(() => {
     setPage(1);
-  }, [query, filter]);
+  }, [query, filter, stockFilter, sortBy]);
 
   const consultant = useMemo(() => getConsultant(consultants, specialOffer), [consultants, specialOffer]);
   const online = useMemo(() => getBusinessStatus(), []);
@@ -2383,12 +2461,8 @@ function App() {
       .filter((product) => (filter === 'Todos' || product.brand === filter) && getStockFilterMatch(product, stockFilter))
       .map((product) => ({ product, ...getSearchMatch(product, deferredQuery) }))
       .filter((match) => (!hasQuery && match.score > 0) || (hasQuery && match.direct && match.score > 0))
-      .sort((a, b) => {
-        if (a.tier !== b.tier) return a.tier - b.tier;
-        if (b.score !== a.score) return b.score - a.score;
-        return a.product.name.localeCompare(b.product.name, 'pt-BR');
-      });
-  }, [deferredQuery, filter, hasQuery, pricedProducts, stockFilter]);
+      .sort((a, b) => compareProductMatches(a, b, sortBy, hasQuery, rankingMaps));
+  }, [deferredQuery, filter, hasQuery, pricedProducts, rankingMaps, sortBy, stockFilter]);
 
   const allFilteredProducts = useMemo(() => matchedProducts.map(({ product }) => product), [matchedProducts]);
   const fallbackSuggestions = useMemo(() => {
@@ -3144,14 +3218,44 @@ function App() {
       </section>
 
       <section className="catalog-heading">
-        <div>
+        <div className="catalog-heading-title">
           <span className="section-index">02</span>
           <div>
             <span className="eyebrow">Seleção de produtos</span>
             <h2>{hasQuery ? `Resultados para “${query.trim()}”` : filter === 'Todos' ? 'Catálogo completo' : `Linha ${filter}`}</h2>
           </div>
         </div>
-        <p><strong>{allFilteredProducts.length.toLocaleString('pt-BR')}</strong> produtos encontrados</p>
+        <div className="catalog-heading-actions">
+          <p><strong>{allFilteredProducts.length.toLocaleString('pt-BR')}</strong> produtos encontrados</p>
+          <label className="sort-control">
+            <span>Ordenar por</span>
+            <select
+              value={sortBy}
+              aria-label="Ordenar produtos"
+              title={rankingStatus === 'error' ? 'Ranking de demanda temporariamente indisponível' : undefined}
+              onChange={(event) => {
+                const nextSort = event.target.value;
+                setSortBy(nextSort);
+                trackEvent('catalog_sort', {
+                  ...getConsultantAnalytics(consultant),
+                  sortBy: nextSort,
+                  queryActive: hasQuery,
+                  resultCount: allFilteredProducts.length
+                });
+              }}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option
+                  key={option.key}
+                  value={option.key}
+                  disabled={Boolean(option.metric && (rankingStatus !== 'ready' || !rankingMaps[option.metric]?.size))}
+                >
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </section>
 
       {loadError ? <div className="message-box">{loadError}</div> : null}
