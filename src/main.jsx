@@ -2636,7 +2636,7 @@ function App() {
 
   function confirmSearch() {
     const normalizedQuery = query.trim();
-    if (loading || normalizedQuery.length < 2 || catalogLocked) return;
+    if (loading || normalizedQuery.length < 4 || catalogLocked) return;
     const signature = `${normalizedQuery}::${filter}::${allFilteredProducts.length}::${fallbackSuggestions.length}`;
     if (lastSearchEventRef.current === signature) return;
     lastSearchEventRef.current = signature;

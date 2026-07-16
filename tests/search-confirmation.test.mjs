@@ -9,5 +9,6 @@ test("busca é registrada apenas por confirmação explícita", () => {
   assert.match(source, /if \(event\.key === 'Enter'\)[\s\S]{0,180}confirmSearch\(\)/);
   assert.doesNotMatch(source, /setTimeout\([\s\S]{0,800}trackEvent\('search'/);
   assert.match(source, /searchConfirmed: true/);
+  assert.match(source, /normalizedQuery\.length < 4/);
+  assert.doesNotMatch(source, /products: allFilteredProducts/);
 });
-

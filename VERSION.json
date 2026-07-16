@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.5.1",
-  "release": "BUSCA-CONFIRMADA-ANALYTICS",
+  "version": "12.5.3",
+  "release": "PESQUISA-CONFIRMADA-SEPARADA",
   "status": "stable",
-  "description": "Analytics registra a busca somente após confirmação por Enter; sugestões durante a digitação não geram demanda.",
-  "updatedAt": "2026-07-16T16:55:00-03:00"
+  "description": "Pesquisas confirmadas são registradas como termos exatos e separadas da demanda por produto; fragmentos curtos e sugestões são ignorados.",
+  "updatedAt": "2026-07-16T17:30:00-03:00"
 }
