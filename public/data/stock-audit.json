@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-16T14:38:27.901Z",
-  "total": 2115,
-  "available": 2115,
+  "generatedAt": "2026-07-16T18:19:35.485Z",
+  "total": 2112,
+  "available": 2112,
   "outOfStock": 0,
-  "lowStock": 494,
+  "lowStock": 493,
   "sources": [
     {
       "brand": "RIDA",
@@ -27,7 +27,7 @@
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true",
       "description": "CATÁLOGO TYC",
       "pages": 65,
-      "productCount": 648
+      "productCount": 645
     },
     {
       "brand": "TYC",
