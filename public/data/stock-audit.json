@@ -1,50 +1,276 @@
 {
-  "generatedAt": "2026-07-16T18:19:35.485Z",
-  "total": 2112,
-  "available": 2112,
-  "outOfStock": 0,
-  "lowStock": 493,
+  "generatedAt": "2026-07-16T18:24:31.980Z",
+  "total": 2704,
+  "available": 2113,
+  "outOfStock": 591,
+  "lowStock": 495,
   "sources": [
     {
       "brand": "RIDA",
       "catalogId": "1438",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true",
       "description": "CATÁLOGO RIDA",
-      "pages": 42,
-      "productCount": 414
+      "pages": 43,
+      "productCount": 427
     },
     {
       "brand": "RETOV",
       "catalogId": "1436",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true",
       "description": "CATÁLOGO RETOV",
-      "pages": 62,
-      "productCount": 612
+      "pages": 70,
+      "productCount": 700
     },
     {
       "brand": "TYC",
       "catalogId": "1494",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true",
       "description": "CATÁLOGO TYC",
-      "pages": 65,
-      "productCount": 645
+      "pages": 100,
+      "productCount": 986
     },
     {
       "brand": "TYC",
       "catalogId": "1493",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true",
       "description": "CATÁLOGO TYC RETROVISORES",
-      "pages": 22,
-      "productCount": 216
+      "pages": 26,
+      "productCount": 252
     },
     {
       "brand": "Z AUTO",
       "catalogId": "1437",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true",
       "description": "CATÁLOGO ZATT",
-      "pages": 55,
-      "productCount": 546
+      "pages": 74,
+      "productCount": 727
     }
   ],
-  "sampleOutOfStock": []
+  "sampleOutOfStock": [
+    {
+      "id": "RETOV-636557-NS082130300-*-SN6244",
+      "code": "636557",
+      "fabCode": "NS082130300 * SN6244",
+      "name": "DEFLETOR INFERIOR PARACHOQUE DIANTEIRO NISSAN VERSA 2015 A 2020",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
+    },
+    {
+      "id": "RETOV-355937-BF4465",
+      "code": "355937",
+      "fabCode": "BF4465",
+      "name": "DEFLETOR INFERIOR RADIADOR FORD FIESTA 2003 A 2012 ECOSPORT 2003 A 2012",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=8"
+    },
+    {
+      "id": "RETOV-525279-SC5161",
+      "code": "525279",
+      "fabCode": "SC5161",
+      "name": "DEFLETOR RADIADOR ONIX/PRISMA/COBALT/SPIN 2011 A 2017 COM AR CONDICIONADO",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
+    },
+    {
+      "id": "RETOV-525255-MC4604",
+      "code": "525255",
+      "fabCode": "MC4604",
+      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 INFERIOR PRETO",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
+    },
+    {
+      "id": "RETOV-525254-MC4603",
+      "code": "525254",
+      "fabCode": "MC4603",
+      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 SUPERIOR PRETO",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
+    },
+    {
+      "id": "RETOV-525267-MC4610",
+      "code": "525267",
+      "fabCode": "MC4610",
+      "name": "FRISO GRADE DIANTEIRA CELTA 2011 A 2016 PRISMA 2010 A 2012 INFERIOR CROMADO",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=20"
+    },
+    {
+      "id": "RETOV-337138-MI5614",
+      "code": "337138",
+      "fabCode": "MI5614",
+      "name": "FRISO GRADE PARACHOQUE DIANTEIRO FIAT CRONOS 2018 2019 2020 DIREITO (PRETO)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
+    },
+    {
+      "id": "RETOV-337139-MI5613",
+      "code": "337139",
+      "fabCode": "MI5613",
+      "name": "FRISO GRADE PARACHOQUE DIANTEIRO FIAT CRONOS 2018 2019 2020 ESQUERDO (PRETO)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
+    },
+    {
+      "id": "RETOV-639936-MP4042",
+      "code": "639936",
+      "fabCode": "MP4042",
+      "name": "FRISO LATERAL PORTA TRASEIRA DIREITA PEUGEOT 307 2002 A 2012",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=59"
+    },
+    {
+      "id": "RETOV-636573-MP6255",
+      "code": "636573",
+      "fabCode": "MP6255",
+      "name": "FRISO SUPERIOR GRADE DIANTEIRA PEUGEOT 208 2024 2025 2026",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=70"
+    },
+    {
+      "id": "RETOV-637728-RB5908",
+      "code": "637728",
+      "fabCode": "RB5908",
+      "name": "GRADE CENTRAL PARACHOQUE C3 2012 A 2019 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=56"
+    },
+    {
+      "id": "RETOV-456939-RW4364",
+      "code": "456939",
+      "fabCode": "RW4364",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO BORA 2008 A 2011 COLMEIA PRETA",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=33"
+    },
+    {
+      "id": "RETOV-636524-RT5064",
+      "code": "636524",
+      "fabCode": "RT5064",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO COROLLA 2018 A 2020 PRETA BRILHANTE",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=46"
+    },
+    {
+      "id": "RETOV-458940-RW4884",
+      "code": "458940",
+      "fabCode": "RW4884",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO GOL VOYAGE G7 2016 A 2018 PRETA COM FRISO CROMADO",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=40"
+    },
+    {
+      "id": "RETOV-636050-RR4523",
+      "code": "636050",
+      "fabCode": "RR4523",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO RENAULT KANGOO 2009 A 2012 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=28"
+    },
+    {
+      "id": "RETOV-457730-RW4758",
+      "code": "457730",
+      "fabCode": "RW4758",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO VOLKSWAGEN UP 2014 A 2018 PRETA COM FURO MILHA (INTERNA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=35"
+    },
+    {
+      "id": "RETOV-637722-RT5302",
+      "code": "637722",
+      "fabCode": "RT5302",
+      "name": "GRADE CENTRAL PARACHOQUE ETIOS 2017 A 2019 PRETA",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
+    },
+    {
+      "id": "RETOV-655010-RJ5322",
+      "code": "655010",
+      "fabCode": "RJ5322",
+      "name": "GRADE CENTRAL PARACHOQUE JEEP RENEGADE 2015 2016 2017 2018",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=51"
+    },
+    {
+      "id": "RETOV-525253-PC4612",
+      "code": "525253",
+      "fabCode": "PC4612",
+      "name": "GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
+    },
+    {
+      "id": "RETOV-355776-PF0736",
+      "code": "355776",
+      "fabCode": "PF0736",
+      "name": "GRADE DIANTEIRA CENTRAL FOCUS GHIA 1999 A 2003 PRETA (COM KIT MOLA FECHADURA CAPO)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=5"
+    },
+    {
+      "id": "RETOV-457880-PW4635",
+      "code": "457880",
+      "fabCode": "PW4635",
+      "name": "GRADE DIANTEIRA CENTRAL FOX 2010 A 2014 SPACEFOX 2011 A 2014 (PRETA COM 2 FRISOS VERMELHOS)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
+    },
+    {
+      "id": "RETOV-525252-PC4542",
+      "code": "525252",
+      "fabCode": "PC4542",
+      "name": "GRADE DIANTEIRA CLASSIC 2011 A 2016 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
+    },
+    {
+      "id": "RETOV-336843-PI4925",
+      "code": "336843",
+      "fabCode": "PI4925",
+      "name": "GRADE DIANTEIRA FIAT MOBI 2016 A 2022 PRETA",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=40"
+    },
+    {
+      "id": "RETOV-338900-PI4666",
+      "code": "338900",
+      "fabCode": "PI4666",
+      "name": "GRADE DIANTEIRA FIAT SIENA EL 2013 A 2018 PRETA SEM MOLDURA",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=31"
+    },
+    {
+      "id": "RETOV-455804-PW0131",
+      "code": "455804",
+      "fabCode": "PW0131",
+      "name": "GRADE DIANTEIRA GOL PARATI SAVEIRO G3 1999 A 2002 FASE 1 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=11"
+    }
+  ]
 }
