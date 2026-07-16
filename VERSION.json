@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.6.0",
-  "release": "IDENTIFICACAO-OBRIGATORIA",
+  "version": "12.5.1",
+  "release": "BUSCA-CONFIRMADA-ANALYTICS",
   "status": "stable",
-  "description": "Acesso ao catálogo condicionado à identificação da empresa, lembrada automaticamente no navegador.",
-  "updatedAt": "2026-07-16T11:30:00-03:00"
+  "description": "Analytics registra a busca somente após confirmação por Enter; sugestões durante a digitação não geram demanda.",
+  "updatedAt": "2026-07-16T16:55:00-03:00"
 }

@@ -2158,31 +2158,39 @@ function CompanyIdentificationBanner({ onIdentify, onClose }) {
   );
 }
 
-function CompanyGate({ value, error, onChange, onSubmit }) {
+function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, onSubmit }) {
+  if (minimized) {
+    return (
+      <div className="company-gate" role="presentation">
+        <button type="button" className="company-restore-card" onClick={onRestore}>
+          Informe o nome da empresa para acessar o catálogo
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="company-gate" role="presentation">
       <form className="company-card" role="dialog" aria-modal="true" aria-labelledby="company-gate-title" onSubmit={onSubmit}>
+        <button type="button" className="company-close" aria-label="Fechar identificação" onClick={onClose}>×</button>
         <img src="/logo-z-automotiva.png" alt="Z Automotiva" className="company-logo" />
         <div>
           <span className="eyebrow">Z Connect</span>
           <h1 id="company-gate-title">Bem-vindo ao Catálogo Z Automotiva</h1>
-          <p className="company-intro">Informe sua empresa para acessar o catálogo. Assim, seu consultor identifica seu histórico e consegue oferecer um atendimento mais rápido e preciso.</p>
+          <p className="company-intro">Identifique sua empresa para salvar seu histórico, facilitar futuras cotações e receber um atendimento mais rápido.</p>
         </div>
         <label className="company-field">
           <span>Nome da autopeça, oficina ou distribuidora</span>
           <input
             autoFocus
-            required
-            minLength={2}
-            maxLength={120}
             value={value}
             onChange={(event) => onChange(event.target.value)}
             placeholder="Ex.: Auto Peças Silva"
           />
         </label>
         {error ? <small className="company-error">{error}</small> : null}
-        <button type="submit" className="primary-button">Entrar no catálogo</button>
-        <small className="company-note"><strong>Você informa somente uma vez.</strong> Nas próximas visitas, este navegador lembrará sua empresa automaticamente.</small>
+        <button type="submit" className="primary-button">Personalizar meu acesso</button>
+        <small className="company-note">Leva menos de 5 segundos. Você também pode fechar esta janela e acessar sem identificação.</small>
       </form>
     </div>
   );
@@ -2626,41 +2634,30 @@ function App() {
     });
   }, [consultant, specialOffer]);
 
-  useEffect(() => {
-    const normalizedQuery = deferredQuery.trim();
+  function confirmSearch() {
+    const normalizedQuery = query.trim();
     if (loading || normalizedQuery.length < 2 || catalogLocked) return;
+    const signature = `${normalizedQuery}::${filter}::${allFilteredProducts.length}::${fallbackSuggestions.length}`;
+    if (lastSearchEventRef.current === signature) return;
+    lastSearchEventRef.current = signature;
 
-    const timeout = window.setTimeout(() => {
-      const signature = `${normalizedQuery}::${filter}::${allFilteredProducts.length}::${fallbackSuggestions.length}`;
-      if (lastSearchEventRef.current === signature) return;
-      lastSearchEventRef.current = signature;
-
-      trackEvent('search', {
-        ...getConsultantAnalytics(consultant),
-        ...getSpecialOfferAnalytics(specialOffer),
-        query: normalizedQuery,
-        total: allFilteredProducts.length,
-        resultsCount: allFilteredProducts.length,
-        suggestions: fallbackSuggestions.length,
-        resultType: allFilteredProducts.length ? 'direct' : fallbackSuggestions.length ? 'suggestions' : 'empty',
-        page: window.location.pathname + window.location.search
-      });
-
-      if (!allFilteredProducts.length && !fallbackSuggestions.length) {
-        trackEvent('search_no_results', {
-          ...getConsultantAnalytics(consultant),
-          query: normalizedQuery,
-          total: 0,
-          resultsCount: 0,
-          suggestions: 0,
-          resultType: 'empty',
-          page: window.location.pathname + window.location.search
-        });
-      }
-    }, 850);
-
-    return () => window.clearTimeout(timeout);
-  }, [deferredQuery, filter, allFilteredProducts.length, fallbackSuggestions.length, consultant, loading, catalogLocked, specialOffer]);
+    const searchData = {
+      ...getConsultantAnalytics(consultant),
+      ...getSpecialOfferAnalytics(specialOffer),
+      query: normalizedQuery,
+      total: allFilteredProducts.length,
+      resultsCount: allFilteredProducts.length,
+      suggestions: fallbackSuggestions.length,
+      resultType: allFilteredProducts.length ? 'direct' : fallbackSuggestions.length ? 'suggestions' : 'empty',
+      searchConfirmed: true,
+      searchSource: 'enter',
+      page: window.location.pathname + window.location.search
+    };
+    trackEvent('search', searchData);
+    if (!allFilteredProducts.length && !fallbackSuggestions.length) {
+      trackEvent('search_no_results', { ...searchData, total: 0, resultsCount: 0, suggestions: 0, resultType: 'empty' });
+    }
+  }
 
   function scrollToCatalog() {
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2670,15 +2667,25 @@ function App() {
     document.getElementById('rodape')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function grantAnonymousAccess() {
+    saveCompanyName('');
+    setCompanyName('');
+    setCompanyDraft('');
+    setCompanyError('');
+    setCompanyGateMinimized(false);
+    setCatalogAccessGranted(true);
+    pageViewSentRef.current = false;
+    setToast(ANONYMOUS_TOAST);
+  }
+
   function handleCompanySubmit(event) {
     event.preventDefault();
-    const cleanCompanyName = String(companyDraft || '').trim().replace(/\s+/g, ' ');
+    const nextCompanyName = saveCompanyName(companyDraft);
 
-    if (cleanCompanyName.length < 2) {
-      setCompanyError('Informe o nome da sua empresa para acessar o catálogo.');
+    if (!nextCompanyName) {
+      grantAnonymousAccess();
       return;
     }
-    const nextCompanyName = saveCompanyName(cleanCompanyName);
 
     setCompanyError('');
     setCompanyName(nextCompanyName);
@@ -3114,6 +3121,7 @@ function App() {
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 event.preventDefault();
+                confirmSearch();
                 setSuggestionsOpen(false);
                 searchInputRef.current?.blur();
               }
@@ -3537,10 +3545,13 @@ function App() {
       <CompanyGate
         value={companyDraft}
         error={companyError}
+        minimized={companyGateMinimized}
         onChange={(value) => {
           setCompanyDraft(value);
           if (companyError) setCompanyError('');
         }}
+        onClose={grantAnonymousAccess}
+        onRestore={() => setCompanyGateMinimized(false)}
         onSubmit={handleCompanySubmit}
       />
     ) : null}
