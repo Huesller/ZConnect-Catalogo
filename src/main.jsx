@@ -2654,8 +2654,8 @@ function App() {
       page: window.location.pathname + window.location.search
     };
     trackEvent('search', searchData);
-    if (!allFilteredProducts.length && !fallbackSuggestions.length) {
-      trackEvent('search_no_results', { ...searchData, total: 0, resultsCount: 0, suggestions: 0, resultType: 'empty' });
+    if (!allFilteredProducts.length) {
+      trackEvent('search_no_results', { ...searchData, total: 0, resultsCount: 0, resultType: 'no_direct_result' });
     }
   }
 

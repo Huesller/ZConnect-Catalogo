@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.5.3",
-  "release": "PESQUISA-CONFIRMADA-SEPARADA",
+  "version": "12.5.4",
+  "release": "SEM-RESULTADO-DIRETO",
   "status": "stable",
-  "description": "Pesquisas confirmadas são registradas como termos exatos e separadas da demanda por produto; fragmentos curtos e sugestões são ignorados.",
-  "updatedAt": "2026-07-16T17:30:00-03:00"
+  "description": "Busca sem produto direto é registrada como não encontrada mesmo quando o catálogo apresenta sugestões de outros anos ou aplicações.",
+  "updatedAt": "2026-07-16T17:40:00-03:00"
 }

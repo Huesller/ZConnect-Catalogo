@@ -11,4 +11,6 @@ test("busca é registrada apenas por confirmação explícita", () => {
   assert.match(source, /searchConfirmed: true/);
   assert.match(source, /normalizedQuery\.length < 4/);
   assert.doesNotMatch(source, /products: allFilteredProducts/);
+  assert.match(source, /if \(!allFilteredProducts\.length\) \{/);
+  assert.doesNotMatch(source, /!allFilteredProducts\.length && !fallbackSuggestions\.length/);
 });
