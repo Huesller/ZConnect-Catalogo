@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.5.0",
-  "release": "ORDENACAO-ESTOQUE-DEMANDA",
+  "version": "12.6.0",
+  "release": "IDENTIFICACAO-OBRIGATORIA",
   "status": "stable",
-  "description": "Ordenação padrão por maior estoque e filtros de demanda comercial dos últimos 30 dias.",
-  "updatedAt": "2026-07-15T10:30:00-03:00"
+  "description": "Acesso ao catálogo condicionado à identificação da empresa, lembrada automaticamente no navegador.",
+  "updatedAt": "2026-07-16T11:30:00-03:00"
 }
