@@ -29,6 +29,7 @@ class FakeRange {
 
 class FakeSheet {
   constructor() { this.rows = []; }
+  setFrozenRows() {}
   getLastRow() { return this.rows.length; }
   getLastColumn() { return Math.max(0, ...this.rows.map((row) => row.length)); }
   appendRow(row) { this.rows.push([...row]); }

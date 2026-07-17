@@ -1,4 +1,0 @@
-Build validado em ambiente local com npm install e npm run build.
-Link especial curto usa apenas o parametro ?z=consultor~desconto~fator~validade~cliente.
-Exemplo: http://localhost:5173/?z=huesller~10~90~20260716~teste
-Links antigos com ?o=...&cliente=... continuam aceitos como fallback.
