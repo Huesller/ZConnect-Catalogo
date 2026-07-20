@@ -10,8 +10,8 @@ import {
 const ZETTA_WITH_IPI = 189.17;
 const ZETTA_WITHOUT_IPI = 183.22;
 
-test('preserva a política de 45% de Huesller, Ney e Junior', () => {
-  for (const slug of ['huesller', 'ney', 'junior']) {
+test('preserva a política de 45% de Huesller, Ney, Almir, Gabriel e Junior', () => {
+  for (const slug of ['huesller', 'ney', 'almir', 'gabriel', 'junior']) {
     const policy = CONSULTANT_PRICE_POLICIES[slug];
     const result = calculateConsultantPriceValues({
       rawWithIpi: ZETTA_WITH_IPI,
