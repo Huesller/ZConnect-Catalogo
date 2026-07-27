@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-23T12:38:03.537Z",
+  "generatedAt": "2026-07-27T11:44:58.478Z",
   "total": 2704,
-  "available": 2105,
-  "outOfStock": 599,
-  "lowStock": 503,
+  "available": 2082,
+  "outOfStock": 622,
+  "lowStock": 498,
   "sources": [
     {
       "brand": "RIDA",
@@ -73,6 +73,15 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
+    },
+    {
+      "id": "RETOV-525257-MC4606",
+      "code": "525257",
+      "fabCode": "MC4606",
+      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 INFERIOR CROMADO",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
     },
     {
       "id": "RETOV-525256-MC4605",
@@ -156,6 +165,15 @@
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=46"
     },
     {
+      "id": "RETOV-355923-RF4397",
+      "code": "355923",
+      "fabCode": "RF4397",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO FORD KA 2002 A 2007 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=7"
+    },
+    {
       "id": "RETOV-458940-RW4884",
       "code": "458940",
       "fabCode": "RW4884",
@@ -190,6 +208,15 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
+    },
+    {
+      "id": "RETOV-336911-RI4401",
+      "code": "336911",
+      "fabCode": "RI4401",
+      "name": "GRADE CENTRAL PARACHOQUE FIAT PALIO CELEBRATION 2004 A 2009 PRETA",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=2"
     },
     {
       "id": "RETOV-655010-RJ5322",
@@ -244,33 +271,6 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=40"
-    },
-    {
-      "id": "RETOV-455804-PW0131",
-      "code": "455804",
-      "fabCode": "PW0131",
-      "name": "GRADE DIANTEIRA GOL PARATI SAVEIRO G3 1999 A 2002 FASE 1 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=11"
-    },
-    {
-      "id": "RETOV-457160-PW4178",
-      "code": "457160",
-      "fabCode": "PW4178",
-      "name": "GRADE DIANTEIRA GOL PARATI SAVEIRO G3 2003 A 2005 FASE 2 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=14"
-    },
-    {
-      "id": "RETOV-457140-PW0117",
-      "code": "457140",
-      "fabCode": "PW0117",
-      "name": "GRADE DIANTEIRA GOL PARATI VOYAGE 1991 A 1995 SAVEIRO 1991 A 1997 (CINZA ESCURO)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=14"
     }
   ]
 }
