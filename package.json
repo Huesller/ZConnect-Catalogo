@@ -1,7 +1,7 @@
 {
   "name": "zconnect-catalogo-premium",
   "private": true,
-  "version": "12.5.5",
+  "version": "12.6.1",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
@@ -10,6 +10,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "generate-search-index": "node scripts/generate-search-index.mjs",
     "generate-catalog": "node scripts/generate-catalog.mjs",
+    "import-images": "node scripts/import-product-images.mjs",
     "sync-analytics": "node scripts/sync-catalog-analytics.mjs",
     "update-catalog": "npm run generate-catalog && npm run generate-search-index",
     "update-fast": "npm run update-catalog",

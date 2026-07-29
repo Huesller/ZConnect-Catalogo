@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.5.4",
-  "release": "SEM-RESULTADO-DIRETO",
+  "version": "12.6.1",
+  "release": "IMPORTADOR-IMAGENS-POR-CODIGO",
   "status": "stable",
-  "description": "Busca sem produto direto é registrada como não encontrada mesmo quando o catálogo apresenta sugestões de outros anos ou aplicações.",
-  "updatedAt": "2026-07-16T17:40:00-03:00"
+  "description": "Importação local e incremental de uma imagem por produto, vinculada pelo código interno e preservada nas atualizações do Zetta.",
+  "updatedAt": "2026-07-29T15:00:00-03:00"
 }

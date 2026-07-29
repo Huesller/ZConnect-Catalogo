@@ -1,4 +1,4 @@
-# Z Connect Catálogo 12.5.5
+# Z Connect Catálogo 12.6.1
 
 Catálogo online validado da Z Automotiva, integrado ao Z Connect Comercial por eventos, reservas e snapshots de estoque.
 
@@ -8,6 +8,12 @@ Catálogo online validado da Z Automotiva, integrado ao Z Connect Comercial por 
 2. Copie `.env.example` para `.env.local` e preencha as variáveis.
 3. Execute `npm test` e `npm run build`.
 4. Publique na Vercel.
+
+## Imagens próprias
+
+Execute `IMPORTAR-IMAGENS.bat` para vincular uma pasta de fotos pelo código interno dos produtos. O processo gera o build e preserva as imagens locais nas próximas atualizações do Zetta.
+
+Consulte `IMPORTACAO-DE-IMAGENS.md` para o passo a passo.
 
 ## Links dos consultores
 
