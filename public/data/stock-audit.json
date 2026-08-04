@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-29T18:06:00.730Z",
+  "generatedAt": "2026-08-04T11:14:37.649Z",
   "total": 2704,
-  "available": 2075,
-  "outOfStock": 629,
-  "lowStock": 501,
+  "available": 2080,
+  "outOfStock": 624,
+  "lowStock": 523,
   "sources": [
     {
       "brand": "RIDA",
@@ -93,15 +93,6 @@
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
     },
     {
-      "id": "RETOV-525255-MC4604",
-      "code": "525255",
-      "fabCode": "MC4604",
-      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 INFERIOR PRETO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
-    },
-    {
       "id": "RETOV-525256-MC4605",
       "code": "525256",
       "fabCode": "MC4605",
@@ -118,6 +109,15 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=20"
+    },
+    {
+      "id": "RETOV-525277-MC5042",
+      "code": "525277",
+      "fabCode": "MC5042",
+      "name": "FRISO GRADE DIANTEIRA CENTRAL INFERIOR ONIX PRISMA LTZ 2017 A 2020 (CROMADO)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=44"
     },
     {
       "id": "RETOV-337138-MI5614",
@@ -156,15 +156,6 @@
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=70"
     },
     {
-      "id": "RETOV-637728-RB5908",
-      "code": "637728",
-      "fabCode": "RB5908",
-      "name": "GRADE CENTRAL PARACHOQUE C3 2012 A 2019 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=56"
-    },
-    {
       "id": "RETOV-456939-RW4364",
       "code": "456939",
       "fabCode": "RW4364",
@@ -172,15 +163,6 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=33"
-    },
-    {
-      "id": "RETOV-636524-RT5064",
-      "code": "636524",
-      "fabCode": "RT5064",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO COROLLA 2018 A 2020 PRETA BRILHANTE",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=46"
     },
     {
       "id": "RETOV-355923-RF4397",
@@ -271,6 +253,24 @@
       "brand": "RETOV",
       "stock": 0,
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
+    },
+    {
+      "id": "RETOV-525276-PC5041",
+      "code": "525276",
+      "fabCode": "PC5041",
+      "name": "GRADE DIANTEIRA CENTRAL INFERIOR ONIX PRISMA LTZ 2017 A 2020 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=44"
+    },
+    {
+      "id": "RETOV-525252-PC4542",
+      "code": "525252",
+      "fabCode": "PC4542",
+      "name": "GRADE DIANTEIRA CLASSIC 2011 A 2016 (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
     }
   ]
 }
