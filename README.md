@@ -1,4 +1,4 @@
-# Z Connect Catálogo 12.7.0
+# Z Connect Catálogo 12.7.2
 
 Catálogo online validado da Z Automotiva, integrado ao Z Connect Comercial por eventos, reservas e snapshots de estoque.
 
@@ -38,6 +38,8 @@ Consulte `PUBLICACAO-CATALOGO.md` antes de publicar.
 - Os links antigos em `/o/` permanecem bloqueados pelo Firewall.
 - Os novos links são gerados em `/oferta/{cliente}/{codigo}`.
 - A assinatura é feita somente no backend; o painel HTML não contém chave privada.
-- Configure `OFFER_ADMIN_SECRET` e `OFFER_LINK_GENERATION` na Vercel antes de usar o novo painel.
+- Os consultores não digitam senha ou chave no painel.
+- Esta versão funciona sem criar novas variáveis na Vercel.
+- `OFFER_SIGNING_SECRET` e `OFFER_LINK_GENERATION` são opcionais e servem somente para uma futura troca de geração.
 
 Consulte `REVOGACAO-E-LINKS-ESPECIAIS.md` para publicar, testar e revogar uma geração.

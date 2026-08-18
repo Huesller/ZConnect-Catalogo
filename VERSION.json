@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.7.0",
-  "release": "RESET-LINKS-OFERTA-V3",
+  "version": "12.7.2",
+  "release": "RESET-LINKS-OFERTA-V3-SEM-SENHA-IDENTIFICADO",
   "status": "stable",
-  "description": "Mantém /o/ bloqueado, invalida a geração antiga e aceita apenas novos links protegidos em /oferta/.",
-  "updatedAt": "2026-08-18T11:30:00-03:00"
+  "description": "Mantém /o/ bloqueado e permite aos consultores gerar novos links em /oferta/ sem digitar chave no painel.",
+  "updatedAt": "2026-08-18T13:05:00-03:00"
 }

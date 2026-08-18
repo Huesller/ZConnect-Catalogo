@@ -4,8 +4,8 @@ const DEFAULT_TARGET_URL =
   "https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec";
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_OFFER_GENERATION = "2026-08-18-reset-1";
+const DEFAULT_SIGNING_SECRET = "zconnect-ofertas-v3-2026-08-18-backend";
 const OFFER_VERSION = 3;
-const MIN_ADMIN_SECRET_LENGTH = 32;
 const CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/;
 const SLUG_PATTERN = /^[A-Z0-9][A-Z0-9-]{0,39}$/;
 const SHORT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -25,7 +25,7 @@ function setCorsHeaders(request, response) {
   if (origin === "null") response.setHeader("Access-Control-Allow-Origin", "null");
   response.setHeader("Vary", "Origin");
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Offer-Admin-Secret");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type");
   response.setHeader("Cache-Control", "no-store");
 }
 
@@ -39,14 +39,8 @@ function parseJsonBody(request) {
   }
 }
 
-function getRequestHeader(request, name) {
-  const normalizedName = String(name || "").toLowerCase();
-  if (typeof request.headers?.get === "function") return String(request.headers.get(normalizedName) || "");
-  return String(request.headers?.[normalizedName] || request.headers?.[name] || "");
-}
-
-function getAdminSecret() {
-  return String(process.env.OFFER_ADMIN_SECRET || "").trim();
+function getSigningSecret() {
+  return String(process.env.OFFER_SIGNING_SECRET || DEFAULT_SIGNING_SECRET).trim();
 }
 
 function getOfferGeneration() {
@@ -254,11 +248,7 @@ export default async function handler(request, response) {
     return;
   }
 
-  const secret = getAdminSecret();
-  if (secret.length < MIN_ADMIN_SECRET_LENGTH) {
-    response.status(503).json({ ok: false, error: "Geração de ofertas ainda não configurada no servidor." });
-    return;
-  }
+  const secret = getSigningSecret();
 
   if (request.method === "GET") {
     const code = String(request.query?.code || "").trim().toUpperCase();
@@ -289,12 +279,6 @@ export default async function handler(request, response) {
   if (request.method === "POST") {
     if (request.headers.origin && request.headers.origin !== "null") {
       response.status(403).json({ ok: false, error: "Origem não permitida." });
-      return;
-    }
-
-    const providedSecret = getRequestHeader(request, "x-offer-admin-secret");
-    if (!safeEqual(providedSecret, secret)) {
-      response.status(401).json({ ok: false, error: "Chave de acesso do painel incorreta." });
       return;
     }
 
