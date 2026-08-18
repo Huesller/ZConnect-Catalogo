@@ -1,31 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import { webcrypto } from 'node:crypto';
 import offerHandler from '../api/offer.js';
 
-function panelPrivateKey() {
-  const html = fs.readFileSync(new URL('../PAINEL-COMERCIAL-OFERTAS-ASSINADAS.html', import.meta.url), 'utf8');
-  const read = (name) => html.match(new RegExp(`\\n\\s*${name}: '([^']+)'`))?.[1] || '';
-  return { key_ops: ['sign'], ext: true, kty: 'EC', x: read('x'), y: read('y'), crv: read('crv'), d: read('d') };
-}
-
-async function signedToken() {
-  const now = Date.now();
-  const payload = {
-    v: 2,
-    i: 'OF-API-TESTE',
-    s: 'huesller',
-    c: 'Cliente API',
-    d: 5,
-    a: Math.floor(now / 1000),
-    e: Math.floor((now + 86400000) / 1000)
-  };
-  const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const key = await webcrypto.subtle.importKey('jwk', panelPrivateKey(), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
-  const signature = await webcrypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(encoded));
-  return `${encoded}.${Buffer.from(signature).toString('base64url')}`;
-}
+const TEST_SECRET = 'teste-ofertas-zconnect-2026-chave-privada-123456';
 
 function responseMock() {
   return {
@@ -39,33 +16,139 @@ function responseMock() {
   };
 }
 
-test('API aceita cadastro e resolução apenas de token assinado válido', async () => {
-  const token = await signedToken();
+test('API gera no servidor e resolve somente uma oferta da geração nova', async () => {
+  const previousSecret = process.env.OFFER_ADMIN_SECRET;
+  const previousGeneration = process.env.OFFER_LINK_GENERATION;
   const originalFetch = globalThis.fetch;
+  let storedToken = '';
   const upstreamCalls = [];
+
+  process.env.OFFER_ADMIN_SECRET = TEST_SECRET;
+  process.env.OFFER_LINK_GENERATION = 'teste-reset-1';
   globalThis.fetch = async (url, options = {}) => {
     upstreamCalls.push({ url: String(url), options });
-    if (options.method === 'POST') return { ok: true, json: async () => ({ ok: true }) };
-    return { ok: true, json: async () => ({ ok: true, token }) };
+    if (options.method === 'POST') {
+      const payload = JSON.parse(options.body);
+      storedToken = payload.signedToken;
+      return { ok: true, json: async () => ({ ok: true }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, token: storedToken }) };
   };
 
   try {
     const createResponse = responseMock();
     await offerHandler({
       method: 'POST',
-      headers: { origin: 'null' },
-      body: { shortCode: '7K2M9QPX', clientSlug: 'CLIENTE-API', signedToken: token },
+      headers: { origin: 'null', 'x-offer-admin-secret': TEST_SECRET },
+      body: {
+        seller: 'huesller',
+        clientName: 'Cliente API',
+        discount: 5,
+        validityDays: 7
+      },
       query: {}
     }, createResponse);
+
     assert.equal(createResponse.statusCode, 201);
     assert.equal(createResponse.body.ok, true);
+    assert.match(createResponse.body.offer.shortCode, /^[A-HJ-NP-Z2-9]{8}$/);
+    assert.equal(createResponse.body.offer.clientSlug, 'CLIENTE-API');
+    assert.ok(storedToken);
 
     const resolveResponse = responseMock();
-    await offerHandler({ method: 'GET', headers: {}, query: { code: '7K2M9QPX' } }, resolveResponse);
+    await offerHandler({
+      method: 'GET',
+      headers: {},
+      query: {
+        code: createResponse.body.offer.shortCode,
+        clientSlug: createResponse.body.offer.clientSlug
+      }
+    }, resolveResponse);
+
     assert.equal(resolveResponse.statusCode, 200);
-    assert.equal(resolveResponse.body.token, token);
-    assert.equal(upstreamCalls.length, 2);
+    assert.equal(resolveResponse.body.offer.clientName, 'Cliente API');
+    assert.equal(resolveResponse.body.offer.source, 'signed_short_link_v3');
+
+    process.env.OFFER_LINK_GENERATION = 'teste-reset-2';
+    const revokedResponse = responseMock();
+    await offerHandler({
+      method: 'GET',
+      headers: {},
+      query: {
+        code: createResponse.body.offer.shortCode,
+        clientSlug: createResponse.body.offer.clientSlug
+      }
+    }, revokedResponse);
+
+    assert.equal(revokedResponse.statusCode, 404);
+    assert.match(revokedResponse.body.error, /revogada/i);
+    assert.equal(upstreamCalls.length, 3);
   } finally {
     globalThis.fetch = originalFetch;
+    if (previousSecret === undefined) delete process.env.OFFER_ADMIN_SECRET;
+    else process.env.OFFER_ADMIN_SECRET = previousSecret;
+    if (previousGeneration === undefined) delete process.env.OFFER_LINK_GENERATION;
+    else process.env.OFFER_LINK_GENERATION = previousGeneration;
+  }
+});
+
+test('API rejeita a chave antiga e não registra uma oferta', async () => {
+  const previousSecret = process.env.OFFER_ADMIN_SECRET;
+  const originalFetch = globalThis.fetch;
+  let called = false;
+  process.env.OFFER_ADMIN_SECRET = TEST_SECRET;
+  globalThis.fetch = async () => {
+    called = true;
+    return { ok: true, json: async () => ({ ok: true }) };
+  };
+
+  try {
+    const response = responseMock();
+    await offerHandler({
+      method: 'POST',
+      headers: { origin: 'null', 'x-offer-admin-secret': 'chave-incorreta-com-mais-de-32-caracteres' },
+      body: { seller: 'huesller', clientName: 'Cliente', discount: 5, validityDays: 7 },
+      query: {}
+    }, response);
+
+    assert.equal(response.statusCode, 401);
+    assert.equal(called, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousSecret === undefined) delete process.env.OFFER_ADMIN_SECRET;
+    else process.env.OFFER_ADMIN_SECRET = previousSecret;
+  }
+});
+
+test('API não aceita token do mecanismo antigo', async () => {
+  const previousSecret = process.env.OFFER_ADMIN_SECRET;
+  const originalFetch = globalThis.fetch;
+  process.env.OFFER_ADMIN_SECRET = TEST_SECRET;
+  const oldPayload = Buffer.from(JSON.stringify({
+    v: 2,
+    i: 'OF-ANTIGA',
+    s: 'huesller',
+    c: 'Cliente Antigo',
+    d: 5,
+    a: 1,
+    e: 9999999999
+  })).toString('base64url');
+  const oldToken = `${oldPayload}.${Buffer.alloc(64, 1).toString('base64url')}`;
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ ok: true, token: oldToken }) });
+
+  try {
+    const response = responseMock();
+    await offerHandler({
+      method: 'GET',
+      headers: {},
+      query: { code: '7K2M9QPX', clientSlug: 'CLIENTE-ANTIGO' }
+    }, response);
+
+    assert.equal(response.statusCode, 404);
+    assert.match(response.body.error, /antiga|revogada/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousSecret === undefined) delete process.env.OFFER_ADMIN_SECRET;
+    else process.env.OFFER_ADMIN_SECRET = previousSecret;
   }
 });

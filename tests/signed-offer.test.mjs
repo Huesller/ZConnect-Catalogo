@@ -1,112 +1,74 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { webcrypto } from 'node:crypto';
 import {
   getShortOfferReferenceFromUrl,
-  resolveShortOfferToken,
-  verifySignedOfferToken
+  resolveShortOffer
 } from '../src/utils/signedOffer.js';
 
-function bytesToBase64Url(bytes) {
-  return Buffer.from(bytes)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
-}
-
-async function createFixture() {
-  const keys = await webcrypto.subtle.generateKey(
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true,
-    ['sign', 'verify']
-  );
-  const now = Date.UTC(2026, 6, 13, 12, 0, 0);
-  const payload = {
-    v: 2,
-    i: 'OFERTA123',
-    s: 'ivoney',
-    c: 'Auto Peças Silva',
-    d: 5,
-    a: Math.floor(now / 1000),
-    e: Math.floor((now + 7 * 24 * 60 * 60 * 1000) / 1000)
-  };
-  const encodedPayload = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
-  const signature = await webcrypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    keys.privateKey,
-    new TextEncoder().encode(encodedPayload)
-  );
-
-  return {
-    now,
-    token: `${encodedPayload}.${bytesToBase64Url(new Uint8Array(signature))}`,
-    publicJwk: await webcrypto.subtle.exportKey('jwk', keys.publicKey)
-  };
-}
-
-test('valida oferta assinada e normaliza Ivoney para Ney', async () => {
-  const fixture = await createFixture();
-  const offer = await verifySignedOfferToken(fixture.token, {
-    cryptoApi: webcrypto,
-    publicJwk: fixture.publicJwk,
-    now: fixture.now
-  });
-
-  assert.equal(offer.active, true);
-  assert.equal(offer.seller, 'ney');
-  assert.equal(offer.clientName, 'Auto Peças Silva');
-  assert.equal(offer.discount, 5);
-  assert.equal(offer.signed, true);
-});
-
-test('rejeita qualquer alteração no conteúdo do token', async () => {
-  const fixture = await createFixture();
-  const [payload, signature] = fixture.token.split('.');
-  const tamperedPayload = `${payload.slice(0, -1)}${payload.endsWith('A') ? 'B' : 'A'}`;
-  const offer = await verifySignedOfferToken(`${tamperedPayload}.${signature}`, {
-    cryptoApi: webcrypto,
-    publicJwk: fixture.publicJwk,
-    now: fixture.now
-  });
-
-  assert.equal(offer, null);
-});
-
-test('mantém a assinatura válida, mas marca a oferta vencida', async () => {
-  const fixture = await createFixture();
-  const offer = await verifySignedOfferToken(fixture.token, {
-    cryptoApi: webcrypto,
-    publicJwk: fixture.publicJwk,
-    now: fixture.now + 8 * 24 * 60 * 60 * 1000
-  });
-
-  assert.equal(offer.active, false);
-  assert.equal(offer.expired, true);
-});
-
-test('reconhece somente o caminho curto cliente e código', () => {
+test('reconhece somente o novo caminho /oferta/cliente/código', () => {
   assert.deepEqual(
-    getShortOfferReferenceFromUrl('/o/AUTO-PECAS-SILVA/7K2M9QPX'),
+    getShortOfferReferenceFromUrl('/oferta/AUTO-PECAS-SILVA/7K2M9QPX'),
     { clientSlug: 'AUTO-PECAS-SILVA', code: '7K2M9QPX' }
   );
-  assert.equal(getShortOfferReferenceFromUrl('/o/CLIENTE/codigo-invalido'), null);
+  assert.equal(getShortOfferReferenceFromUrl('/o/AUTO-PECAS-SILVA/7K2M9QPX'), null);
+  assert.equal(getShortOfferReferenceFromUrl('/oferta/CLIENTE/codigo-invalido'), null);
   assert.equal(getShortOfferReferenceFromUrl('/produtos/7K2M9QPX'), null);
 });
 
-test('resolve o token de uma oferta curta pelo backend', async () => {
+test('resolve a oferta validada pelo backend sem expor o token assinado', async () => {
   const calls = [];
-  const token = await resolveShortOfferToken(
+  const now = Date.UTC(2026, 7, 18, 15, 0, 0);
+  const offer = await resolveShortOffer(
     { clientSlug: 'CLIENTE', code: '7K2M9QPX' },
     {
+      now,
       baseUrl: 'https://catalogo.exemplo.com',
       fetchApi: async (url) => {
         calls.push(url);
-        return { ok: true, json: async () => ({ ok: true, token: 'payload.assinatura' }) };
+        return {
+          ok: true,
+          json: async () => ({
+            ok: true,
+            offer: {
+              active: true,
+              expired: false,
+              signed: true,
+              id: 'OF-NOVA',
+              seller: 'huesller',
+              clientName: 'Cliente',
+              discount: 5,
+              factor: 0.95,
+              mode: 'discount',
+              createdAt: new Date(now - 60000).toISOString(),
+              expiresAt: new Date(now + 86400000).toISOString(),
+              expiresLabel: '19/08/2026, 12:00',
+              shortCode: '7K2M9QPX',
+              clientSlug: 'CLIENTE',
+              source: 'signed_short_link_v3'
+            }
+          })
+        };
       }
     }
   );
 
-  assert.equal(token, 'payload.assinatura');
-  assert.equal(calls[0], 'https://catalogo.exemplo.com/api/offer?code=7K2M9QPX');
+  assert.equal(offer?.active, true);
+  assert.equal(offer?.clientName, 'Cliente');
+  assert.equal(offer?.source, 'signed_short_link_v3');
+  assert.equal(calls[0], 'https://catalogo.exemplo.com/api/offer?code=7K2M9QPX&clientSlug=CLIENTE');
+});
+
+test('descarta resposta de oferta incompleta ou adulterada', async () => {
+  const offer = await resolveShortOffer(
+    { clientSlug: 'CLIENTE', code: '7K2M9QPX' },
+    {
+      baseUrl: 'https://catalogo.exemplo.com',
+      fetchApi: async () => ({
+        ok: true,
+        json: async () => ({ ok: true, offer: { signed: true, discount: 5 } })
+      })
+    }
+  );
+
+  assert.equal(offer, null);
 });

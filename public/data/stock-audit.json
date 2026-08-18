@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-04T11:14:37.649Z",
+  "generatedAt": "2026-08-18T14:19:08.969Z",
   "total": 2704,
-  "available": 2080,
-  "outOfStock": 624,
-  "lowStock": 523,
+  "available": 2152,
+  "outOfStock": 552,
+  "lowStock": 479,
   "sources": [
     {
       "brand": "RIDA",
@@ -48,204 +48,6 @@
   ],
   "sampleOutOfStock": [
     {
-      "id": "RETOV-638954-SY6183",
-      "code": "638954",
-      "fabCode": "SY6183",
-      "name": "DEFLETOR INFERIOR PARACHOQUE DIANTEIRO HB20 2023 A 2026",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=66"
-    },
-    {
-      "id": "RETOV-636557-NS082130300-*-SN6244",
-      "code": "636557",
-      "fabCode": "NS082130300 * SN6244",
-      "name": "DEFLETOR INFERIOR PARACHOQUE DIANTEIRO NISSAN VERSA 2015 A 2020",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
-    },
-    {
-      "id": "RETOV-355937-BF4465",
-      "code": "355937",
-      "fabCode": "BF4465",
-      "name": "DEFLETOR INFERIOR RADIADOR FORD FIESTA 2003 A 2012 ECOSPORT 2003 A 2012",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=8"
-    },
-    {
-      "id": "RETOV-525279-SC5161",
-      "code": "525279",
-      "fabCode": "SC5161",
-      "name": "DEFLETOR RADIADOR ONIX/PRISMA/COBALT/SPIN 2011 A 2017 COM AR CONDICIONADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
-    },
-    {
-      "id": "RETOV-525257-MC4606",
-      "code": "525257",
-      "fabCode": "MC4606",
-      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 INFERIOR CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
-    },
-    {
-      "id": "RETOV-525256-MC4605",
-      "code": "525256",
-      "fabCode": "MC4605",
-      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 SUPERIOR CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
-    },
-    {
-      "id": "RETOV-525267-MC4610",
-      "code": "525267",
-      "fabCode": "MC4610",
-      "name": "FRISO GRADE DIANTEIRA CELTA 2011 A 2016 PRISMA 2010 A 2012 INFERIOR CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=20"
-    },
-    {
-      "id": "RETOV-525277-MC5042",
-      "code": "525277",
-      "fabCode": "MC5042",
-      "name": "FRISO GRADE DIANTEIRA CENTRAL INFERIOR ONIX PRISMA LTZ 2017 A 2020 (CROMADO)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=44"
-    },
-    {
-      "id": "RETOV-337138-MI5614",
-      "code": "337138",
-      "fabCode": "MI5614",
-      "name": "FRISO GRADE PARACHOQUE DIANTEIRO FIAT CRONOS 2018 2019 2020 DIREITO (PRETO)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
-    },
-    {
-      "id": "RETOV-337139-MI5613",
-      "code": "337139",
-      "fabCode": "MI5613",
-      "name": "FRISO GRADE PARACHOQUE DIANTEIRO FIAT CRONOS 2018 2019 2020 ESQUERDO (PRETO)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
-    },
-    {
-      "id": "RETOV-639936-MP4042",
-      "code": "639936",
-      "fabCode": "MP4042",
-      "name": "FRISO LATERAL PORTA TRASEIRA DIREITA PEUGEOT 307 2002 A 2012",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=59"
-    },
-    {
-      "id": "RETOV-636573-MP6255",
-      "code": "636573",
-      "fabCode": "MP6255",
-      "name": "FRISO SUPERIOR GRADE DIANTEIRA PEUGEOT 208 2024 2025 2026",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=70"
-    },
-    {
-      "id": "RETOV-456939-RW4364",
-      "code": "456939",
-      "fabCode": "RW4364",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO BORA 2008 A 2011 COLMEIA PRETA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=33"
-    },
-    {
-      "id": "RETOV-355923-RF4397",
-      "code": "355923",
-      "fabCode": "RF4397",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO FORD KA 2002 A 2007 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=7"
-    },
-    {
-      "id": "RETOV-458940-RW4884",
-      "code": "458940",
-      "fabCode": "RW4884",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO GOL VOYAGE G7 2016 A 2018 PRETA COM FRISO CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=40"
-    },
-    {
-      "id": "RETOV-636050-RR4523",
-      "code": "636050",
-      "fabCode": "RR4523",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO RENAULT KANGOO 2009 A 2012 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=28"
-    },
-    {
-      "id": "RETOV-457730-RW4758",
-      "code": "457730",
-      "fabCode": "RW4758",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO VOLKSWAGEN UP 2014 A 2018 PRETA COM FURO MILHA (INTERNA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=35"
-    },
-    {
-      "id": "RETOV-637722-RT5302",
-      "code": "637722",
-      "fabCode": "RT5302",
-      "name": "GRADE CENTRAL PARACHOQUE ETIOS 2017 A 2019 PRETA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=47"
-    },
-    {
-      "id": "RETOV-336911-RI4401",
-      "code": "336911",
-      "fabCode": "RI4401",
-      "name": "GRADE CENTRAL PARACHOQUE FIAT PALIO CELEBRATION 2004 A 2009 PRETA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=2"
-    },
-    {
-      "id": "RETOV-655010-RJ5322",
-      "code": "655010",
-      "fabCode": "RJ5322",
-      "name": "GRADE CENTRAL PARACHOQUE JEEP RENEGADE 2015 2016 2017 2018",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=51"
-    },
-    {
-      "id": "RETOV-525253-PC4612",
-      "code": "525253",
-      "fabCode": "PC4612",
-      "name": "GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
-    },
-    {
-      "id": "RETOV-355776-PF0736",
-      "code": "355776",
-      "fabCode": "PF0736",
-      "name": "GRADE DIANTEIRA CENTRAL FOCUS GHIA 1999 A 2003 PRETA (COM KIT MOLA FECHADURA CAPO)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=5"
-    },
-    {
       "id": "RETOV-457880-PW4635",
       "code": "457880",
       "fabCode": "PW4635",
@@ -255,22 +57,220 @@
       "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
     },
     {
-      "id": "RETOV-525276-PC5041",
-      "code": "525276",
-      "fabCode": "PC5041",
-      "name": "GRADE DIANTEIRA CENTRAL INFERIOR ONIX PRISMA LTZ 2017 A 2020 (PRETA)",
+      "id": "RETOV-338736-PI2287N",
+      "code": "338736",
+      "fabCode": "PI2287N",
+      "name": "GRADE DO RADIADOR PALIO SIENA STRADA WEEKEND FIRE 2001 A 2007 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=44"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=4"
     },
     {
-      "id": "RETOV-525252-PC4542",
-      "code": "525252",
-      "fabCode": "PC4542",
-      "name": "GRADE DIANTEIRA CLASSIC 2011 A 2016 (PRETA)",
+      "id": "RETOV-636863-RT5910",
+      "code": "636863",
+      "fabCode": "RT5910",
+      "name": "GRADE MOLDURA MILHA HILUX SRX 2018 2019 2020 ESQUERDA COM FRISO CROMADO",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
+    },
+    {
+      "id": "RETOV-636396-RP4698",
+      "code": "636396",
+      "fabCode": "RP4698",
+      "name": "GRADE MOLDURA MILHA PEUGEOT 308 2011 A 2015 DIREITA (PRETA)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=32"
+    },
+    {
+      "id": "RETOV-457731-MW4760",
+      "code": "457731",
+      "fabCode": "MW4760",
+      "name": "MOLDURA PARACHOQUE DIANTEIRO VOLKSWAGEN UP 2014 A 2016 SEM FURO PARA MILHA (PRIMER)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=35"
+    },
+    {
+      "id": "RETOV-636747-SR5400",
+      "code": "636747",
+      "fabCode": "SR5400",
+      "name": "PAINEL DIANTEIRO FLUENCE 2010 A 2018",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=64"
+    },
+    {
+      "id": "RETOV-636015-AP4284-85",
+      "code": "636015",
+      "fabCode": "AP4284-85",
+      "name": "PAR MOLDURA FAROL DE MILHA PEUGEOT 307 2006 A 2012 (CROMADO)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=26"
+    },
+    {
+      "id": "RETOV-356245-BF4251",
+      "code": "356245",
+      "fabCode": "BF4251",
+      "name": "PARACHOQUE DIANTEIRO CENTRAL FORD KA 1997 A 2000 (PRIMER)",
+      "brand": "RETOV",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=10"
+    },
+    {
+      "id": "RIDA-338617-714",
+      "code": "338617",
+      "fabCode": "714",
+      "name": "ACABAMENTO PORTA BAU FIAT FIORINO 1998 A 2013 (SOLEIRA)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=30"
+    },
+    {
+      "id": "RIDA-465774-439",
+      "code": "465774",
+      "fabCode": "439",
+      "name": "FRISO MOLDURA INFERIOR GRADE DIANTEIRA S10 BLAZER 2012 2013 2014 2015 (CROMADO)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=10"
+    },
+    {
+      "id": "RIDA-525909-406",
+      "code": "525909",
+      "fabCode": "406",
+      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO MERIVA 2006 A 2012",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=2"
+    },
+    {
+      "id": "RIDA-630347-654",
+      "code": "630347",
+      "fabCode": "654",
+      "name": "GRADE CENTRAL PARACHOQUE SANDERO STEPWAY 2011 2012 2013 2014",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=43"
+    },
+    {
+      "id": "RIDA-338998-717-DER",
+      "code": "338998",
+      "fabCode": "717 DER",
+      "name": "GUIA FAROL FIAT PALIO 2004 A 2017 PALIO WEEKEND 2005 A 2008 STRADA 2005 A 2012 DIREITO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=30"
+    },
+    {
+      "id": "RIDA-338999-718-IZQ",
+      "code": "338999",
+      "fabCode": "718 IZQ",
+      "name": "GUIA FAROL FIAT PALIO 2004 A 2017 PALIO WEEKEND 2005 A 2008 STRADA 2005 A 2012 ESQUERDO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=30"
+    },
+    {
+      "id": "RIDA-638658-694-DER",
+      "code": "638658",
+      "fabCode": "694 DER",
+      "name": "GUIA PARACHOQUE DIANTEIRO KWID 2018 2019 2020 2022 DIREITO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=20"
+    },
+    {
+      "id": "RIDA-638659-695-IZQ",
+      "code": "638659",
+      "fabCode": "695 IZQ",
+      "name": "GUIA PARACHOQUE DIANTEIRO KWID 2018 2019 2020 2022 ESQUERDO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=20"
+    },
+    {
+      "id": "RIDA-638692-660-DER",
+      "code": "638692",
+      "fabCode": "660 DER",
+      "name": "GUIA PARACHOQUE DUSTER 2010 2011 2012 2013 2014 2015 SUPERIOR DIANTEIRO DIREITO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=19"
+    },
+    {
+      "id": "RIDA-638619-1002-IZQ",
+      "code": "638619",
+      "fabCode": "1002 IZQ",
+      "name": "GUIA PARACHOQUE ETIOS 2012 2013 2014 2015 2016 2017 DIANTEIRO ESQUERDO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=32"
+    },
+    {
+      "id": "RIDA-358606-880-DER",
+      "code": "358606",
+      "fabCode": "880 DER",
+      "name": "GUIA PARACHOQUE FIESTA 2010 2011 2012 2013 2014 DIANTEIRO DIREITO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=7"
+    },
+    {
+      "id": "RIDA-358607-879-IZQ",
+      "code": "358607",
+      "fabCode": "879 IZQ",
+      "name": "GUIA PARACHOQUE FIESTA 2010 2011 2012 2013 2014 DIANTEIRO ESQUERDO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=7"
+    },
+    {
+      "id": "RIDA-358630-888-DER",
+      "code": "358630",
+      "fabCode": "888 DER",
+      "name": "GUIA PARACHOQUE KA 2019 2020 2021 DIANTEIRO DIREITO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=7"
+    },
+    {
+      "id": "RIDA-358631-889-IZQ",
+      "code": "358631",
+      "fabCode": "889 IZQ",
+      "name": "GUIA PARACHOQUE KA 2019 2020 2021 DIANTEIRO ESQUERDO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=7"
+    },
+    {
+      "id": "RIDA-528610-458-DER",
+      "code": "528610",
+      "fabCode": "458 DER",
+      "name": "GUIA PARACHOQUE ONIX/PRISMA 2012 2013 2014 2015 2016 DIANTEIRO DIREITO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=13"
+    },
+    {
+      "id": "RIDA-528611-459-IZQ",
+      "code": "528611",
+      "fabCode": "459 IZQ",
+      "name": "GUIA PARACHOQUE ONIX/PRISMA 2012 2013 2014 2015 2016 DIANTEIRO ESQUERDO (SUPORTE)",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=13"
+    },
+    {
+      "id": "RIDA-638729-657-IZQ",
+      "code": "638729",
+      "fabCode": "657 IZQ",
+      "name": "PARA BARRO DIANTEIRO ESQUERDO KANGOO 2008 A 2018",
+      "brand": "RIDA",
+      "stock": 0,
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=22"
     }
   ]
 }

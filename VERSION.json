@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.6.1",
-  "release": "IMPORTADOR-IMAGENS-POR-CODIGO",
+  "version": "12.7.0",
+  "release": "RESET-LINKS-OFERTA-V3",
   "status": "stable",
-  "description": "Importação local e incremental de uma imagem por produto, vinculada pelo código interno e preservada nas atualizações do Zetta.",
-  "updatedAt": "2026-07-29T15:00:00-03:00"
+  "description": "Mantém /o/ bloqueado, invalida a geração antiga e aceita apenas novos links protegidos em /oferta/.",
+  "updatedAt": "2026-08-18T11:30:00-03:00"
 }

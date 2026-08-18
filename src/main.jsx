@@ -13,9 +13,7 @@ import {
 } from './domain/pricing-core.js';
 import {
   getShortOfferReferenceFromUrl,
-  getSignedOfferTokenFromUrl,
-  resolveShortOfferToken,
-  verifySignedOfferToken
+  resolveShortOffer
 } from './utils/signedOffer.js';
 import {
   RESERVATION_HEARTBEAT_MS,
@@ -147,7 +145,7 @@ function getSpecialOfferFromUrl() {
   if (typeof window === 'undefined') return null;
 
   const params = new URLSearchParams(window.location.search);
-  if (getSignedOfferTokenFromUrl(window.location.search) || getShortOfferReferenceFromUrl(window.location.pathname)) return null;
+  if (getShortOfferReferenceFromUrl(window.location.pathname)) return null;
 
   const token = params.get(SPECIAL_OFFER_QUERY_KEYS.token);
   const shortToken = params.get(SPECIAL_OFFER_QUERY_KEYS.shortToken);
@@ -2202,14 +2200,13 @@ function CompanyGate({ value, error, minimized, onChange, onClose, onRestore, on
 }
 
 function App() {
-  const signedOfferToken = useMemo(() => getSignedOfferTokenFromUrl(), []);
   const shortOfferReference = useMemo(() => getShortOfferReferenceFromUrl(), []);
   const initialSpecialOffer = useMemo(
-    () => (signedOfferToken || shortOfferReference ? null : getSpecialOfferFromUrl()),
-    [shortOfferReference, signedOfferToken]
+    () => (shortOfferReference ? null : getSpecialOfferFromUrl()),
+    [shortOfferReference]
   );
   const [specialOffer, setSpecialOffer] = useState(initialSpecialOffer);
-  const [offerVerificationPending, setOfferVerificationPending] = useState(Boolean(signedOfferToken || shortOfferReference));
+  const [offerVerificationPending, setOfferVerificationPending] = useState(Boolean(shortOfferReference));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [products, setProducts] = useState([]);
@@ -2262,23 +2259,18 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!signedOfferToken && !shortOfferReference) return undefined;
+    if (!shortOfferReference) return undefined;
 
     let active = true;
     setOfferVerificationPending(true);
 
-    const tokenPromise = signedOfferToken
-      ? Promise.resolve(signedOfferToken)
-      : resolveShortOfferToken(shortOfferReference);
-
-    tokenPromise
-      .then((token) => token ? verifySignedOfferToken(token) : null)
+    resolveShortOffer(shortOfferReference)
       .then((verifiedOffer) => {
       if (!active) return;
 
-      const resolvedOffer = verifiedOffer && shortOfferReference
-        ? { ...verifiedOffer, source: 'signed_short_link_v1', shortCode: shortOfferReference.code }
-        : verifiedOffer;
+      const resolvedOffer = verifiedOffer
+        ? { ...verifiedOffer, source: 'signed_short_link_v3', shortCode: shortOfferReference.code }
+        : null;
       setSpecialOffer(resolvedOffer);
       setOfferVerificationPending(false);
 
@@ -2304,7 +2296,7 @@ function App() {
     return () => {
       active = false;
     };
-  }, [shortOfferReference, signedOfferToken]);
+  }, [shortOfferReference]);
 
   useEffect(() => {
     if (!specialOffer?.active) return;

@@ -225,17 +225,22 @@
       <span class="brand-mark">Z</span>
       <span><strong>Z Automotiva</strong><small>Painel comercial interno</small></span>
     </div>
-    <span class="version">Ofertas assinadas · Build 2</span>
+    <span class="version">Ofertas protegidas · Build 3</span>
   </header>
 
   <main class="shell">
     <section class="card form-card">
       <span class="eyebrow">Ferramenta interna</span>
       <h1>Gerar condição especial</h1>
-      <p class="intro">Defina cliente, consultor, desconto adicional e validade. Confira a condição final antes de gerar.</p>
+      <p class="intro">Defina cliente, consultor, desconto adicional e validade. Os novos links usam a rota protegida <strong>/oferta/</strong>.</p>
       <div class="warning"><strong>Não envie este arquivo ao cliente.</strong> O cliente recebe somente o link assinado.</div>
 
       <form id="offerForm" class="fields">
+        <label>Chave de acesso do painel
+          <input id="adminSecret" type="password" minlength="32" autocomplete="current-password" placeholder="A mesma chave configurada na Vercel" required>
+          <small>A chave é usada somente durante esta sessão e não fica gravada no painel nem no histórico.</small>
+        </label>
+
         <label>Consultor
           <select id="seller" required></select>
         </label>
@@ -306,16 +311,7 @@
       var CATALOG_URL = 'https://catalogo-zautomotiva.vercel.app/';
       var OFFER_API_URL = new URL('api/offer', CATALOG_URL).href;
       var ANALYTICS_URL = 'https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec';
-      var HISTORY_KEY = 'zautomotiva_signed_offer_history_v2';
-      var PRIVATE_KEY_JWK = {
-        key_ops: ['sign'],
-        ext: true,
-        kty: 'EC',
-        x: 'ZO1Zs56p0ajqfCIpZ6gEa7ckQ5Hqzr1qlp9iNz5kc4M',
-        y: 'BVoESZjC1ShNIKiqZUpc_rS1Ivh_VgdPmMVONJtvMf4',
-        crv: 'P-256',
-        d: 'ZNKKCzPcxPXOWNcxankMcpYJNmhrqkj3jjAl0YPFNdo'
-      };
+      var HISTORY_KEY = 'zautomotiva_signed_offer_history_v3';
       var SELLERS = [
         { id: 'huesller', name: 'Huesller', baseDiscount: 45 },
         { id: 'ney', name: 'Ivoney', baseDiscount: 45 },
@@ -326,6 +322,7 @@
       ];
 
       var form = document.getElementById('offerForm');
+      var adminSecretEl = document.getElementById('adminSecret');
       var sellerEl = document.getElementById('seller');
       var clientEl = document.getElementById('client');
       var discountEl = document.getElementById('discount');
@@ -359,7 +356,8 @@
 
       function getExtraDiscount() {
         var value = Number(String(discountEl.value || '').replace(',', '.'));
-        return Number.isFinite(value) ? Math.max(0, Math.min(95, value)) : 0;
+        var maximum = 95 - getSeller().baseDiscount;
+        return Number.isFinite(value) ? Math.max(0, Math.min(maximum, value)) : 0;
       }
 
       function formatPercent(value) {
@@ -376,6 +374,9 @@
 
       function updatePolicyPreview() {
         var seller = getSeller();
+        var maximum = 95 - seller.baseDiscount;
+        discountEl.max = String(maximum);
+        if (Number(discountEl.value || 0) > maximum) discountEl.value = String(maximum);
         var extra = getExtraDiscount();
         var finalDiscount = Math.min(95, seller.baseDiscount + extra);
         document.getElementById('basePolicy').textContent = formatPercent(seller.baseDiscount);
@@ -383,42 +384,14 @@
         document.getElementById('finalPolicy').textContent = formatPercent(finalDiscount);
       }
 
-      function bytesToBase64Url(bytes) {
-        var binary = '';
-        bytes.forEach(function (byte) { binary += String.fromCharCode(byte); });
-        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-      }
-
-      function createOfferId() {
-        var bytes = new Uint8Array(8);
-        crypto.getRandomValues(bytes);
-        return 'OF-' + Array.from(bytes).map(function (byte) { return byte.toString(16).padStart(2, '0'); }).join('').toUpperCase();
-      }
-
-      function createShortCode() {
-        var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        var bytes = new Uint8Array(8);
-        crypto.getRandomValues(bytes);
-        return Array.from(bytes).map(function (byte) { return alphabet[byte % alphabet.length]; }).join('');
-      }
-
-      function slugifyClient(value) {
-        var slug = String(value || '')
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toUpperCase()
-          .replace(/[^A-Z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '')
-          .slice(0, 40)
-          .replace(/-+$/g, '');
-        return slug || 'CLIENTE';
-      }
-
-      async function registerShortOffer(details) {
+      async function registerShortOffer(details, adminSecret) {
         var response = await fetch(OFFER_API_URL, {
           method: 'POST',
           mode: 'cors',
-          headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8',
+            'X-Offer-Admin-Secret': adminSecret
+          },
           body: JSON.stringify(details)
         });
         var result = await response.json().catch(function () { return {}; });
@@ -428,23 +401,6 @@
           throw error;
         }
         return result;
-      }
-
-      async function signPayload(payload) {
-        if (!crypto || !crypto.subtle) throw new Error('Este navegador não oferece assinatura segura.');
-        var key = await crypto.subtle.importKey(
-          'jwk', PRIVATE_KEY_JWK,
-          { name: 'ECDSA', namedCurve: 'P-256' },
-          false, ['sign']
-        );
-        var payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
-        var encodedPayload = bytesToBase64Url(payloadBytes);
-        var signature = await crypto.subtle.sign(
-          { name: 'ECDSA', hash: 'SHA-256' },
-          key,
-          new TextEncoder().encode(encodedPayload)
-        );
-        return encodedPayload + '.' + bytesToBase64Url(new Uint8Array(signature));
       }
 
       function loadHistory() {
@@ -532,7 +488,7 @@
           specialOfferSeller: offer.seller,
           specialOfferDiscount: offer.discount,
           specialOfferExpiresAt: offer.expiresAt,
-          specialOfferSource: 'signed_short_link_v1',
+          specialOfferSource: 'signed_short_link_v3',
           specialOfferCode: offer.shortCode,
           page: 'painel-comercial-local'
         };
@@ -560,51 +516,40 @@
       form.addEventListener('submit', async function (event) {
         event.preventDefault();
         var seller = getSeller();
+        var adminSecret = String(adminSecretEl.value || '').trim();
         var clientName = String(clientEl.value || '').trim().replace(/\s+/g, ' ');
         var discount = getExtraDiscount();
         var validityDays = Math.max(1, Math.min(30, Number(validityEl.value || 7)));
         var finalDiscount = Math.min(95, seller.baseDiscount + discount);
 
+        if (adminSecret.length < 32) { showToast('Informe a chave de acesso com pelo menos 32 caracteres.'); adminSecretEl.focus(); return; }
         if (!clientName) { showToast('Informe o nome do cliente.'); clientEl.focus(); return; }
         if (!discount) { showToast('Informe um desconto adicional maior que zero.'); discountEl.focus(); return; }
         if (finalDiscount >= 70 && !confirm('A condição final será ' + formatPercent(finalDiscount) + '. Confirma a geração?')) return;
 
-        var createdAt = Date.now();
-        var expiresAt = createdAt + validityDays * 24 * 60 * 60 * 1000;
-        var payload = {
-          v: 2,
-          i: createOfferId(),
-          s: seller.id,
-          c: clientName,
-          d: discount,
-          a: Math.floor(createdAt / 1000),
-          e: Math.floor(expiresAt / 1000)
-        };
-
         try {
           generateButtonEl.disabled = true;
           generateButtonEl.textContent = 'Protegendo e encurtando...';
-          var token = await signPayload(payload);
-          var shortCode = createShortCode();
-          var clientSlug = slugifyClient(clientName);
-          await registerShortOffer({
-            shortCode: shortCode,
-            clientSlug: clientSlug,
-            signedToken: token
-          });
-          var url = new URL('/o/' + encodeURIComponent(clientSlug) + '/' + shortCode, CATALOG_URL);
+          var result = await registerShortOffer({
+            seller: seller.id,
+            clientName: clientName,
+            discount: discount,
+            validityDays: validityDays
+          }, adminSecret);
+          var serverOffer = result.offer || {};
+          var url = new URL('/oferta/' + encodeURIComponent(serverOffer.clientSlug) + '/' + serverOffer.shortCode, CATALOG_URL);
           var offer = {
-            id: payload.i,
+            id: serverOffer.id,
             seller: seller.id,
             sellerName: seller.name,
             clientName: clientName,
             baseDiscount: seller.baseDiscount,
             discount: discount,
             finalDiscount: finalDiscount,
-            createdAt: new Date(createdAt).toISOString(),
-            expiresAt: new Date(expiresAt).toISOString(),
-            shortCode: shortCode,
-            clientSlug: clientSlug,
+            createdAt: serverOffer.createdAt,
+            expiresAt: serverOffer.expiresAt,
+            shortCode: serverOffer.shortCode,
+            clientSlug: serverOffer.clientSlug,
             url: url.href
           };
           saveHistory([offer].concat(loadHistory().filter(function (item) { return item.id !== offer.id; })));
