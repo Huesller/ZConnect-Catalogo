@@ -1,8 +1,8 @@
 {
   "project": "ZConnect Catalogo",
-  "version": "12.7.2",
-  "release": "RESET-LINKS-OFERTA-V3-SEM-SENHA-IDENTIFICADO",
+  "version": "12.7.3",
+  "release": "OFERTA-V3-SEM-SENHA-COM-VALIDADE-PERMANENTE",
   "status": "stable",
-  "description": "Mantém /o/ bloqueado e permite aos consultores gerar novos links em /oferta/ sem digitar chave no painel.",
-  "updatedAt": "2026-08-18T13:05:00-03:00"
+  "description": "Mantém /o/ bloqueado e adiciona aos novos links /oferta/ a opção permanente sem vencimento automático.",
+  "updatedAt": "2026-08-18T13:52:49-03:00"
 }

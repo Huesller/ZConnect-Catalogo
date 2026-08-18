@@ -6,8 +6,10 @@
 4. Execute `npm run build`.
 5. Confirme que o sincronizador informa envio bem-sucedido do snapshot quando as credenciais estão configuradas.
 6. Publique na Vercel e valide busca, carrinho, cotação e identificação da empresa.
-7. Abra o novo painel e gere um link de teste em `/oferta/`; nenhuma chave será solicitada ao consultor.
-8. Confirme em janela anônima que o link novo funciona e que um link antigo `/o/` permanece bloqueado.
+7. Abra o novo painel Build 3.3 e gere um link com prazo em `/oferta/`; nenhuma chave será solicitada ao consultor.
+8. Gere também um link `Permanente — sem vencimento automático` e confirme em janela anônima que o catálogo informa essa condição.
+9. Confirme que um link antigo `/o/` permanece bloqueado.
 
 Esta limpeza não altera regras de preço, reserva, busca confirmada ou rastreamento comercial.
 Não é necessário criar nenhuma variável nova na Vercel para ativar os links `/oferta/` desta versão.
+Também não é necessário criar regra adicional no Firewall para usar a opção permanente.

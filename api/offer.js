@@ -10,6 +10,7 @@ const CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/;
 const SLUG_PATTERN = /^[A-Z0-9][A-Z0-9-]{0,39}$/;
 const SHORT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ALLOWED_VALIDITY_DAYS = new Set([1, 3, 7, 15, 30]);
+const PERMANENT_EXPIRES_AT_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
 const SELLER_POLICIES = new Map([
   ["huesller", 45],
   ["ney", 45],
@@ -119,6 +120,7 @@ function normalizeVerifiedPayload(payload, now = Date.now()) {
   const discount = Number(payload.d);
   const createdAtMs = Number(payload.a) * 1000;
   const expiresAtMs = Number(payload.e) * 1000;
+  const permanent = payload.p === 1;
   const clientSlug = String(payload.l || "").trim().toUpperCase();
   const shortCode = String(payload.k || "").trim().toUpperCase();
   const baseDiscount = SELLER_POLICIES.get(seller);
@@ -127,10 +129,15 @@ function normalizeVerifiedPayload(payload, now = Date.now()) {
   if (!SLUG_PATTERN.test(clientSlug) || !CODE_PATTERN.test(shortCode)) return null;
   if (!Number.isFinite(discount) || discount <= 0 || baseDiscount + discount > 95) return null;
   if (!Number.isFinite(createdAtMs) || !Number.isFinite(expiresAtMs)) return null;
+  if (payload.p !== undefined && payload.p !== 0 && payload.p !== 1) return null;
   if (createdAtMs > now + 5 * 60 * 1000 || expiresAtMs <= createdAtMs) return null;
-  if (expiresAtMs - createdAtMs > 31 * 24 * 60 * 60 * 1000) return null;
+  if (permanent) {
+    if (expiresAtMs !== PERMANENT_EXPIRES_AT_MS) return null;
+  } else if (expiresAtMs - createdAtMs > 31 * 24 * 60 * 60 * 1000) {
+    return null;
+  }
 
-  const expired = now > expiresAtMs;
+  const expired = permanent ? false : now > expiresAtMs;
   return {
     active: !expired,
     expired,
@@ -141,9 +148,10 @@ function normalizeVerifiedPayload(payload, now = Date.now()) {
     discount,
     factor: Math.max(0.05, Math.min(0.9999, (100 - discount) / 100)),
     mode: "discount",
+    permanent,
     createdAt: new Date(createdAtMs).toISOString(),
-    expiresAt: new Date(expiresAtMs).toISOString(),
-    expiresLabel: formatExpiresLabel(expiresAtMs),
+    expiresAt: permanent ? "" : new Date(expiresAtMs).toISOString(),
+    expiresLabel: permanent ? "Sem vencimento automático" : formatExpiresLabel(expiresAtMs),
     clientSlug,
     shortCode,
     source: "signed_short_link_v3"
@@ -180,9 +188,11 @@ function getTargetUrl() {
   return new URL(process.env.ZCONNECT_ANALYTICS_TARGET_URL || DEFAULT_TARGET_URL);
 }
 
-async function registerOffer({ secret, seller, clientName, discount, validityDays }) {
+async function registerOffer({ secret, seller, clientName, discount, validityDays, permanent }) {
   const createdAt = Date.now();
-  const expiresAt = createdAt + validityDays * 24 * 60 * 60 * 1000;
+  const expiresAt = permanent
+    ? PERMANENT_EXPIRES_AT_MS
+    : createdAt + validityDays * 24 * 60 * 60 * 1000;
   const offerId = createOfferId();
   const clientSlug = slugifyClient(clientName);
 
@@ -197,6 +207,7 @@ async function registerOffer({ secret, seller, clientName, discount, validityDay
       d: discount,
       a: Math.floor(createdAt / 1000),
       e: Math.floor(expiresAt / 1000),
+      ...(permanent ? { p: 1 } : {}),
       l: clientSlug,
       k: shortCode
     }, secret);
@@ -214,6 +225,7 @@ async function registerOffer({ secret, seller, clientName, discount, validityDay
         offerId,
         clientName,
         seller,
+        permanent,
         expiresAt: new Date(expiresAt).toISOString()
       })
     });
@@ -224,8 +236,9 @@ async function registerOffer({ secret, seller, clientName, discount, validityDay
         seller,
         clientName,
         discount,
+        permanent,
         createdAt: new Date(createdAt).toISOString(),
-        expiresAt: new Date(expiresAt).toISOString(),
+        expiresAt: permanent ? "" : new Date(expiresAt).toISOString(),
         clientSlug,
         shortCode
       };
@@ -287,6 +300,7 @@ export default async function handler(request, response) {
     const clientName = normalizeClientName(data?.clientName);
     const discount = Number(data?.discount);
     const validityDays = Number(data?.validityDays);
+    const permanent = data?.permanent === true;
     const baseDiscount = SELLER_POLICIES.get(seller);
 
     if (!baseDiscount || clientName.length < 2 || !Number.isFinite(discount) || discount <= 0) {
@@ -297,13 +311,13 @@ export default async function handler(request, response) {
       response.status(400).json({ ok: false, error: "A condição final não pode ultrapassar 95%." });
       return;
     }
-    if (!ALLOWED_VALIDITY_DAYS.has(validityDays)) {
+    if (!permanent && !ALLOWED_VALIDITY_DAYS.has(validityDays)) {
       response.status(400).json({ ok: false, error: "Validade da oferta inválida." });
       return;
     }
 
     try {
-      const offer = await registerOffer({ secret, seller, clientName, discount, validityDays });
+      const offer = await registerOffer({ secret, seller, clientName, discount, validityDays, permanent });
       response.status(201).json({ ok: true, offer });
     } catch (error) {
       const collision = error?.message === "short_code_collision";

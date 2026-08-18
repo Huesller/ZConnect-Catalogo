@@ -223,6 +223,7 @@ function getSpecialOfferAnalytics(offer) {
     specialOfferClient: offer.clientName || '',
     specialOfferSeller: offer.seller || '',
     specialOfferMode: offer.mode || '',
+    specialOfferPermanent: Boolean(offer.permanent),
     specialOfferDiscount: offer.discount ?? '',
     specialOfferFactor: offer.factor ?? '',
     specialOfferExpiresAt: offer.expiresAt || '',
@@ -2124,7 +2125,7 @@ function SpecialOfferBanner({ offer, consultant }) {
       <div>
         <span>Condição especial gerada</span>
         <strong>Oferta exclusiva para {offer.clientName}</strong>
-        <p>{offer.expiresLabel ? `Válida até ${offer.expiresLabel}. ` : ''}Os valores já foram personalizados para este atendimento.</p>
+        <p>{offer.permanent ? 'Esta condição não possui vencimento automático. ' : offer.expiresLabel ? `Válida até ${offer.expiresLabel}. ` : ''}Os valores já foram personalizados para este atendimento.</p>
       </div>
       <button type="button" className="ghost-button small-button" onClick={() => openWhatsapp(consultant.phone)}>
         Falar com {consultant.name}

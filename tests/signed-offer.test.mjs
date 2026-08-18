@@ -58,6 +58,47 @@ test('resolve a oferta validada pelo backend sem expor o token assinado', async 
   assert.equal(calls[0], 'https://catalogo.exemplo.com/api/offer?code=7K2M9QPX&clientSlug=CLIENTE');
 });
 
+test('aceita oferta permanente validada pelo backend sem data de expiração', async () => {
+  const now = Date.UTC(2026, 7, 18, 15, 0, 0);
+  const offer = await resolveShortOffer(
+    { clientSlug: 'CLIENTE-PERMANENTE', code: '8K2M9QPX' },
+    {
+      now,
+      baseUrl: 'https://catalogo.exemplo.com',
+      fetchApi: async () => ({
+        ok: true,
+        json: async () => ({
+          ok: true,
+          offer: {
+            active: true,
+            expired: false,
+            signed: true,
+            permanent: true,
+            id: 'OF-PERMANENTE',
+            seller: 'huesller',
+            clientName: 'Cliente Permanente',
+            discount: 5,
+            factor: 0.95,
+            mode: 'discount',
+            createdAt: new Date(now - 60000).toISOString(),
+            expiresAt: '',
+            expiresLabel: 'Sem vencimento automático',
+            shortCode: '8K2M9QPX',
+            clientSlug: 'CLIENTE-PERMANENTE',
+            source: 'signed_short_link_v3'
+          }
+        })
+      })
+    }
+  );
+
+  assert.equal(offer?.active, true);
+  assert.equal(offer?.expired, false);
+  assert.equal(offer?.permanent, true);
+  assert.equal(offer?.expiresAt, '');
+  assert.equal(offer?.expiresLabel, 'Sem vencimento automático');
+});
+
 test('descarta resposta de oferta incompleta ou adulterada', async () => {
   const offer = await resolveShortOffer(
     { clientSlug: 'CLIENTE', code: '7K2M9QPX' },

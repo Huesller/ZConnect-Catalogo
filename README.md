@@ -1,4 +1,4 @@
-# Z Connect Catálogo 12.7.2
+# Z Connect Catálogo 12.7.3
 
 Catálogo online validado da Z Automotiva, integrado ao Z Connect Comercial por eventos, reservas e snapshots de estoque.
 
@@ -39,6 +39,9 @@ Consulte `PUBLICACAO-CATALOGO.md` antes de publicar.
 - Os novos links são gerados em `/oferta/{cliente}/{codigo}`.
 - A assinatura é feita somente no backend; o painel HTML não contém chave privada.
 - Os consultores não digitam senha ou chave no painel.
+- A validade padrão continua em 7 dias, com opções de 24 horas, 3, 7, 15 e 30 dias.
+- A opção `Permanente — sem vencimento automático` mantém a condição ativa até uma revogação administrativa.
+- Links permanentes também são invalidados se `OFFER_LINK_GENERATION` ou `OFFER_SIGNING_SECRET` forem trocados.
 - Esta versão funciona sem criar novas variáveis na Vercel.
 - `OFFER_SIGNING_SECRET` e `OFFER_LINK_GENERATION` são opcionais e servem somente para uma futura troca de geração.
 

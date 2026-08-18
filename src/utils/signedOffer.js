@@ -16,16 +16,18 @@ function normalizeResolvedOffer(value, now) {
   const clientName = String(value.clientName || '').trim().replace(/\s+/g, ' ');
   const discount = Number(value.discount);
   const createdAtMs = Date.parse(value.createdAt || '');
-  const expiresAtMs = Date.parse(value.expiresAt || '');
+  const permanent = value.permanent === true;
+  const expiresAtMs = permanent ? null : Date.parse(value.expiresAt || '');
   const shortCode = String(value.shortCode || '').trim().toUpperCase();
   const clientSlug = String(value.clientSlug || '').trim().toUpperCase();
 
   if (!id || !ALLOWED_SELLERS.has(seller) || !clientName) return null;
   if (!Number.isFinite(discount) || discount <= 0 || discount > 95) return null;
-  if (!Number.isFinite(createdAtMs) || !Number.isFinite(expiresAtMs) || expiresAtMs <= createdAtMs) return null;
+  if (!Number.isFinite(createdAtMs)) return null;
+  if (!permanent && (!Number.isFinite(expiresAtMs) || expiresAtMs <= createdAtMs)) return null;
   if (!SHORT_OFFER_CODE_PATTERN.test(shortCode) || !/^[A-Z0-9][A-Z0-9-]{0,39}$/.test(clientSlug)) return null;
 
-  const expired = now > expiresAtMs;
+  const expired = permanent ? false : now > expiresAtMs;
   return {
     active: !expired,
     expired,
@@ -36,9 +38,10 @@ function normalizeResolvedOffer(value, now) {
     discount,
     factor: Math.max(0.05, Math.min(0.9999, Number(value.factor) || (100 - discount) / 100)),
     mode: 'discount',
+    permanent,
     createdAt: new Date(createdAtMs).toISOString(),
-    expiresAt: new Date(expiresAtMs).toISOString(),
-    expiresLabel: String(value.expiresLabel || ''),
+    expiresAt: permanent ? '' : new Date(expiresAtMs).toISOString(),
+    expiresLabel: permanent ? 'Sem vencimento automático' : String(value.expiresLabel || ''),
     shortCode,
     clientSlug,
     source: 'signed_short_link_v3'

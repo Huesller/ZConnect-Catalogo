@@ -99,6 +99,7 @@ function toPayload(event, data = {}) {
     specialOfferClient: String(data.specialOfferClient || "").slice(0, 160),
     specialOfferSeller: String(data.specialOfferSeller || "").slice(0, 80),
     specialOfferMode: String(data.specialOfferMode || "").slice(0, 40),
+    specialOfferPermanent: Boolean(data.specialOfferPermanent),
     specialOfferDiscount: Number(data.specialOfferDiscount || 0),
     specialOfferFactor: Number(data.specialOfferFactor || 0),
     specialOfferExpiresAt: String(data.specialOfferExpiresAt || "").slice(0, 80),

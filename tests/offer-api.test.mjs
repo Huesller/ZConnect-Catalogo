@@ -92,6 +92,114 @@ test('API gera no servidor e resolve somente uma oferta da geração nova', asyn
   }
 });
 
+test('API gera e resolve oferta permanente sem prazo de vencimento', async () => {
+  const previousSecret = process.env.OFFER_SIGNING_SECRET;
+  const previousGeneration = process.env.OFFER_LINK_GENERATION;
+  const originalFetch = globalThis.fetch;
+  let storedToken = '';
+  let storedOffer = null;
+
+  process.env.OFFER_SIGNING_SECRET = TEST_SIGNING_SECRET;
+  process.env.OFFER_LINK_GENERATION = 'teste-permanente-1';
+  globalThis.fetch = async (_url, options = {}) => {
+    if (options.method === 'POST') {
+      storedOffer = JSON.parse(options.body);
+      storedToken = storedOffer.signedToken;
+      return { ok: true, json: async () => ({ ok: true }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, token: storedToken }) };
+  };
+
+  try {
+    const createResponse = responseMock();
+    await offerHandler({
+      method: 'POST',
+      headers: { origin: 'null' },
+      body: {
+        seller: 'huesller',
+        clientName: 'Cliente Permanente',
+        discount: 5,
+        validityDays: null,
+        permanent: true
+      },
+      query: {}
+    }, createResponse);
+
+    assert.equal(createResponse.statusCode, 201);
+    assert.equal(createResponse.body.offer.permanent, true);
+    assert.equal(createResponse.body.offer.expiresAt, '');
+    assert.equal(storedOffer.permanent, true);
+    assert.equal(storedOffer.expiresAt, '9999-12-31T23:59:59.000Z');
+
+    const encodedPayload = storedToken.split('.')[0];
+    const signedPayload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+    assert.equal(signedPayload.p, 1);
+    assert.equal(signedPayload.e, 253402300799);
+
+    const resolveResponse = responseMock();
+    await offerHandler({
+      method: 'GET',
+      headers: {},
+      query: {
+        code: createResponse.body.offer.shortCode,
+        clientSlug: createResponse.body.offer.clientSlug
+      }
+    }, resolveResponse);
+
+    assert.equal(resolveResponse.statusCode, 200);
+    assert.equal(resolveResponse.body.offer.active, true);
+    assert.equal(resolveResponse.body.offer.expired, false);
+    assert.equal(resolveResponse.body.offer.permanent, true);
+    assert.equal(resolveResponse.body.offer.expiresAt, '');
+    assert.equal(resolveResponse.body.offer.expiresLabel, 'Sem vencimento automático');
+
+    process.env.OFFER_LINK_GENERATION = 'teste-permanente-2';
+    const revokedResponse = responseMock();
+    await offerHandler({
+      method: 'GET',
+      headers: {},
+      query: {
+        code: createResponse.body.offer.shortCode,
+        clientSlug: createResponse.body.offer.clientSlug
+      }
+    }, revokedResponse);
+
+    assert.equal(revokedResponse.statusCode, 404);
+    assert.match(revokedResponse.body.error, /revogada/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousSecret === undefined) delete process.env.OFFER_SIGNING_SECRET;
+    else process.env.OFFER_SIGNING_SECRET = previousSecret;
+    if (previousGeneration === undefined) delete process.env.OFFER_LINK_GENERATION;
+    else process.env.OFFER_LINK_GENERATION = previousGeneration;
+  }
+});
+
+test('API continua rejeitando prazo fora da lista quando a oferta não é permanente', async () => {
+  const originalFetch = globalThis.fetch;
+  let called = false;
+  globalThis.fetch = async () => {
+    called = true;
+    return { ok: true, json: async () => ({ ok: true }) };
+  };
+
+  try {
+    const response = responseMock();
+    await offerHandler({
+      method: 'POST',
+      headers: { origin: 'null' },
+      body: { seller: 'huesller', clientName: 'Cliente', discount: 5, validityDays: 365 },
+      query: {}
+    }, response);
+
+    assert.equal(response.statusCode, 400);
+    assert.match(response.body.error, /validade/i);
+    assert.equal(called, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('API rejeita criação vinda de um site externo e não registra oferta', async () => {
   const previousSecret = process.env.OFFER_SIGNING_SECRET;
   const originalFetch = globalThis.fetch;

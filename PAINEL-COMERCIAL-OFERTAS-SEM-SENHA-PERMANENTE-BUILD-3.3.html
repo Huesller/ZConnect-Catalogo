@@ -225,7 +225,7 @@
       <span class="brand-mark">Z</span>
       <span><strong>Z Automotiva</strong><small>Painel comercial interno</small></span>
     </div>
-    <span class="version">Build 3.2 · SEM SENHA</span>
+    <span class="version">Build 3.3 · SEM SENHA</span>
   </header>
 
   <main class="shell">
@@ -249,13 +249,14 @@
           <label>Desconto adicional
             <input id="discount" type="number" min="0.01" max="95" step="0.01" inputmode="decimal" placeholder="Ex.: 5" required>
           </label>
-          <label>Validade exata
+          <label>Validade do link
             <select id="validity">
               <option value="1">24 horas</option>
               <option value="3">3 dias</option>
               <option value="7" selected>7 dias</option>
               <option value="15">15 dias</option>
               <option value="30">30 dias</option>
+              <option value="permanent">Permanente — sem vencimento automático</option>
             </select>
           </label>
         </div>
@@ -412,7 +413,9 @@
         resultLinkEl.value = offer.url;
         document.getElementById('resultClient').textContent = offer.clientName;
         document.getElementById('resultRule').textContent = offer.sellerName + ' · ' + formatPercent(offer.baseDiscount) + ' base + ' + formatPercent(offer.discount) + ' adicional = ' + formatPercent(offer.finalDiscount) + ' final';
-        document.getElementById('resultExpiry').textContent = 'Válida até ' + formatDateTime(offer.expiresAt);
+        document.getElementById('resultExpiry').textContent = offer.permanent
+          ? 'Link permanente · sem vencimento automático'
+          : 'Válida até ' + formatDateTime(offer.expiresAt);
         resultEl.hidden = false;
       }
 
@@ -424,11 +427,18 @@
         }
 
         historyEl.innerHTML = items.map(function (item) {
-          var expired = Date.now() > new Date(item.expiresAt).getTime();
+          var permanent = item.permanent === true;
+          var expiresAtMs = Date.parse(item.expiresAt || '');
+          var hasExpiry = Number.isFinite(expiresAtMs);
+          var expired = !permanent && hasExpiry && Date.now() > expiresAtMs;
+          var status = permanent ? 'PERMANENTE' : expired ? 'EXPIRADA' : 'ATIVA';
+          var expiryText = permanent
+            ? 'Sem vencimento automático'
+            : hasExpiry ? 'Válida até ' + formatDateTime(item.expiresAt) : 'Validade não informada';
           return '<article class="history-item">' +
-            '<div class="history-title"><strong>' + escapeHtml(item.clientName) + '</strong><span class="status ' + (expired ? 'expired' : '') + '">' + (expired ? 'EXPIRADA' : 'ATIVA') + '</span></div>' +
+            '<div class="history-title"><strong>' + escapeHtml(item.clientName) + '</strong><span class="status ' + (expired ? 'expired' : '') + '">' + status + '</span></div>' +
             '<p>' + escapeHtml(item.sellerName) + ' · condição final ' + escapeHtml(formatPercent(item.finalDiscount)) + '</p>' +
-            '<small>Válida até ' + escapeHtml(formatDateTime(item.expiresAt)) + ' · ' + escapeHtml(item.id) + '</small>' +
+            '<small>' + escapeHtml(expiryText) + ' · ' + escapeHtml(item.id) + '</small>' +
             '<div class="history-actions">' +
               '<button type="button" data-action="copy" data-id="' + escapeHtml(item.id) + '">Copiar</button>' +
               '<button type="button" data-action="open" data-id="' + escapeHtml(item.id) + '">Abrir</button>' +
@@ -453,7 +463,9 @@
           'Olá, ' + offer.clientName + '!',
           '',
           'Preparei uma condição especial e exclusiva para sua empresa no Catálogo Z Automotiva.',
-          'A oferta é válida até ' + formatDateTime(offer.expiresAt) + '.',
+          offer.permanent
+            ? 'Esta condição é permanente e não possui vencimento automático.'
+            : 'A oferta é válida até ' + formatDateTime(offer.expiresAt) + '.',
           '',
           offer.url,
           '',
@@ -478,6 +490,7 @@
           specialOfferClient: offer.clientName,
           specialOfferSeller: offer.seller,
           specialOfferDiscount: offer.discount,
+          specialOfferPermanent: offer.permanent === true,
           specialOfferExpiresAt: offer.expiresAt,
           specialOfferSource: 'signed_short_link_v3',
           specialOfferCode: offer.shortCode,
@@ -509,12 +522,14 @@
         var seller = getSeller();
         var clientName = String(clientEl.value || '').trim().replace(/\s+/g, ' ');
         var discount = getExtraDiscount();
-        var validityDays = Math.max(1, Math.min(30, Number(validityEl.value || 7)));
+        var permanent = validityEl.value === 'permanent';
+        var validityDays = permanent ? null : Math.max(1, Math.min(30, Number(validityEl.value || 7)));
         var finalDiscount = Math.min(95, seller.baseDiscount + discount);
 
         if (!clientName) { showToast('Informe o nome do cliente.'); clientEl.focus(); return; }
         if (!discount) { showToast('Informe um desconto adicional maior que zero.'); discountEl.focus(); return; }
         if (finalDiscount >= 70 && !confirm('A condição final será ' + formatPercent(finalDiscount) + '. Confirma a geração?')) return;
+        if (permanent && !confirm('Este link não terá vencimento automático. Confirma a geração permanente?')) return;
 
         try {
           generateButtonEl.disabled = true;
@@ -523,7 +538,8 @@
             seller: seller.id,
             clientName: clientName,
             discount: discount,
-            validityDays: validityDays
+            validityDays: validityDays,
+            permanent: permanent
           });
           var serverOffer = result.offer || {};
           var url = new URL('/oferta/' + encodeURIComponent(serverOffer.clientSlug) + '/' + serverOffer.shortCode, CATALOG_URL);
@@ -535,6 +551,8 @@
             baseDiscount: seller.baseDiscount,
             discount: discount,
             finalDiscount: finalDiscount,
+            validityDays: validityDays,
+            permanent: serverOffer.permanent === true,
             createdAt: serverOffer.createdAt,
             expiresAt: serverOffer.expiresAt,
             shortCode: serverOffer.shortCode,
@@ -575,6 +593,8 @@
           sellerEl.value = item.seller;
           clientEl.value = item.clientName;
           discountEl.value = item.discount;
+          if (item.permanent === true) validityEl.value = 'permanent';
+          else if ([1, 3, 7, 15, 30].indexOf(Number(item.validityDays)) >= 0) validityEl.value = String(item.validityDays);
           updatePolicyPreview();
           clientEl.focus();
           window.scrollTo({ top: 0, behavior: 'smooth' });
