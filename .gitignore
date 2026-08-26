@@ -36,13 +36,5 @@ logs/
 
 # generated local files
 BUILD_VALIDADO.txt
-
-dist/product-images/
-
 public/product-images/
-
-dist/product-images/
-
-public/product-images/
-
 dist/product-images/

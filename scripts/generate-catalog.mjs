@@ -8,7 +8,6 @@ const outputCatalogPath = path.join(outputDir, 'catalog.v5.json');
 const outputConsultantsPath = path.join(outputDir, 'consultants.json');
 const outputMetaPath = path.join(outputDir, 'meta.json');
 const outputStockAuditPath = path.join(outputDir, 'stock-audit.json');
-const imageOverridesPath = path.join(rootDir, 'scripts', 'image-overrides.json');
 
 const ZETTA_ORIGIN = 'https://sistema.zettabrasil.com.br';
 const FETCH_TIMEOUT_MS = 30000;
@@ -701,36 +700,19 @@ function applyStockHistory(products, previousMap) {
   });
 }
 
-function loadImageOverrides() {
-  if (!fs.existsSync(imageOverridesPath)) return {};
+function assertOfficialImageSources(products) {
+  const localImages = products.filter((product) =>
+    [product.image, product.imageFull].some((value) =>
+      cleanText(value).startsWith('/product-images/')
+    )
+  );
 
-  try {
-    const parsed = JSON.parse(fs.readFileSync(imageOverridesPath, 'utf8'));
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-  } catch (error) {
-    throw new Error(`Arquivo de imagens locais invalido: ${error.message}`);
+  if (localImages.length) {
+    throw new Error(
+      `Catalogo contem ${localImages.length} referencia(s) a imagens locais. ` +
+      'A geracao foi interrompida para impedir a publicacao de public/product-images.'
+    );
   }
-}
-
-function applyImageOverrides(products, overrides) {
-  let applied = 0;
-
-  const updated = products.map((product) => {
-    const code = cleanText(product.code).toUpperCase();
-    const override = overrides[code];
-    const imagePath = cleanText(typeof override === 'string' ? override : override?.path);
-    if (!imagePath) return product;
-
-    applied += 1;
-    return {
-      ...product,
-      image: imagePath,
-      imageFull: imagePath,
-      imageSource: 'local-import'
-    };
-  });
-
-  return { products: updated, applied };
 }
 
 function buildStockAudit(products, summaries) {
@@ -804,8 +786,7 @@ async function main() {
 
   const previousCatalogMap = loadPreviousCatalogMap();
   result.products = applyStockHistory(result.products, previousCatalogMap);
-  const imageOverrides = applyImageOverrides(result.products, loadImageOverrides());
-  result.products = imageOverrides.products;
+  assertOfficialImageSources(result.products);
 
   const meta = {
     generatedAt: new Date().toISOString(),
@@ -831,7 +812,7 @@ async function main() {
   const stockAudit = buildStockAudit(result.products, result.summaries);
   console.log(`[Zetta] catalog.v5.json gerado com ${result.products.length} produtos.`);
   console.log(`[Zetta] Auditoria estoque: ${stockAudit.available} disponiveis, ${stockAudit.outOfStock} reposicao em breve, ${stockAudit.lowStock} ultimas unidades.`);
-  console.log(`[Zetta] Imagens locais aplicadas: ${imageOverrides.applied}.`);
+  console.log('[Zetta] Imagens: somente URLs oficiais do SIGGMA.');
   console.log(`[Zetta] Fallback usado: ${fallbackUsed ? 'sim' : 'nao'}.`);
 }
 

@@ -9,11 +9,9 @@ Catálogo online validado da Z Automotiva, integrado ao Z Connect Comercial por 
 3. Execute `npm test` e `npm run build`.
 4. Publique na Vercel.
 
-## Imagens próprias
+## Imagens dos produtos
 
-Execute `IMPORTAR-IMAGENS.bat` para vincular uma pasta de fotos pelo código interno dos produtos. O processo gera o build e preserva as imagens locais nas próximas atualizações do Zetta.
-
-Consulte `IMPORTACAO-DE-IMAGENS.md` para o passo a passo.
+As imagens são utilizadas diretamente pelas URLs oficiais fornecidas pelo SIGGMA. O projeto não importa, copia nem publica imagens locais de produtos. As pastas `public/product-images/` e `dist/product-images/` permanecem bloqueadas pelo `.gitignore`.
 
 ## Links dos consultores
 

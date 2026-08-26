@@ -1830,14 +1830,16 @@ function QuantityStepper({ value, onChange, compact = false }) {
 
 function ProductImage({ src, alt, className = '', loading = 'lazy' }) {
   const [failed, setFailed] = useState(false);
+  const officialSrc = String(src || '').trim();
+  const isOfficialZettaImage = officialSrc.startsWith('https://sistema.zettabrasil.com.br/');
 
   useEffect(() => setFailed(false), [src]);
 
-  if (!src || failed) {
+  if (!isOfficialZettaImage || failed) {
     return <span className={`no-image image-fallback ${className}`.trim()}><Icon name="search" size={18}/><small>Imagem indisponível</small></span>;
   }
 
-  return <img className={className} src={src} alt={alt} loading={loading} decoding="async" onError={() => setFailed(true)}/>;
+  return <img className={className} src={officialSrc} alt={alt} loading={loading} decoding="async" onError={() => setFailed(true)}/>;
 }
 
 function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite }) {
