@@ -468,7 +468,7 @@ function sanitizeZettaProduct(item, context, config) {
     precoBaseLabel: formatMoney(price),
     precoZettaLabel: formatMoney(price),
     precoCheioLabel: formatMoney(price),
-    image: absoluteZettaUrl(item.imgMin || item.img || ''),
+    image: absoluteZettaUrl(item.img || item.imgMin || ''),
     imageFull: absoluteZettaUrl(item.img || item.imgMin || ''),
     vehicle,
     application,

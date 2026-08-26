@@ -18,3 +18,11 @@ test('pastas locais de produtos permanecem ignoradas pelo Git', () => {
   assert.match(gitignore, /^public\/product-images\/$/m);
   assert.match(gitignore, /^dist\/product-images\/$/m);
 });
+
+test('imagem principal usa a versão original do SIGGMA quando disponível', () => {
+  const catalog = JSON.parse(fs.readFileSync('public/data/catalog.v5.json', 'utf8'));
+  const productsWithFullImage = catalog.filter((product) => product.imageFull);
+  const usingThumbnail = productsWithFullImage.filter((product) => product.image !== product.imageFull);
+
+  assert.equal(usingThumbnail.length, 0);
+});
