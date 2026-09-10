@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-02T18:25:41.343Z",
-  "productCount": 2704,
+  "generatedAt": "2026-09-10T20:29:04.436Z",
+  "productCount": 2706,
   "brands": [
     [
       "RETOV",
-      667
+      669
     ],
     [
       "RIDA",
@@ -36,8 +36,8 @@
         "catalogId": "1436",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true",
         "description": "CATÁLOGO RETOV",
-        "pages": 70,
-        "productCount": 700
+        "pages": 71,
+        "productCount": 703
       },
       {
         "brand": "TYC",
