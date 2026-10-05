@@ -41,7 +41,7 @@
   },
   "representante1": {
     "slug": "representante1",
-    "name": "Representante",
+    "name": "Representante1",
     "phone": "5527992747307",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
@@ -49,7 +49,7 @@
   },
   "representante2": {
     "slug": "representante2",
-    "name": "Representante",
+    "name": "Representante2",
     "phone": "5527992747307",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
