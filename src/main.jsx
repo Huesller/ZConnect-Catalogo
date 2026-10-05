@@ -1615,7 +1615,16 @@ function getBusinessStatus() {
 
 function getConsultant(consultants, specialOffer = null) {
   const params = new URLSearchParams(window.location.search);
-  const requestedSlug = normalizeText(params.get('consultor') || specialOffer?.seller || 'huesller');
+  const requestedSlug = normalizeText(params.get('consultor') || specialOffer?.seller || 'huesller'
+);
+
+  console.log('DEBUG CONSULTOR:', {
+  requestedSlug,
+  consultants,
+  representante1: consultants?.representante1,
+  representante2: consultants?.representante2
+});
+
   const aliases = {
     huesller: 'huesller',
     ney: 'ney',
