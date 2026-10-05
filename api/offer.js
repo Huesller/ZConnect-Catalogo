@@ -14,11 +14,11 @@ const PERMANENT_EXPIRES_AT_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
 const SELLER_POLICIES = new Map([
   ["huesller", 45],
   ["ney", 45],
-  ["almir", 45],
   ["gabriel", 45],
-  ["junior", 45],
   ["francisco", 50],
-  ["representante", 50]
+  ["representante1", 50]
+  ["representante2", 50]
+  ["representante3", 50]
 ]);
 
 function setCorsHeaders(request, response) {

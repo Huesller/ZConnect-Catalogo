@@ -74,26 +74,10 @@ const DEFAULT_CONSULTANTS = {
     baseDiscount: 45,
     targetDiscount: 45
   },
-  almir: {
-    slug: 'almir',
-    name: 'Almir',
-    phone: '554792292510',
-    policyType: 'politicaDesconto',
-    baseDiscount: 45,
-    targetDiscount: 45
-  },
   gabriel: {
     slug: 'gabriel',
     name: 'Gabriel Zatt',
     phone: '554788647114',
-    policyType: 'politicaDesconto',
-    baseDiscount: 45,
-    targetDiscount: 45
-  },
-  junior: {
-    slug: 'junior',
-    name: 'Junior',
-    phone: process.env.ZCONNECT_JUNIOR_WHATSAPP || '554733054400',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
     targetDiscount: 45
