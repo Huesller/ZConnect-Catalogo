@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-09-10T20:29:04.436Z",
-  "productCount": 2706,
+  "generatedAt": "2026-10-05T12:23:19.916Z",
+  "productCount": 2043,
   "brands": [
     [
       "RETOV",
-      669
+      627
     ],
     [
       "RIDA",
-      407
+      379
     ],
     [
       "TYC",
-      938
+      555
     ],
     [
       "Z AUTO",
-      692
+      482
     ]
   ],
   "source": {
@@ -28,40 +28,40 @@
         "catalogId": "1438",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true",
         "description": "CATÁLOGO RIDA",
-        "pages": 43,
-        "productCount": 427
+        "pages": 40,
+        "productCount": 397
       },
       {
         "brand": "RETOV",
         "catalogId": "1436",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true",
         "description": "CATÁLOGO RETOV",
-        "pages": 71,
-        "productCount": 703
+        "pages": 66,
+        "productCount": 658
       },
       {
         "brand": "TYC",
         "catalogId": "1494",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true",
         "description": "CATÁLOGO TYC",
-        "pages": 100,
-        "productCount": 986
+        "pages": 59,
+        "productCount": 583
       },
       {
         "brand": "TYC",
         "catalogId": "1493",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true",
         "description": "CATÁLOGO TYC RETROVISORES",
-        "pages": 26,
-        "productCount": 252
+        "pages": 21,
+        "productCount": 208
       },
       {
         "brand": "Z AUTO",
         "catalogId": "1437",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true",
         "description": "CATÁLOGO ZATT",
-        "pages": 74,
-        "productCount": 727
+        "pages": 51,
+        "productCount": 506
       }
     ],
     "legacyFallback": {

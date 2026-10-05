@@ -1,276 +1,50 @@
 {
-  "generatedAt": "2026-09-10T20:29:04.441Z",
-  "total": 2706,
-  "available": 2116,
-  "outOfStock": 590,
-  "lowStock": 488,
+  "generatedAt": "2026-10-05T12:23:19.929Z",
+  "total": 2043,
+  "available": 2043,
+  "outOfStock": 0,
+  "lowStock": 0,
   "sources": [
     {
       "brand": "RIDA",
       "catalogId": "1438",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true",
       "description": "CATÁLOGO RIDA",
-      "pages": 43,
-      "productCount": 427
+      "pages": 40,
+      "productCount": 397
     },
     {
       "brand": "RETOV",
       "catalogId": "1436",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true",
       "description": "CATÁLOGO RETOV",
-      "pages": 71,
-      "productCount": 703
+      "pages": 66,
+      "productCount": 658
     },
     {
       "brand": "TYC",
       "catalogId": "1494",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true",
       "description": "CATÁLOGO TYC",
-      "pages": 100,
-      "productCount": 986
+      "pages": 59,
+      "productCount": 583
     },
     {
       "brand": "TYC",
       "catalogId": "1493",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true",
       "description": "CATÁLOGO TYC RETROVISORES",
-      "pages": 26,
-      "productCount": 252
+      "pages": 21,
+      "productCount": 208
     },
     {
       "brand": "Z AUTO",
       "catalogId": "1437",
       "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true",
       "description": "CATÁLOGO ZATT",
-      "pages": 74,
-      "productCount": 727
+      "pages": 51,
+      "productCount": 506
     }
   ],
-  "sampleOutOfStock": [
-    {
-      "id": "RETOV-637733-MB5947",
-      "code": "637733",
-      "fabCode": "MB5947",
-      "name": "FRISO GRADE CENTRAL PARACHOQUE C3 2012 A 2019 (CINZA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=58"
-    },
-    {
-      "id": "RETOV-525257-MC4606",
-      "code": "525257",
-      "fabCode": "MC4606",
-      "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 INFERIOR CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
-    },
-    {
-      "id": "RETOV-637235-PT5989N",
-      "code": "637235",
-      "fabCode": "PT5989N",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO COROLLA 2020 2021 2022 (PRETA BRILHANTE)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=51"
-    },
-    {
-      "id": "RETOV-406752-RF6176S",
-      "code": "406752",
-      "fabCode": "RF6176S",
-      "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO RANGER 2023 A 2026 (COM FURO PARA SENSOR)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
-    },
-    {
-      "id": "RETOV-636260-RT4728",
-      "code": "636260",
-      "fabCode": "RT4728",
-      "name": "GRADE CENTRAL PARACHOQUE ETIOS 2012 A 2017 PRETA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=32"
-    },
-    {
-      "id": "RETOV-336921-RI4531",
-      "code": "336921",
-      "fabCode": "RI4531",
-      "name": "GRADE CENTRAL PARACHOQUE FIAT PALIO SIENA G4 2008 A 2011 PRETA COM FURO MILHA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=3"
-    },
-    {
-      "id": "RETOV-457880-PW4635",
-      "code": "457880",
-      "fabCode": "PW4635",
-      "name": "GRADE DIANTEIRA CENTRAL FOX 2010 A 2014 SPACEFOX 2011 A 2014 (PRETA COM 2 FRISOS VERMELHOS)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
-    },
-    {
-      "id": "RETOV-457158-PW0120N",
-      "code": "457158",
-      "fabCode": "PW0120N",
-      "name": "GRADE DIANTEIRA GOL PARATI G2 1995 A 1999 G2 SPECIAL 2001 A 2003 SAVEIRO G2 1998 A 2000 (PRETA LISA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=14"
-    },
-    {
-      "id": "RETOV-355797-PF0704",
-      "code": "355797",
-      "fabCode": "PF0704",
-      "name": "GRADE DIANTEIRA RADIADOR FIESTA 1996 A 1999 (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=6"
-    },
-    {
-      "id": "RETOV-335726-LI2283S",
-      "code": "335726",
-      "fabCode": "LI2283S",
-      "name": "GRADE DIANTEIRA UNO PREMIO ELBA FIORINO 1996 A 2003 PRETA S/LUGAR P/EMBLEMA C/LUGAR P/FRISO CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true"
-    },
-    {
-      "id": "RETOV-637212-RR4792",
-      "code": "637212",
-      "fabCode": "RR4792",
-      "name": "GRADE MOLDURA FAROL MILHA RENAULT SANDERO 2015 A 2019 DIREITA COM FURO MILHA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=36"
-    },
-    {
-      "id": "RETOV-637250-RT5916N",
-      "code": "637250",
-      "fabCode": "RT5916N",
-      "name": "GRADE MOLDURA MILHA COROLLA 2020 2021 2022 DIREITA PRETA SEM FURO MILHA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
-    },
-    {
-      "id": "RETOV-637251-RT5915N",
-      "code": "637251",
-      "fabCode": "RT5915N",
-      "name": "GRADE MOLDURA MILHA COROLLA 2020 2021 2022 DIREITA PRETA SEM FURO MILHA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
-    },
-    {
-      "id": "RETOV-636863-RT5910",
-      "code": "636863",
-      "fabCode": "RT5910",
-      "name": "GRADE MOLDURA MILHA HILUX SRX 2018 2019 2020 ESQUERDA COM FRISO CROMADO",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
-    },
-    {
-      "id": "RETOV-636396-RP4698",
-      "code": "636396",
-      "fabCode": "RP4698",
-      "name": "GRADE MOLDURA MILHA PEUGEOT 308 2011 A 2015 DIREITA (PRETA)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=32"
-    },
-    {
-      "id": "RETOV-636398-RP4700",
-      "code": "636398",
-      "fabCode": "RP4700",
-      "name": "GRADE MOLDURA MILHA PEUGEOT 308 2011 A 2015 DIREITA COM FRISO CINZA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=32"
-    },
-    {
-      "id": "RETOV-459317-RW5373",
-      "code": "459317",
-      "fabCode": "RW5373",
-      "name": "MOLDURA DIANTEIRA ESQUERDA INFERIOR PARACHOQUE POLO VIRTUS 2017 2018 2019 2020",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=50"
-    },
-    {
-      "id": "RETOV-636023-MR4209",
-      "code": "636023",
-      "fabCode": "MR4209",
-      "name": "MOLDURA FRISO PARACHOQUE RENAULT CLIO 2003 A 2005 DIANTEIRA CENTRAL",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=26"
-    },
-    {
-      "id": "RETOV-636025-MR4207",
-      "code": "636025",
-      "fabCode": "MR4207",
-      "name": "MOLDURA FRISO PARACHOQUE RENAULT CLIO 2003 A 2005 DIANTEIRA ESQUERDA",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=26"
-    },
-    {
-      "id": "RETOV-457731-MW4760",
-      "code": "457731",
-      "fabCode": "MW4760",
-      "name": "MOLDURA PARACHOQUE DIANTEIRO VOLKSWAGEN UP 2014 A 2016 SEM FURO PARA MILHA (PRIMER)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=35"
-    },
-    {
-      "id": "RETOV-636015-AP4284-85",
-      "code": "636015",
-      "fabCode": "AP4284-85",
-      "name": "PAR MOLDURA FAROL DE MILHA PEUGEOT 307 2006 A 2012 (CROMADO)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=26"
-    },
-    {
-      "id": "RETOV-356245-BF4251",
-      "code": "356245",
-      "fabCode": "BF4251",
-      "name": "PARACHOQUE DIANTEIRO CENTRAL FORD KA 1997 A 2000 (PRIMER)",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=10"
-    },
-    {
-      "id": "RETOV-639196-ET5778",
-      "code": "639196",
-      "fabCode": "ET5778",
-      "name": "PONTEIRA PISANTE DIREITA PARACHOQUE TRASEIRO HILUX 2015 A 2020",
-      "brand": "RETOV",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=55"
-    },
-    {
-      "id": "RIDA-338617-714",
-      "code": "338617",
-      "fabCode": "714",
-      "name": "ACABAMENTO PORTA BAU FIAT FIORINO 1998 A 2013 (SOLEIRA)",
-      "brand": "RIDA",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=30"
-    },
-    {
-      "id": "RIDA-465774-439",
-      "code": "465774",
-      "fabCode": "439",
-      "name": "FRISO MOLDURA INFERIOR GRADE DIANTEIRA S10 BLAZER 2012 2013 2014 2015 (CROMADO)",
-      "brand": "RIDA",
-      "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true&page=10"
-    }
-  ]
+  "sampleOutOfStock": []
 }
