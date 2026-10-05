@@ -63,7 +63,7 @@ const DEFAULT_CONSULTANTS = {
     name: 'Huesller',
     phone: '554733054401',
     policyType: 'politicaDesconto',
-    baseDiscount: 45,
+    baseDiscount: 50,
     targetDiscount: 50
   },
   ney: {
@@ -92,23 +92,23 @@ const DEFAULT_CONSULTANTS = {
   },
   representante: {
     slug: 'representante',
-    name: 'Francisco',
+    name: 'Representante',
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
     targetDiscount: 50
   },
   representante2: {
-    slug: 'representante',
-    name: 'Francisco',
+    slug: 'representante1',
+    name: 'Representante',
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
     targetDiscount: 50
   },
   representante3: {
-    slug: 'representante',
-    name: 'Francisco',
+    slug: 'representante2',
+    name: 'Representante',
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
