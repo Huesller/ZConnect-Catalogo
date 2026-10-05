@@ -12,7 +12,7 @@ const SHORT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ALLOWED_VALIDITY_DAYS = new Set([1, 3, 7, 15, 30]);
 const PERMANENT_EXPIRES_AT_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
 const SELLER_POLICIES = new Map([
-  ["huesller", 45],
+  ["huesller", 50],
   ["ney", 45],
   ["gabriel", 45],
   ["francisco", 50],

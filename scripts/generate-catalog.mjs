@@ -64,7 +64,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '554733054401',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 45
+    targetDiscount: 50
   },
   ney: {
     slug: 'ney',
