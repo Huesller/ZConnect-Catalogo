@@ -37,11 +37,11 @@ const STORAGE_KEYS = {
 
 const BRANDS = ['Todos', 'RETOV', 'RIDA', 'TYC', 'Z AUTO'];
 const FALLBACK_CONSULTANTS = {
-  huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
+  huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
-  almir: { slug: 'almir', name: 'Almir', phone: '554792292510', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
+  almir: { slug: 'representante2', name: 'representante2', phone: '554792292510', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   gabriel: { slug: 'gabriel', name: 'Gabriel Zatt', phone: '554788647114', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
-  junior: { slug: 'junior', name: 'Junior', phone: import.meta.env.VITE_JUNIOR_WHATSAPP || '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
+  junior: { slug: 'representante1', name: 'representante1', phone: import.meta.env.VITE_JUNIOR_WHATSAPP || '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
 };
