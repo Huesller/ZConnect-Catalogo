@@ -1615,15 +1615,11 @@ function getBusinessStatus() {
 
 function getConsultant(consultants, specialOffer = null) {
   const params = new URLSearchParams(window.location.search);
-  const requestedSlug = normalizeText(params.get('consultor') || specialOffer?.seller || 'huesller'
+  const requestedSlug = normalizeText(
+  params.get('consultor') || specialOffer?.seller || 'huesller'
 );
 
-  console.log('DEBUG CONSULTOR:', {
-  requestedSlug,
-  consultants,
-  representante1: consultants?.representante1,
-  representante2: consultants?.representante2
-});
+const slugKey = requestedSlug.replace(/\s+/g, '');
 
   const aliases = {
     huesller: 'huesller',
@@ -1637,7 +1633,7 @@ function getConsultant(consultants, specialOffer = null) {
     representante2: 'representante2'
   };
 
-  const slug = aliases[requestedSlug] || requestedSlug;
+  const slug = aliases[slugKey] || slugKey;
   return consultants?.[slug]
     || FALLBACK_CONSULTANTS[slug]
     || consultants?.huesller
