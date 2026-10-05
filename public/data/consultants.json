@@ -39,7 +39,7 @@
     "baseDiscount": 45,
     "targetDiscount": 50
   },
-  "representante2": {
+  "representante1": {
     "slug": "representante1",
     "name": "Representante1",
     "phone": "5527992747307",
@@ -47,7 +47,7 @@
     "baseDiscount": 45,
     "targetDiscount": 50
   },
-  "representante3": {
+  "representante2": {
     "slug": "representante2",
     "name": "Representante2",
     "phone": "5527992747307",
