@@ -42,8 +42,8 @@ const FALLBACK_CONSULTANTS = {
   gabriel: { slug: 'gabriel', name: 'Gabriel Zatt', phone: '554788647114', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
   francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
-  representante1: { slug: 'representante1', name: 'representante1', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
-  representante2: { slug: 'representante2', name: 'representante2', phone: '554792292510', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
+  representante1: { slug: 'representante1', name: 'representante1', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
+  representante2: { slug: 'representante2', name: 'representante2', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
 };
 const PAGE_SIZE = 24;
 const SORT_OPTIONS = [
