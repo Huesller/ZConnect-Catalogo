@@ -113,6 +113,22 @@ const DEFAULT_CONSULTANTS = {
     policyType: 'politicaDesconto',
     baseDiscount: 45,
     targetDiscount: 50
+  },
+  representante2: {
+    slug: 'representante',
+    name: 'Francisco',
+    phone: '5527992747307',
+    policyType: 'politicaDesconto',
+    baseDiscount: 45,
+    targetDiscount: 50
+  },
+  representante3: {
+    slug: 'representante',
+    name: 'Francisco',
+    phone: '5527992747307',
+    policyType: 'politicaDesconto',
+    baseDiscount: 45,
+    targetDiscount: 50
   }
 };
 
