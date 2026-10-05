@@ -1619,13 +1619,13 @@ function getConsultant(consultants, specialOffer = null) {
   const aliases = {
     ney: 'ney',
     ivoney: 'ney',
-    almir: 'almir',
     gabriel: 'gabriel',
     'gabriel-zatt': 'gabriel',
-    junior: 'junior',
     francisco: 'francisco',
     representante: 'representante',
-    huesller: 'huesller'
+    huesller: 'huesller',
+    representante1: 'representante1',
+    representante2: 'representante2'
   };
 
   const slug = aliases[requestedSlug] || requestedSlug;

@@ -63,7 +63,7 @@ const DEFAULT_CONSULTANTS = {
     name: 'Huesller',
     phone: '554733054401',
     policyType: 'politicaDesconto',
-    baseDiscount: 50,
+    baseDiscount: 45,
     targetDiscount: 50
   },
   ney: {
