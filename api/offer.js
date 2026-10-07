@@ -14,10 +14,10 @@ const PERMANENT_EXPIRES_AT_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
 const SELLER_POLICIES = new Map([
   ["huesller", 50],
   ["ney", 45],
-  ["gabriel", 45],
+  ["gabriel", 48],
   ["francisco", 50],
-  ["representante1", 50]
-  ["representante2", 50]
+  ["representante1", 50],
+  ["representante2", 50],
   ["representante3", 50]
 ]);
 
@@ -289,11 +289,7 @@ export default async function handler(request, response) {
     return;
   }
 
-  if (request.method === "POST") {
-    if (request.headers.origin && request.headers.origin !== "null") {
-      response.status(403).json({ ok: false, error: "Origem não permitida." });
-      return;
-    }
+  
 
     const data = parseJsonBody(request);
     const seller = canonicalSeller(data?.seller);
@@ -303,7 +299,7 @@ export default async function handler(request, response) {
     const permanent = data?.permanent === true;
     const baseDiscount = SELLER_POLICIES.get(seller);
 
-    if (!baseDiscount || clientName.length < 2 || !Number.isFinite(discount) || discount <= 0) {
+    if (!baseDiscount || clientName.length < 2 || !Number.isFinite(discount) || discount < 0) {
       response.status(400).json({ ok: false, error: "Dados da oferta inválidos." });
       return;
     }
