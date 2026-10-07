@@ -14,7 +14,7 @@ const PERMANENT_EXPIRES_AT_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
 const SELLER_POLICIES = new Map([
   ["huesller", 50],
   ["ney", 45],
-  ["gabriel", 48],
+  ["gabriel", 45],
   ["francisco", 50],
   ["representante", 50],
   ["representante1", 50],
