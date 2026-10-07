@@ -127,7 +127,7 @@ function normalizeVerifiedPayload(payload, now = Date.now()) {
 
   if (!id || !baseDiscount || clientName.length < 2) return null;
   if (!SLUG_PATTERN.test(clientSlug) || !CODE_PATTERN.test(shortCode)) return null;
-  if (!Number.isFinite(discount) || discount <= 0 || baseDiscount + discount > 95) return null;
+  if (!Number.isFinite(discount) || discount < 0 || baseDiscount + discount > 95) return null;
   if (!Number.isFinite(createdAtMs) || !Number.isFinite(expiresAtMs)) return null;
   if (payload.p !== undefined && payload.p !== 0 && payload.p !== 1) return null;
   if (createdAtMs > now + 5 * 60 * 1000 || expiresAtMs <= createdAtMs) return null;
