@@ -1,49 +1,49 @@
 {
-  "generatedAt": "2026-10-05T17:32:54.766Z",
-  "total": 2706,
-  "available": 2046,
-  "outOfStock": 660,
-  "lowStock": 493,
+  "generatedAt": "2026-10-07T13:55:20.618Z",
+  "total": 2723,
+  "available": 2207,
+  "outOfStock": 516,
+  "lowStock": 458,
   "sources": [
     {
       "brand": "RIDA",
-      "catalogId": "1438",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true",
-      "description": "CATÁLOGO RIDA",
+      "catalogId": "01159297-6eae-4848-a10a-4f3df8910490",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/01159297-6eae-4848-a10a-4f3df8910490?p=true",
+      "description": "Z - NAO ALTERAR - RIDA",
       "pages": 43,
       "productCount": 427
     },
     {
       "brand": "RETOV",
-      "catalogId": "1436",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true",
-      "description": "CATÁLOGO RETOV",
+      "catalogId": "9d4a8945-38b8-4808-95ef-f0fc282eb8b0",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true",
+      "description": "Z - NAO ALTERAR - RETOV",
       "pages": 71,
       "productCount": 703
     },
     {
       "brand": "TYC",
-      "catalogId": "1494",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true",
-      "description": "CATÁLOGO TYC",
-      "pages": 100,
-      "productCount": 986
+      "catalogId": "62a7ba01-43d6-45ef-b866-6a88f99ef38c",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/62a7ba01-43d6-45ef-b866-6a88f99ef38c?p=true",
+      "description": "Z - NAO ALTERAR - TYC",
+      "pages": 75,
+      "productCount": 744
     },
     {
       "brand": "TYC",
-      "catalogId": "1493",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true",
-      "description": "CATÁLOGO TYC RETROVISORES",
+      "catalogId": "abf3f87f-d1e0-477e-aa1e-85a61e55dfcd",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/abf3f87f-d1e0-477e-aa1e-85a61e55dfcd?p=true",
+      "description": "Z - NAO ALTERAR - TYC RETROVISORES",
       "pages": 26,
       "productCount": 252
     },
     {
       "brand": "Z AUTO",
-      "catalogId": "1437",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true",
-      "description": "CATÁLOGO ZATT",
-      "pages": 74,
-      "productCount": 727
+      "catalogId": "5e578953-0911-41c0-8776-fdf62603d70a",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/5e578953-0911-41c0-8776-fdf62603d70a?p=true",
+      "description": "Z - NAO ALTERAR - Z AUTO",
+      "pages": 76,
+      "productCount": 734
     }
   ],
   "sampleOutOfStock": [
@@ -54,7 +54,7 @@
       "name": "FRISO GRADE CENTRAL PARACHOQUE C3 2012 A 2019 (CINZA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=58"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=58"
     },
     {
       "id": "RETOV-525257-MC4606",
@@ -63,7 +63,7 @@
       "name": "FRISO GRADE DIANTEIRA AGILE 2009 A 2013 MONTANA 2011 A 2018 INFERIOR CROMADO",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=19"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=19"
     },
     {
       "id": "RETOV-637235-PT5989N",
@@ -72,7 +72,7 @@
       "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO COROLLA 2020 2021 2022 (PRETA BRILHANTE)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=51"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=51"
     },
     {
       "id": "RETOV-355923-RF4397",
@@ -81,7 +81,7 @@
       "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO FORD KA 2002 A 2007 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=7"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=7"
     },
     {
       "id": "RETOV-406752-RF6176S",
@@ -90,7 +90,7 @@
       "name": "GRADE CENTRAL PARACHOQUE DIANTEIRO RANGER 2023 A 2026 (COM FURO PARA SENSOR)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=71"
     },
     {
       "id": "RETOV-636260-RT4728",
@@ -99,7 +99,7 @@
       "name": "GRADE CENTRAL PARACHOQUE ETIOS 2012 A 2017 PRETA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=32"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=32"
     },
     {
       "id": "RETOV-336921-RI4531",
@@ -108,7 +108,7 @@
       "name": "GRADE CENTRAL PARACHOQUE FIAT PALIO SIENA G4 2008 A 2011 PRETA COM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=3"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=3"
     },
     {
       "id": "RETOV-655010-RJ5322",
@@ -117,7 +117,7 @@
       "name": "GRADE CENTRAL PARACHOQUE JEEP RENEGADE 2015 2016 2017 2018",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=51"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=51"
     },
     {
       "id": "RETOV-525263-PC4611",
@@ -126,7 +126,7 @@
       "name": "GRADE DIANTEIRA CENTRAL CELTA 2011 A 2016 PRISMA 2010 A 2012 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=20"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=20"
     },
     {
       "id": "RETOV-457880-PW4635",
@@ -135,7 +135,7 @@
       "name": "GRADE DIANTEIRA CENTRAL FOX 2010 A 2014 SPACEFOX 2011 A 2014 (PRETA COM 2 FRISOS VERMELHOS)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=52"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=52"
     },
     {
       "id": "RETOV-457158-PW0120N",
@@ -144,7 +144,7 @@
       "name": "GRADE DIANTEIRA GOL PARATI G2 1995 A 1999 G2 SPECIAL 2001 A 2003 SAVEIRO G2 1998 A 2000 (PRETA LISA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=14"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=14"
     },
     {
       "id": "RETOV-455804-PW0131",
@@ -153,7 +153,7 @@
       "name": "GRADE DIANTEIRA GOL PARATI SAVEIRO G3 1999 A 2002 FASE 1 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=11"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=11"
     },
     {
       "id": "RETOV-457160-PW4178",
@@ -162,7 +162,7 @@
       "name": "GRADE DIANTEIRA GOL PARATI SAVEIRO G3 2003 A 2005 FASE 2 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=14"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=14"
     },
     {
       "id": "RETOV-337172-RI5038",
@@ -171,7 +171,7 @@
       "name": "GRADE DIANTEIRA INFERIOR PARACHOQUE FIAT PALIO G5 2012 A 2017 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=65"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=66"
     },
     {
       "id": "RETOV-355797-PF0704",
@@ -180,7 +180,7 @@
       "name": "GRADE DIANTEIRA RADIADOR FIESTA 1996 A 1999 (PRETA)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=6"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=6"
     },
     {
       "id": "RETOV-335726-LI2283S",
@@ -189,7 +189,7 @@
       "name": "GRADE DIANTEIRA UNO PREMIO ELBA FIORINO 1996 A 2003 PRETA S/LUGAR P/EMBLEMA C/LUGAR P/FRISO CROMADO",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true"
     },
     {
       "id": "RETOV-337153-PI5760",
@@ -198,7 +198,7 @@
       "name": "GRADE FRONTAL DIANTEIRO FIAT CRONOS 2018 2019 2020 (PRETA BRILHANTE EMBLEMA REDONDO)",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=54"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=54"
     },
     {
       "id": "RETOV-336958-RI5776",
@@ -207,7 +207,7 @@
       "name": "GRADE MOLDURA FAROL MILHA FIAT CRONOS 2017 A 2022 PRETA COM FURO DIREITA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=59"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=60"
     },
     {
       "id": "RETOV-457374-RW4499",
@@ -216,7 +216,7 @@
       "name": "GRADE MOLDURA FAROL MILHA GOL PARATI SAVEIRO G3 2000 A 2002 FASE 1 COLMEIA ESQUERDA COM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=18"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=18"
     },
     {
       "id": "RETOV-637212-RR4792",
@@ -225,7 +225,7 @@
       "name": "GRADE MOLDURA FAROL MILHA RENAULT SANDERO 2015 A 2019 DIREITA COM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=36"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=36"
     },
     {
       "id": "RETOV-636005-RB4377",
@@ -234,7 +234,7 @@
       "name": "GRADE MOLDURA MILHA CITROEN C4 HATCH PALLAS 2008 A 2013 ESQUERDA SEM FURO PRETA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=25"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=25"
     },
     {
       "id": "RETOV-637250-RT5916N",
@@ -243,7 +243,7 @@
       "name": "GRADE MOLDURA MILHA COROLLA 2020 2021 2022 DIREITA PRETA SEM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=71"
     },
     {
       "id": "RETOV-637251-RT5915N",
@@ -252,7 +252,7 @@
       "name": "GRADE MOLDURA MILHA COROLLA 2020 2021 2022 DIREITA PRETA SEM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=69"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=71"
     },
     {
       "id": "RETOV-636859-RT5917",
@@ -261,7 +261,7 @@
       "name": "GRADE MOLDURA MILHA COROLLA 2020 2021 2022 ESQUERDA CINZA COM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=56"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=56"
     },
     {
       "id": "RETOV-338905-RI4669",
@@ -270,7 +270,7 @@
       "name": "GRADE MOLDURA MILHA FIAT SIENA EL 2013 A 2016 ESQUERDA PRETA COM FURO MILHA",
       "brand": "RETOV",
       "stock": 0,
-      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true&page=31"
+      "sourcePageUrl": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true&page=31"
     }
   ]
 }

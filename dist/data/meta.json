@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-05T17:32:54.762Z",
-  "productCount": 2706,
+  "generatedAt": "2026-10-07T13:55:20.615Z",
+  "productCount": 2723,
   "brands": [
     [
       "RETOV",
@@ -12,11 +12,11 @@
     ],
     [
       "TYC",
-      938
+      949
     ],
     [
       "Z AUTO",
-      692
+      698
     ]
   ],
   "source": {
@@ -25,43 +25,43 @@
     "officialLinks": [
       {
         "brand": "RIDA",
-        "catalogId": "1438",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true",
-        "description": "CATÁLOGO RIDA",
+        "catalogId": "01159297-6eae-4848-a10a-4f3df8910490",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/01159297-6eae-4848-a10a-4f3df8910490?p=true",
+        "description": "Z - NAO ALTERAR - RIDA",
         "pages": 43,
         "productCount": 427
       },
       {
         "brand": "RETOV",
-        "catalogId": "1436",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true",
-        "description": "CATÁLOGO RETOV",
+        "catalogId": "9d4a8945-38b8-4808-95ef-f0fc282eb8b0",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true",
+        "description": "Z - NAO ALTERAR - RETOV",
         "pages": 71,
         "productCount": 703
       },
       {
         "brand": "TYC",
-        "catalogId": "1494",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true",
-        "description": "CATÁLOGO TYC",
-        "pages": 100,
-        "productCount": 986
+        "catalogId": "62a7ba01-43d6-45ef-b866-6a88f99ef38c",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/62a7ba01-43d6-45ef-b866-6a88f99ef38c?p=true",
+        "description": "Z - NAO ALTERAR - TYC",
+        "pages": 75,
+        "productCount": 744
       },
       {
         "brand": "TYC",
-        "catalogId": "1493",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true",
-        "description": "CATÁLOGO TYC RETROVISORES",
+        "catalogId": "abf3f87f-d1e0-477e-aa1e-85a61e55dfcd",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/abf3f87f-d1e0-477e-aa1e-85a61e55dfcd?p=true",
+        "description": "Z - NAO ALTERAR - TYC RETROVISORES",
         "pages": 26,
         "productCount": 252
       },
       {
         "brand": "Z AUTO",
-        "catalogId": "1437",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true",
-        "description": "CATÁLOGO ZATT",
-        "pages": 74,
-        "productCount": 727
+        "catalogId": "5e578953-0911-41c0-8776-fdf62603d70a",
+        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/5e578953-0911-41c0-8776-fdf62603d70a?p=true",
+        "description": "Z - NAO ALTERAR - Z AUTO",
+        "pages": 76,
+        "productCount": 734
       }
     ],
     "legacyFallback": {

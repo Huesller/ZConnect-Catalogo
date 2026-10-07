@@ -2,28 +2,28 @@
   "officialSources": [
     {
       "brand": "RIDA",
-      "catalogId": "1438",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1438?p=true"
+      "catalogId": "01159297-6eae-4848-a10a-4f3df8910490",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/01159297-6eae-4848-a10a-4f3df8910490?p=true"
     },
     {
       "brand": "RETOV",
-      "catalogId": "1436",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1436?p=true"
+      "catalogId": "9d4a8945-38b8-4808-95ef-f0fc282eb8b0",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true"
     },
     {
       "brand": "TYC",
-      "catalogId": "1494",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1494?p=true"
+      "catalogId": "62a7ba01-43d6-45ef-b866-6a88f99ef38c",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/62a7ba01-43d6-45ef-b866-6a88f99ef38c?p=true"
     },
     {
       "brand": "TYC",
-      "catalogId": "1493",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1493?p=true"
+      "catalogId": "abf3f87f-d1e0-477e-aa1e-85a61e55dfcd",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/abf3f87f-d1e0-477e-aa1e-85a61e55dfcd?p=true"
     },
     {
       "brand": "Z AUTO",
-      "catalogId": "1437",
-      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/1437?p=true"
+      "catalogId": "5e578953-0911-41c0-8776-fdf62603d70a",
+      "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/5e578953-0911-41c0-8776-fdf62603d70a?p=true"
     }
   ],
   "commercialPolicy": 45,
@@ -32,11 +32,11 @@
     "enableEnv": "ZCONNECT_ALLOW_LEGACY_FALLBACK"
   },
   "legacyBrands": {
-    "1436": "RETOV",
-    "1438": "RIDA",
-    "1494": "TYC",
-    "1493": "TYC",
-    "1437": "Z AUTO"
+    "01159297-6eae-4848-a10a-4f3df8910490": "RIDA",
+    "9d4a8945-38b8-4808-95ef-f0fc282eb8b0": "RETOV",
+    "62a7ba01-43d6-45ef-b866-6a88f99ef38c": "TYC",
+    "5e578953-0911-41c0-8776-fdf62603d70a": "Z AUTO",
+    "abf3f87f-d1e0-477e-aa1e-85a61e55dfcd": "TYC"
   },
   "_note": "Produtos, precos e disponibilidade vem dos links oficiais Zetta. Fallback legado so e aceito quando ZCONNECT_ALLOW_LEGACY_FALLBACK=1 for definido explicitamente; npm run scrape falha se a fonte Zetta falhar."
 }
