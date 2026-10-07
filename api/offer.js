@@ -16,9 +16,9 @@ const SELLER_POLICIES = new Map([
   ["ney", 45],
   ["gabriel", 48],
   ["francisco", 50],
+  ["representante", 50],
   ["representante1", 50],
-  ["representante2", 50],
-  ["representante3", 50]
+  ["representante2", 50]
 ]);
 
 function setCorsHeaders(request, response) {
