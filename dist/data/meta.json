@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-07T14:35:20.964Z",
-  "productCount": 2723,
+  "generatedAt": "2026-10-07T18:10:36.361Z",
+  "productCount": 2683,
   "brands": [
     [
       "RETOV",
@@ -8,7 +8,7 @@
     ],
     [
       "RIDA",
-      407
+      367
     ],
     [
       "TYC",
@@ -28,8 +28,8 @@
         "catalogId": "01159297-6eae-4848-a10a-4f3df8910490",
         "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/01159297-6eae-4848-a10a-4f3df8910490?p=true",
         "description": "Z - NAO ALTERAR - RIDA",
-        "pages": 43,
-        "productCount": 427
+        "pages": 40,
+        "productCount": 400
       },
       {
         "brand": "RETOV",
