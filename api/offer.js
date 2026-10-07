@@ -291,6 +291,7 @@ export default async function handler(request, response) {
 
   
 
+  if (request.method === "POST") {
     const data = parseJsonBody(request);
     const seller = canonicalSeller(data?.seller);
     const clientName = normalizeClientName(data?.clientName);
