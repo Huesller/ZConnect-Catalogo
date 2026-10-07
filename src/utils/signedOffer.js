@@ -22,7 +22,7 @@ function normalizeResolvedOffer(value, now) {
   const clientSlug = String(value.clientSlug || '').trim().toUpperCase();
 
   if (!id || !ALLOWED_SELLERS.has(seller) || !clientName) return null;
-  if (!Number.isFinite(discount) || discount <= 0 || discount > 95) return null;
+  if (!Number.isFinite(discount) || discount < 0 || discount > 95) return null;
   if (!Number.isFinite(createdAtMs)) return null;
   if (!permanent && (!Number.isFinite(expiresAtMs) || expiresAtMs <= createdAtMs)) return null;
   if (!SHORT_OFFER_CODE_PATTERN.test(shortCode) || !/^[A-Z0-9][A-Z0-9-]{0,39}$/.test(clientSlug)) return null;
