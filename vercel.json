@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/painel/:seller", "destination": "/painel/index.html" },
     { "source": "/oferta/:path*", "destination": "/index.html" }
   ]
 }
