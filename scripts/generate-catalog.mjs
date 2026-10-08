@@ -390,6 +390,11 @@ function absoluteZettaUrl(value) {
   const text = cleanText(value);
   if (!text) return '';
 
+  if (/\/cadastros\/itens\//.test(text)) {
+    const file = text.split('/').pop();
+    return `${ZETTA_ORIGIN}/siggma/data-files/200/cadastros/itens/${file}`;
+  }
+
   return new URL(text, ZETTA_ORIGIN).href;
 }
 
@@ -941,6 +946,8 @@ main().catch((error) => {
   console.error(`[Zetta] ${error.message}`);
   process.exit(1);
 });
+
+
 
 
 
