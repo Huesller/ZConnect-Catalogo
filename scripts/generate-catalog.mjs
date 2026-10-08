@@ -390,9 +390,9 @@ function absoluteZettaUrl(value) {
   const text = cleanText(value);
   if (!text) return '';
 
-  if (/\/cadastros\/itens\//.test(text)) {
-    const file = text.split('/').pop();
-    return `${ZETTA_ORIGIN}/siggma/data-files/200/cadastros/itens/${file}`;
+  const file = text.split('/').pop();
+  if (file && /\.(png|jpg|jpeg|webp)$/i.test(file)) {
+    return `${ZETTA_ORIGIN}/siggma/catalogos/200/files?type=item&name=${encodeURIComponent(file)}`;
   }
 
   return new URL(text, ZETTA_ORIGIN).href;
@@ -946,6 +946,7 @@ main().catch((error) => {
   console.error(`[Zetta] ${error.message}`);
   process.exit(1);
 });
+
 
 
 
