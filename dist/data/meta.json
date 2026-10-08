@@ -1,22 +1,26 @@
 {
-  "generatedAt": "2026-10-07T18:24:20.911Z",
-  "productCount": 2723,
+  "generatedAt": "2026-10-08T20:43:13.258Z",
+  "productCount": 2860,
   "brands": [
     [
       "RETOV",
-      669
+      703
     ],
     [
       "RIDA",
-      407
+      427
     ],
     [
       "TYC",
-      949
+      744
+    ],
+    [
+      "TYC RETROVISORES",
+      252
     ],
     [
       "Z AUTO",
-      698
+      734
     ]
   ],
   "source": {
@@ -24,44 +28,44 @@
     "fallbackUsed": false,
     "officialLinks": [
       {
-        "brand": "RIDA",
-        "catalogId": "01159297-6eae-4848-a10a-4f3df8910490",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/01159297-6eae-4848-a10a-4f3df8910490?p=true",
-        "description": "Z - NAO ALTERAR - RIDA",
-        "pages": 43,
-        "productCount": 427
-      },
-      {
-        "brand": "RETOV",
-        "catalogId": "9d4a8945-38b8-4808-95ef-f0fc282eb8b0",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/9d4a8945-38b8-4808-95ef-f0fc282eb8b0?p=true",
-        "description": "Z - NAO ALTERAR - RETOV",
-        "pages": 71,
-        "productCount": 703
-      },
-      {
         "brand": "TYC",
-        "catalogId": "62a7ba01-43d6-45ef-b866-6a88f99ef38c",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/62a7ba01-43d6-45ef-b866-6a88f99ef38c?p=true",
-        "description": "Z - NAO ALTERAR - TYC",
-        "pages": 75,
+        "catalogId": "705",
+        "url": "https://sistema.zettabrasil.com.br",
+        "description": "Grupo interno Zetta TYC",
+        "pages": 1,
         "productCount": 744
       },
       {
-        "brand": "TYC",
-        "catalogId": "abf3f87f-d1e0-477e-aa1e-85a61e55dfcd",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/abf3f87f-d1e0-477e-aa1e-85a61e55dfcd?p=true",
-        "description": "Z - NAO ALTERAR - TYC RETROVISORES",
-        "pages": 26,
+        "brand": "TYC RETROVISORES",
+        "catalogId": "708",
+        "url": "https://sistema.zettabrasil.com.br",
+        "description": "Grupo interno Zetta TYC RETROVISORES",
+        "pages": 1,
         "productCount": 252
       },
       {
         "brand": "Z AUTO",
-        "catalogId": "5e578953-0911-41c0-8776-fdf62603d70a",
-        "url": "https://sistema.zettabrasil.com.br/siggma/catalogos/200-3/id/5e578953-0911-41c0-8776-fdf62603d70a?p=true",
-        "description": "Z - NAO ALTERAR - Z AUTO",
-        "pages": 76,
+        "catalogId": "718",
+        "url": "https://sistema.zettabrasil.com.br",
+        "description": "Grupo interno Zetta Z AUTO",
+        "pages": 1,
         "productCount": 734
+      },
+      {
+        "brand": "RETOV",
+        "catalogId": "720",
+        "url": "https://sistema.zettabrasil.com.br",
+        "description": "Grupo interno Zetta RETOV",
+        "pages": 1,
+        "productCount": 703
+      },
+      {
+        "brand": "RIDA",
+        "catalogId": "842",
+        "url": "https://sistema.zettabrasil.com.br",
+        "description": "Grupo interno Zetta RIDA",
+        "pages": 1,
+        "productCount": 427
       }
     ],
     "legacyFallback": {
