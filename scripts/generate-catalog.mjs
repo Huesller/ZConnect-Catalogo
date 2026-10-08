@@ -289,17 +289,27 @@ function parseZettaPage(html, url) {
 }
 
 function parseCurrency(value) {
-  const text = String(value ?? '').trim();
-  if (!text) return null;
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? roundMoney(value) : null;
+  }
 
-  const normalized = text
-    .replace(/\s+/g, '')
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  if (/^-?\d+\.\d{1,4}$/.test(raw)) {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? roundMoney(parsed) : null;
+  }
+
+  const normalized = raw
+    .replace(/\s/g, '')
+    .replace(/R\$/gi, '')
     .replace(/\./g, '')
-    .replace(',', '.')
-    .replace(/[^\d.-]/g, '');
-  const parsed = Number(normalized);
+    .replace(',', '.');
 
-  return Number.isFinite(parsed) ? Math.round(parsed * 100) / 100 : null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? roundMoney(parsed) : null;
 }
 
 
@@ -554,18 +564,129 @@ function dedupeProducts(items) {
   });
 }
 
-async function scrapeOfficialZetta(config) {
-  const sourceResults = [];
-
-  for (const source of config.officialSources) {
-    sourceResults.push(await scrapeSource(source, config));
+function loadInternalZettaSource(config) {
+  const filePath = path.join(rootDir, 'scripts', 'zetta-interno.json');
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Arquivo interno do Zetta nao encontrado: ${filePath}`);
   }
 
-  const products = dedupeProducts(sourceResults.flatMap((result) => result.products));
-  const summaries = sourceResults.map((result) => result.summary);
-  return { products, summaries };
+  const rows = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  if (!Array.isArray(rows) || !rows.length) {
+    throw new Error('Arquivo interno do Zetta esta vazio ou invalido.');
+  }
+
+  const groups = {
+    '842': 'RIDA',
+    '720': 'RETOV',
+    '705': 'TYC',
+    '708': 'TYC RETROVISORES',
+    '718': 'Z AUTO'
+  };
+
+  const products = [];
+  const counts = {};
+
+  rows.forEach((item, index) => {
+    const groupCode = String(item?.grupo?.progruCod ?? '');
+    const brand = groups[groupCode];
+
+    if (!brand) return;
+
+    const code = cleanText(item.proCodOri || item.proCod || '');
+    const name = cleanText(item.proNom || 'Produto sem nome');
+    const fabCode = cleanText(item.proCodFab || '');
+    const manufacturer = cleanText(item.proCarMar || '');
+    const priceWithoutIpi = parseCurrency(item.proValVen);
+    const priceWithIpi = parseCurrency(item.proValVenIpi) ||
+      (priceWithoutIpi > 0 ? roundMoney(priceWithoutIpi * (1 + (parseCurrency(item.proIpi) || 0) / 100)) : 0);
+    const ipiPercent = parseCurrency(item.proIpi) || 0;
+    const ipiValue = priceWithIpi > 0 && priceWithoutIpi > 0
+      ? roundMoney(priceWithIpi - priceWithoutIpi)
+      : 0;
+    const image = absoluteZettaUrl(item.imagem || item.imagemMin || '');
+    const stock = parseStockQuantity(item.estoqueReal ?? item.estoque);
+    const description = cleanText(item.proObs || name);
+    const vehicle = inferVehicle(name, manufacturer);
+    const application = inferApplication(name);
+    const commercialPolicy = config.commercialPolicy;
+
+    if (!code || !priceWithIpi || priceWithIpi <= 0) return;
+
+    products.push({
+      id: productId(brand, code, fabCode, `grupo-${groupCode}`),
+      code,
+      fabCode,
+      name,
+      description,
+      manufacturer,
+      brand,
+      displayBrand: brand,
+      price: priceWithIpi,
+      priceWithIpi,
+      priceWithoutIpi,
+      rawPriceWithIpi: priceWithIpi,
+      rawPriceWithoutIpi: priceWithoutIpi,
+      valorIpi: ipiValue,
+      percentualIpi: ipiPercent,
+      precoComIpi: priceWithIpi,
+      precoSemIpi: priceWithoutIpi,
+      priceWithIpiLabel: formatMoney(priceWithIpi),
+      priceWithoutIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
+      precoComIpiLabel: formatMoney(priceWithIpi),
+      precoSemIpiLabel: priceWithoutIpi ? formatMoney(priceWithoutIpi) : '',
+      basePrice: priceWithIpi,
+      priceBase: priceWithIpi,
+      precoBase: priceWithIpi,
+      precoZetta: priceWithIpi,
+      precoCheio: priceWithIpi,
+      priceLabel: formatMoney(priceWithIpi),
+      basePriceLabel: formatMoney(priceWithIpi),
+      precoBaseLabel: formatMoney(priceWithIpi),
+      precoZettaLabel: formatMoney(priceWithIpi),
+      precoCheioLabel: formatMoney(priceWithIpi),
+      image,
+      imageFull: image,
+      vehicle,
+      application,
+      search: createSearchText([code, fabCode, name, description, manufacturer, brand, vehicle, application]),
+      vehicleSignature: buildVehicleSignature(name, description, manufacturer),
+      catalogId: groupCode,
+      commercialPolicy,
+      sourcePricePolicy: 'zetta-internal',
+      sourceCatalog: brand,
+      sourceUrl: ZETTA_ORIGIN,
+      sourcePageUrl: ZETTA_ORIGIN,
+      sourcePage: 1,
+      stock,
+      stockQty: stock,
+      estoque: stock,
+      available: stock === null ? true : stock > 0,
+      inStock: stock === null ? true : stock > 0
+    });
+
+    counts[brand] = (counts[brand] || 0) + 1;
+  });
+
+  const deduped = dedupeProducts(products);
+
+  const summaries = Object.entries(groups).map(([groupCode, brand]) => ({
+    brand,
+    catalogId: groupCode,
+    url: ZETTA_ORIGIN,
+    description: `Grupo interno Zetta ${brand}`,
+    pages: 1,
+    productCount: counts[brand] || 0
+  }));
+
+  console.log(`[Zetta] Fonte interna: ${rows.length} registros recebidos, ${deduped.length} produtos validos.`);
+  console.log(`[Zetta] Grupos: ${Object.entries(counts).map(([brand, count]) => `${brand} ${count}`).join(' | ')}`);
+
+  return { products: deduped, summaries };
 }
 
+async function scrapeOfficialZetta(config) {
+  return loadInternalZettaSource(config);
+}
 function isLegacyFallbackEnabled(config) {
   return ['1', 'true', 'yes'].includes(String(process.env[config.legacyFallback.enableEnv] || '').toLowerCase());
 }
@@ -820,3 +941,16 @@ main().catch((error) => {
   console.error(`[Zetta] ${error.message}`);
   process.exit(1);
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
