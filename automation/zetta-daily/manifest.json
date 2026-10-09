@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "ZConnect - Atualizacao Zetta",
+  "version": "1.2.0",
+  "permissions": ["downloads", "tabs", "scripting"],
+  "host_permissions": ["https://sistema.zettabrasil.com.br/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Atualizar Zetta"
+  }
+}

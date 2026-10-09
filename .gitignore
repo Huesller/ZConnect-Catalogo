@@ -38,3 +38,6 @@ logs/
 BUILD_VALIDADO.txt
 public/product-images/
 dist/product-images/
+
+.vercel
+.env*

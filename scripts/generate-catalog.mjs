@@ -557,7 +557,7 @@ function dedupeProducts(items) {
   const map = new Map();
 
   for (const item of items) {
-    const key = `${item.brand}|${item.code}|${item.fabCode}`;
+    const key = `${item.brand}|${item.displayBrand || item.brand}|${item.code}|${item.fabCode}`;
     if (!map.has(key)) {
       map.set(key, item);
     }
@@ -587,15 +587,24 @@ function loadInternalZettaSource(config) {
     '708': 'TYC RETROVISORES',
     '718': 'Z AUTO'
   };
+  const secondaryGroups = {
+    '703': 'VIC',
+    '704': 'FEITUO',
+    '707': 'SUN',
+    '719': 'OPORTUNIDADE!',
+    '600': 'NARVA'
+  };
 
   const products = [];
   const counts = {};
 
   rows.forEach((item, index) => {
     const groupCode = String(item?.grupo?.progruCod ?? '');
-    const brand = groups[groupCode];
+    const sourceBrand = groups[groupCode] || secondaryGroups[groupCode];
+    const isSecondary = Boolean(secondaryGroups[groupCode]);
+    const brand = isSecondary ? 'OUTRAS MARCAS' : sourceBrand;
 
-    if (!brand) return;
+    if (!sourceBrand) return;
 
     const code = cleanText(item.proCodOri || item.proCod || '');
     const name = cleanText(item.proNom || 'Produto sem nome');
@@ -612,6 +621,7 @@ function loadInternalZettaSource(config) {
       : 0;
     const image = absoluteZettaUrl(item.imagem || item.imagemMin || '');
     const stock = parseStockQuantity(item.estoqueReal ?? item.estoque);
+    if (isSecondary && !(stock > 0)) return;
     const description = cleanText(item.proObs || name);
     const vehicle = inferVehicle(name, manufacturer);
     const application = inferApplication(name);
@@ -620,7 +630,7 @@ function loadInternalZettaSource(config) {
     if (!code || !priceWithIpi || priceWithIpi <= 0) return;
 
     products.push({
-      id: productId(brand, code, fabCode, `grupo-${groupCode}`),
+      id: productId(isSecondary ? `${brand}-${sourceBrand}` : brand, code, fabCode, `grupo-${groupCode}`),
       code,
       fabCode,
       gtin,
@@ -629,7 +639,7 @@ function loadInternalZettaSource(config) {
       description,
       manufacturer,
       brand,
-      displayBrand: brand,
+      displayBrand: sourceBrand,
       price: priceWithIpi,
       priceWithIpi,
       priceWithoutIpi,
@@ -657,7 +667,7 @@ function loadInternalZettaSource(config) {
       imageFull: image,
       vehicle,
       application,
-      search: createSearchText([code, fabCode, gtin, ncm, name, description, manufacturer, brand, vehicle, application]),
+      search: createSearchText([code, fabCode, gtin, ncm, name, description, manufacturer, sourceBrand, brand, vehicle, application]),
       vehicleSignature: buildVehicleSignature(name, description, manufacturer),
       catalogId: groupCode,
       commercialPolicy,
@@ -673,7 +683,7 @@ function loadInternalZettaSource(config) {
       inStock: stock === null ? true : stock > 0
     });
 
-    counts[brand] = (counts[brand] || 0) + 1;
+    counts[sourceBrand] = (counts[sourceBrand] || 0) + 1;
   });
 
   const deduped = dedupeProducts(products);

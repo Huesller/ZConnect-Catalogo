@@ -4,7 +4,7 @@ import "./styles.css";
 import { buildSearchIndex, searchProducts, searchProductsDetailed } from "./utils/search.js";
 import { getConsultantSlug, track } from "./analytics/track.js";
 
-const BRANDS = ["Todos", "RETOV", "RIDA", "TYC", "Z AUTO"];
+const BRANDS = ["Todos", "RETOV", "RIDA", "TYC", "Z AUTO", "OUTRAS MARCAS"];
 const PAGE_SIZE = 36;
 
 function money(value) {
@@ -299,7 +299,7 @@ export default function App() {
 
   const searched = useMemo(() => {
     const base = searchDetails.results || [];
-    return brand === "Todos" ? base : base.filter((p) => String(p.displayBrand || p.brand || "").toUpperCase().includes(brand));
+    return brand === "Todos" ? base : brand === "OUTRAS MARCAS" ? base.filter((p) => p.brand === "OUTRAS MARCAS") : base.filter((p) => String(p.displayBrand || p.brand || "").toUpperCase().includes(brand));
   }, [searchDetails, brand]);
 
   const suggestions = useMemo(() => query.trim() ? searchProducts(index, query, { limit: 8 }) : [], [index, query]);

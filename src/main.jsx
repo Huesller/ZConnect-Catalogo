@@ -35,7 +35,7 @@ const STORAGE_KEYS = {
   companyName: 'zconnect_company_name'
 };
 
-const BRANDS = ['Todos', 'RETOV', 'RIDA', 'TYC', 'Z AUTO'];
+const BRANDS = ['Todos', 'RETOV', 'RIDA', 'TYC', 'Z AUTO', 'OUTRAS MARCAS'];
 const FALLBACK_CONSULTANTS = {
   huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
   ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
@@ -47,6 +47,7 @@ const FALLBACK_CONSULTANTS = {
 };
 const PAGE_SIZE = 24;
 const SORT_OPTIONS = [
+  { key: 'brand_order', label: 'Marca (ordem comercial)' },
   { key: 'stock_desc', label: 'Maior estoque' },
   { key: 'popular', label: 'Mais procurados · 30 dias', metric: 'popular' },
   { key: 'quoted', label: 'Mais cotados · 30 dias', metric: 'quoted' },
@@ -1573,6 +1574,32 @@ function compareProductMatches(a, b, sortBy, hasQuery, rankingMaps) {
     return String(a.product.name || '').localeCompare(String(b.product.name || ''), 'pt-BR');
   }
 
+  if (sortBy === 'brand_order') {
+    const brandRank = {
+      'RETOV': 0,
+      'RIDA': 1,
+      'TYC': 2,
+      'TYC RETROVISORES': 2,
+      'Z AUTO': 3,
+      'OUTRAS MARCAS': 4
+    };
+
+    const getBrandRank = (product) => {
+      const brand = String(product.brand || '').trim().toUpperCase();
+      const displayBrand = String(product.displayBrand || '').trim().toUpperCase();
+      const key = brand === 'OUTRAS MARCAS'
+        ? 'OUTRAS MARCAS'
+        : (brandRank[brand] !== undefined ? brand : displayBrand);
+      return brandRank[key] !== undefined ? brandRank[key] : 99;
+    };
+
+    const rankA = getBrandRank(a.product);
+    const rankB = getBrandRank(b.product);
+    if (rankA !== rankB) return rankA - rankB;
+
+    return String(a.product.name || '').localeCompare(String(b.product.name || ''), 'pt-BR');
+  }
+
   if (sortBy === 'stock_desc') return compareStockThenName(a.product, b.product);
 
   const rankMap = rankingMaps[sortBy];
@@ -2243,7 +2270,7 @@ function App() {
   const deferredQuery = useDeferredValue(query);
   const [filter, setFilter] = useState('Todos');
   const [stockFilter, setStockFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('stock_desc');
+  const [sortBy, setSortBy] = useState('brand_order');
   const [rankingMaps, setRankingMaps] = useState(emptyRankingMaps);
   const [rankingStatus, setRankingStatus] = useState('loading');
   const [page, setPage] = useState(1);
@@ -2510,7 +2537,7 @@ function App() {
   }, [addedMap, pricedProducts]);
 
   const brandCounts = useMemo(() => {
-    const counts = { Todos: pricedProducts.length, RETOV: 0, RIDA: 0, TYC: 0, 'Z AUTO': 0 };
+    const counts = { Todos: pricedProducts.length, RETOV: 0, RIDA: 0, TYC: 0, 'Z AUTO': 0, 'OUTRAS MARCAS': 0 };
     for (const product of pricedProducts) {
       counts[product.brand] = (counts[product.brand] || 0) + 1;
     }
