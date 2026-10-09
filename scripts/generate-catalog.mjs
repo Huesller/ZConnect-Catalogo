@@ -600,6 +600,8 @@ function loadInternalZettaSource(config) {
     const code = cleanText(item.proCodOri || item.proCod || '');
     const name = cleanText(item.proNom || 'Produto sem nome');
     const fabCode = cleanText(item.proCodFab || '');
+    const gtin = cleanText(item.gtin || '');
+    const ncm = cleanText(item.proClaFis || '');
     const manufacturer = cleanText(item.proCarMar || '');
     const priceWithoutIpi = parseCurrency(item.proValVen);
     const priceWithIpi = parseCurrency(item.proValVenIpi) ||
@@ -621,6 +623,8 @@ function loadInternalZettaSource(config) {
       id: productId(brand, code, fabCode, `grupo-${groupCode}`),
       code,
       fabCode,
+      gtin,
+      ncm,
       name,
       description,
       manufacturer,
@@ -653,7 +657,7 @@ function loadInternalZettaSource(config) {
       imageFull: image,
       vehicle,
       application,
-      search: createSearchText([code, fabCode, name, description, manufacturer, brand, vehicle, application]),
+      search: createSearchText([code, fabCode, gtin, ncm, name, description, manufacturer, brand, vehicle, application]),
       vehicleSignature: buildVehicleSignature(name, description, manufacturer),
       catalogId: groupCode,
       commercialPolicy,

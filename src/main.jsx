@@ -1193,15 +1193,23 @@ function getSearchMatch(product, query) {
   const n = product._n || {};
   const compactQuery = compactCode(intent.normalized);
   const codeExact = n.code === intent.normalized || n.codeCompact === compactQuery;
-  const fabCodeExact = n.fabCode === intent.normalized || n.fabCodeCompact === compactQuery;
-  const codeStarts = n.codeCompact?.startsWith(compactQuery) || n.fabCodeCompact?.startsWith(compactQuery);
+  const fabCodes = String(product.fabCode || '').split(/[,;|]/).map((value) => normalizeText(value)).filter(Boolean);
+  const fabCodeExact = fabCodes.some((value) => value === intent.normalized || compactCode(value) === compactQuery)
+    || n.fabCode === intent.normalized || n.fabCodeCompact === compactQuery;
+  const gtinExact = normalizeText(product.gtin) === intent.normalized || compactCode(product.gtin) === compactQuery;
+  const ncmExact = normalizeText(product.ncm) === intent.normalized || compactCode(product.ncm) === compactQuery;
+  const codeStarts = n.codeCompact?.startsWith(compactQuery)
+    || n.fabCodeCompact?.startsWith(compactQuery)
+    || fabCodes.some((value) => compactCode(value).startsWith(compactQuery))
+    || compactCode(product.gtin).startsWith(compactQuery)
+    || compactCode(product.ncm).startsWith(compactQuery);
 
-  if (codeExact || fabCodeExact || codeStarts) {
+  if (codeExact || fabCodeExact || gtinExact || ncmExact || codeStarts) {
     return {
-      score: codeExact ? 9000 : fabCodeExact ? 8600 : 7600,
+      score: codeExact ? 9000 : fabCodeExact ? 8600 : (gtinExact || ncmExact) ? 8500 : 7600,
       direct: true,
       suggestionScore: 0,
-      tier: codeExact || fabCodeExact ? 1 : 2
+      tier: codeExact || fabCodeExact || gtinExact || ncmExact ? 1 : 2
     };
   }
 
@@ -1305,7 +1313,9 @@ function buildSearchField(product) {
     product.vehicle,
     product.manufacturer,
     product.brand,
-    product.displayBrand
+    product.displayBrand,
+    product.gtin,
+    product.ncm
   ].filter(Boolean).join(' ');
 }
 
@@ -1320,7 +1330,9 @@ function prepareProduct(product) {
     vehicle: normalizeText(product.vehicle),
     manufacturer: normalizeText(product.manufacturer),
     brand: normalizeText(product.brand),
-    displayBrand: normalizeText(product.displayBrand)
+    displayBrand: normalizeText(product.displayBrand),
+    gtin: normalizeText(product.gtin),
+    ncm: normalizeText(product.ncm)
   };
 
   const field = buildSearchField(product);
@@ -1506,7 +1518,7 @@ function buildOutOfStockInterestMessage(product, consultant, companyName) {
     `Consultor: ${consultant.name}`,
     '',
     'Tenho interesse neste item quando voltar ao estoque:',
-    `Código: ${product.code || ''}${product.fabCode ? ` / ${product.fabCode}` : ''}`,
+    `Código: ${product.code || ''}`,
     `Produto: ${product.name || ''}`,
     product.displayBrand || product.brand ? `Marca: ${product.displayBrand || product.brand}` : '',
     '',
@@ -1660,7 +1672,7 @@ function buildWhatsAppMessage(cart, consultant, subtotal, companyName, reservati
         : '';
 
       return [
-        `${index + 1}. ${item.code}${item.fabCode ? ` / ${item.fabCode}` : ''}`,
+        `${index + 1}. ${item.code}`,
         `${item.name}`,
         `Quantidade: ${item.qty}`,
         availabilityLine,
@@ -1869,7 +1881,7 @@ function CompactRail({ title, items, favorites, onOpen, onAdd, onToggleFavorite 
               <article key={product.id} className="compact-item">
                 <button type="button" className="compact-main" onClick={() => onOpen(product)}>
                   <span className="chip">{product.displayBrand}</span>
-                  <strong>{product.code}{product.fabCode ? ` / ${product.fabCode}` : ''}</strong>
+                  <strong>{product.code}</strong>
                   <span>{product.name}</span>
                 </button>
                 <div className="compact-item-footer">
@@ -2013,7 +2025,7 @@ function ProductCard({ product, reservation, favoriteIds, qty, onQtyChange, onOp
         </div>
 
         <div className="product-copy">
-          <span className="product-code">{product.code}{product.fabCode ? ` / ${product.fabCode}` : ''}</span>
+          <span className="product-code">{product.code}</span>
           <h3 title={product.name}>{product.name}</h3>
         </div>
       </button>
@@ -3153,7 +3165,7 @@ function App() {
                   openDetails(product);
                 }}>
                   <div>
-                    <strong>{product.code}{product.fabCode ? ` / ${product.fabCode}` : ''}</strong>
+                    <strong>{product.code}</strong>
                     <span>{product.name}</span>
                   </div>
                   <small>{product.priceLabel || money(product.price)}</small>
@@ -3348,7 +3360,7 @@ function App() {
                 <article key={item.id} className="cart-item">
                   <div className="cart-thumb"><ProductImage src={item.image} alt={item.name}/></div>
                   <div className="cart-copy">
-                    <strong>{item.code}{item.fabCode ? ` / ${item.fabCode}` : ''}</strong>
+                    <strong>{item.code}</strong>
                     <span>{item.name}</span>
                     <small>{item.priceLabel || money(item.price)}</small>
                     <ReservationStatus product={item} reservation={reservationProducts[item.code || item.id]} variant="cart" />
@@ -3418,7 +3430,7 @@ function App() {
               <div className="modal-head">
                 <h3>{selectedProduct.name}</h3>
                 <p className="modal-title-meta">
-                  {selectedProduct.code}{selectedProduct.fabCode ? ` • ${selectedProduct.fabCode}` : ''}{selectedProduct.manufacturer ? ` • ${selectedProduct.manufacturer}` : ''}
+                  {selectedProduct.code}{selectedProduct.manufacturer ? ` • ${selectedProduct.manufacturer}` : ''}
                 </p>
               </div>
 
@@ -3457,10 +3469,7 @@ function App() {
                   <span>Código</span>
                   <strong>{selectedProduct.code}</strong>
                 </div>
-                <div className="detail-box">
-                  <span>Fab.</span>
-                  <strong>{selectedProduct.fabCode || '—'}</strong>
-                </div>
+
                 <div className="detail-box">
                   <span>Marca</span>
                   <strong>{selectedProduct.manufacturer || '—'}</strong>
