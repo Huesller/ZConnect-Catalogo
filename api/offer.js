@@ -16,7 +16,7 @@ const SELLER_POLICIES = new Map([
   ["ney", 45],
   ["gabriel", 45],
   ["francisco", 50],
-  ["representante", 50],
+  ["ramires", 50],
   ["representante1", 50],
   ["representante2", 50]
 ]);
