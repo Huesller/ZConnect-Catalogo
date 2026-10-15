@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { CONSULTANT_PRICE_POLICIES } from '../src/domain/consultant-policies.js';
 
 const rootDir = process.cwd();
 const configPath = path.join(rootDir, 'scripts', 'catalog-source.json');
@@ -64,7 +65,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '554733054401',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 50
+    targetDiscount: CONSULTANT_PRICE_POLICIES.huesller.discount
   },
   ney: {
     slug: 'ney',
@@ -72,7 +73,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '554733054400',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 45
+    targetDiscount: CONSULTANT_PRICE_POLICIES.ney.discount
   },
   gabriel: {
     slug: 'gabriel',
@@ -80,7 +81,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '554788647114',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 45
+    targetDiscount: CONSULTANT_PRICE_POLICIES.gabriel.discount
   },
   francisco: {
     slug: 'francisco',
@@ -88,7 +89,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 50
+    targetDiscount: CONSULTANT_PRICE_POLICIES.francisco.discount
   },
   representante: {
     slug: 'representante',
@@ -96,7 +97,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 50
+    targetDiscount: CONSULTANT_PRICE_POLICIES.representante.discount
   },
   representante2: {
     slug: 'representante1',
@@ -104,7 +105,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 50
+    targetDiscount: CONSULTANT_PRICE_POLICIES.representante1.discount
   },
   representante3: {
     slug: 'representante2',
@@ -112,7 +113,7 @@ const DEFAULT_CONSULTANTS = {
     phone: '5527992747307',
     policyType: 'politicaDesconto',
     baseDiscount: 45,
-    targetDiscount: 50
+    targetDiscount: CONSULTANT_PRICE_POLICIES.representante2.discount
   }
 };
 
