@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { resolveConsultant } from "./_lib/consultantLookup.js";
 
 const DEFAULT_TARGET_URL =
   "https://script.google.com/macros/s/AKfycbxcISxjVLPj5mBz0oem-5FrDjL0fOf2NtX6Ry5prry2AIWce5Tsn2NwRinB2tQKMs0T/exec";
@@ -12,13 +13,13 @@ const SHORT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ALLOWED_VALIDITY_DAYS = new Set([1, 3, 7, 15, 30]);
 const PERMANENT_EXPIRES_AT_MS = Date.UTC(9999, 11, 31, 23, 59, 59);
 const SELLER_POLICIES = new Map([
-  ["huesller", 50],
+  ["huesller", 45],
   ["ney", 45],
   ["gabriel", 45],
-  ["francisco", 50],
-  ["ramires", 50],
-  ["representante1", 50],
-  ["representante2", 50]
+  ["francisco", 45],
+  ["ramires", 45],
+  ["representante1", 45],
+  ["representante2", 45]
 ]);
 
 function setCorsHeaders(request, response) {
@@ -30,6 +31,24 @@ function setCorsHeaders(request, response) {
   response.setHeader("Cache-Control", "no-store");
 }
 
+function isAllowedOfferOrigin(request) {
+  const origin = String(request.headers?.origin || "").trim();
+  if (!origin || origin === "null") return true;
+
+  const configured = String(process.env.OFFER_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  const allowed = new Set([
+    "https://catalogo-zautomotiva.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    ...configured
+  ]);
+
+  return allowed.has(origin);
+}
 function parseJsonBody(request) {
   if (!request.body) return null;
   if (typeof request.body === "object") return request.body;
@@ -123,9 +142,9 @@ function normalizeVerifiedPayload(payload, now = Date.now()) {
   const permanent = payload.p === 1;
   const clientSlug = String(payload.l || "").trim().toUpperCase();
   const shortCode = String(payload.k || "").trim().toUpperCase();
-  const baseDiscount = SELLER_POLICIES.get(seller);
+  const baseDiscount = payload.b === undefined ? SELLER_POLICIES.get(seller) : Number(payload.b);
 
-  if (!id || !baseDiscount || clientName.length < 2) return null;
+  if (!id || !Number.isFinite(baseDiscount) || baseDiscount < 0 || baseDiscount > 95 || clientName.length < 2) return null;
   if (!SLUG_PATTERN.test(clientSlug) || !CODE_PATTERN.test(shortCode)) return null;
   if (!Number.isFinite(discount) || discount < 0 || baseDiscount + discount > 95) return null;
   if (!Number.isFinite(createdAtMs) || !Number.isFinite(expiresAtMs)) return null;
@@ -188,7 +207,7 @@ function getTargetUrl() {
   return new URL(process.env.ZCONNECT_ANALYTICS_TARGET_URL || DEFAULT_TARGET_URL);
 }
 
-async function registerOffer({ secret, seller, clientName, discount, validityDays, permanent }) {
+async function registerOffer({ secret, seller, clientName, discount, validityDays, permanent, baseDiscount }) {
   const createdAt = Date.now();
   const expiresAt = permanent
     ? PERMANENT_EXPIRES_AT_MS
@@ -205,6 +224,7 @@ async function registerOffer({ secret, seller, clientName, discount, validityDay
       s: seller,
       c: clientName,
       d: discount,
+      b: baseDiscount,
       a: Math.floor(createdAt / 1000),
       e: Math.floor(expiresAt / 1000),
       ...(permanent ? { p: 1 } : {}),
@@ -260,6 +280,13 @@ export default async function handler(request, response) {
     response.status(204).end();
     return;
   }
+  if (request.method === "POST" && !isAllowedOfferOrigin(request)) {
+    response.status(403).json({
+      ok: false,
+      error: "Origem não autorizada para criar ofertas."
+    });
+    return;
+  }
 
   const secret = getSigningSecret();
 
@@ -293,28 +320,50 @@ export default async function handler(request, response) {
 
   if (request.method === "POST") {
     const data = parseJsonBody(request);
-    const seller = canonicalSeller(data?.seller);
+    const requestedSeller = String(data?.seller || "").trim().toLowerCase();
     const clientName = normalizeClientName(data?.clientName);
     const discount = Number(data?.discount);
     const validityDays = Number(data?.validityDays);
     const permanent = data?.permanent === true;
-    const baseDiscount = SELLER_POLICIES.get(seller);
 
-    if (!baseDiscount || clientName.length < 2 || !Number.isFinite(discount) || discount < 0) {
+    if (!requestedSeller || clientName.length < 2 || !Number.isFinite(discount) || discount < 0) {
       response.status(400).json({ ok: false, error: "Dados da oferta inválidos." });
       return;
     }
+
+    let consultant;
+    try {
+      consultant = await resolveConsultant(requestedSeller);
+    } catch {
+      response.status(503).json({ ok: false, error: "Não foi possível validar o consultor no cadastro central. Tente novamente mais tarde." });
+      return;
+    }
+
+    if (!consultant) {
+      response.status(404).json({ ok: false, error: "Consultor inexistente ou inativo. Confira o link com a administração." });
+      return;
+    }
+
+    const seller = consultant.slug;
+    const baseDiscount = Number(consultant.offer_base_discount);
+
+    if (!Number.isFinite(baseDiscount) || baseDiscount < 0 || baseDiscount > 95) {
+      response.status(503).json({ ok: false, error: "A política de desconto do consultor está inválida." });
+      return;
+    }
+
     if (baseDiscount + discount > 95) {
       response.status(400).json({ ok: false, error: "A condição final não pode ultrapassar 95%." });
       return;
     }
+
     if (!permanent && !ALLOWED_VALIDITY_DAYS.has(validityDays)) {
       response.status(400).json({ ok: false, error: "Validade da oferta inválida." });
       return;
     }
 
     try {
-      const offer = await registerOffer({ secret, seller, clientName, discount, validityDays, permanent });
+      const offer = await registerOffer({ secret, seller, clientName, discount, validityDays, permanent, baseDiscount });
       response.status(201).json({ ok: true, offer });
     } catch (error) {
       const collision = error?.message === "short_code_collision";
@@ -327,6 +376,5 @@ export default async function handler(request, response) {
     }
     return;
   }
-
   response.status(405).json({ ok: false, error: "Método não permitido." });
 }
