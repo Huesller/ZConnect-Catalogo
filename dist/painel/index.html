@@ -356,7 +356,7 @@
   <div id="historyList" class="history-list"></div>
 </div>
 <script>
-(function () {
+(async function () {
   'use strict';
   /*
    * IMPORTANTE:
@@ -365,78 +365,15 @@
    */
   var CATALOG_URL = window.location.origin + '/';
   var OFFER_API_URL = '/api/offer';
-  /*
-   * Vendedores disponíveis.
-   *
-   * A URL define automaticamente qual vendedor está usando
-   * o painel.
-   */
-  var SELLERS = {
-    gabriel: {
-      id: 'gabriel',
-      name: 'Gabriel Zatt',
-      baseDiscount: 45
-    },
-    ney: {
-      id: 'ney',
-      name: 'Ney',
-      baseDiscount: 45
-    },
-    huesller: {
-      id: 'huesller',
-      name: 'Huesller',
-      baseDiscount: 50
-    },
-    ramires: {
-      id: 'ramires',
-      name: 'Ramires',
-      baseDiscount: 50
-    },
-    representante1: {
-      id: 'representante1',
-      name: 'representante1',
-      baseDiscount: 50
-    },
-    representante2: {
-      id: 'representante2',
-      name: 'representante2',
-      baseDiscount: 50
-    },
-    francisco: {
-      id: 'francisco',
-      name: 'Francisco',
-      baseDiscount: 50
-    }
-  };
-  /*
-   * Lê o vendedor da URL.
-   *
-   * Exemplos:
-   *
-   * /painel/gabriel
-   * /painel/ney
-   * /painel/huesller
-   * /painel/francisco
-   */
   function getSellerId() {
-    var path = window.location.pathname
-      .replace(/^\/+|\/+$/g, '');
+    var path = window.location.pathname.replace(/^\/+|\/+$/g, '');
     var parts = path.split('/');
-    var sellerId = parts[parts.length - 1];
-    /*
-     * Se estiver apenas em /painel/,
-     * usamos Gabriel temporariamente.
-     */
-    if (!sellerId || sellerId === 'painel') {
-      sellerId = 'gabriel';
-    }
-    return sellerId.toLowerCase();
+    return parts.length === 2 && parts[0].toLowerCase() === 'painel'
+      ? parts[1].toLowerCase()
+      : '';
   }
-  function getSeller() {
-    var sellerId = getSellerId();
-    return SELLERS[sellerId] || SELLERS.gabriel;
-  }
-  var seller = getSeller();
+  var requestedSellerId = getSellerId();
+  var seller = null;
   var form = document.getElementById('offerForm');
   var clientEl = document.getElementById('clientName');
   var discountEl = document.getElementById('discount');
@@ -455,7 +392,51 @@ var historyList = document.getElementById('historyList');
   var copyButton = document.getElementById('copyButton');
   var openButton = document.getElementById('openButton');
   var currentUrl = '';
-  sellerBadge.textContent = 'Consultor: ' + seller.name;
+
+  function blockPanel(message) {
+    showError(message);
+    if (form) form.querySelectorAll('input, select, button, textarea').forEach(function (el) {
+      el.disabled = true;
+    });
+    if (submitButton) submitButton.disabled = true;
+  }
+
+  if (!requestedSellerId) {
+    blockPanel('Informe o consultor no link do painel. Acesse o endereço individual fornecido pela administração.');
+    return;
+  }
+
+  try {
+    var consultantResponse = await fetch('/api/consultants?slug=' + encodeURIComponent(requestedSellerId), {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    var consultantResult = await consultantResponse.json().catch(function () { return {}; });
+
+    if (!consultantResponse.ok || !consultantResult.ok || !consultantResult.consultant) {
+      blockPanel(consultantResult.error || 'Não foi possível validar o consultor. Confira o link ou tente novamente mais tarde.');
+      return;
+    }
+
+    seller = {
+      id: consultantResult.consultant.slug,
+      name: consultantResult.consultant.name,
+      baseDiscount: Number(consultantResult.consultant.baseDiscount)
+    };
+
+    if (!Number.isFinite(seller.baseDiscount) || seller.baseDiscount < 0 || seller.baseDiscount > 95) {
+      blockPanel('A política de desconto deste consultor está inválida. Contate a administração.');
+      return;
+    }
+
+    sellerBadge.textContent = 'Consultor: ' + seller.name;
+    updateDiscountSummary();
+  } catch (error) {
+    blockPanel('Não foi possível validar o consultor agora. Tente novamente mais tarde.');
+    return;
+  }
+
   function updateDiscountSummary() {
     var extra = getExtraDiscount();
     var base = Number(seller.baseDiscount || 0);
@@ -792,4 +773,3 @@ function getExtraDiscount() {
 </script>
 </body>
 </html>
-

@@ -5,7 +5,7 @@
     "phone": "554733054401",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
-    "targetDiscount": 50
+    "targetDiscount": 45
   },
   "ney": {
     "slug": "ney",
@@ -29,15 +29,15 @@
     "phone": "5527992747307",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
-    "targetDiscount": 50
+    "targetDiscount": 45
   },
-  "ramires": {
-    "slug": "ramires",
-    "name": "Ramires",
-    "phone": "5547997199931",
+  "representante": {
+    "slug": "representante",
+    "name": "Representante",
+    "phone": "5527992747307",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
-    "targetDiscount": 50
+    "targetDiscount": 45
   },
   "representante2": {
     "slug": "representante1",
@@ -45,7 +45,7 @@
     "phone": "5527992747307",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
-    "targetDiscount": 50
+    "targetDiscount": 45
   },
   "representante3": {
     "slug": "representante2",
@@ -53,6 +53,6 @@
     "phone": "5527992747307",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
-    "targetDiscount": 50
+    "targetDiscount": 45
   }
 }
