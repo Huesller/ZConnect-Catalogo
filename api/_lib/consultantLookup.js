@@ -10,8 +10,6 @@ const LOCAL_CONSULTANTS = {
 
 const LOCAL_ALIASES = {
   representante: 'francisco',
-  representante1: 'francisco',
-  representante2: 'francisco',
   ivoney: 'ney'
 };
 

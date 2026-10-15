@@ -305,7 +305,8 @@ export default async function handler(request, response) {
     try {
       const result = await upstreamFetch(target.toString());
       const offer = result?.ok ? verifySignedToken(result.token, secret) : null;
-      if (!offer || offer.shortCode !== code || offer.clientSlug !== clientSlug) {
+      const consultant = offer ? await resolveConsultant(offer.seller) : null;
+      if (!offer || !consultant || offer.shortCode !== code || offer.clientSlug !== clientSlug) {
         response.status(404).json({ ok: false, error: "Oferta antiga, revogada ou inexistente." });
         return;
       }
