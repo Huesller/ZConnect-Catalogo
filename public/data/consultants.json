@@ -31,10 +31,10 @@
     "baseDiscount": 45,
     "targetDiscount": 50
   },
-  "representante": {
-    "slug": "representante",
-    "name": "Representante",
-    "phone": "5527992747307",
+  "ramires": {
+    "slug": "ramires",
+    "name": "Ramires",
+    "phone": "5547997199931",
     "policyType": "politicaDesconto",
     "baseDiscount": 45,
     "targetDiscount": 50
