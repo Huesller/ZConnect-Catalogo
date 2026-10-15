@@ -1,7 +1,7 @@
 export const SHORT_OFFER_PATH_PREFIX = 'oferta';
 export const SHORT_OFFER_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/;
 
-const ALLOWED_SELLERS = new Set(['huesller', 'ney', 'gabriel', 'francisco', 'representante', 'representante1', 'representante2']);
+const ALLOWED_SELLERS = new Set(['huesller', 'ney', 'gabriel', 'francisco', 'representante', 'representante1', 'representante2', 'ramires']);
 
 function canonicalSeller(value) {
   const seller = String(value || '').trim().toLowerCase();
