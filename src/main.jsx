@@ -37,13 +37,13 @@ const STORAGE_KEYS = {
 
 const BRANDS = ['Todos', 'RETOV', 'RIDA', 'TYC', 'Z AUTO', 'OUTRAS MARCAS'];
 const FALLBACK_CONSULTANTS = {
-  huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
-  ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
-  gabriel: { slug: 'gabriel', name: 'Gabriel Zatt', phone: '554788647114', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 45 },
-  francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
-  representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
-  representante1: { slug: 'representante1', name: 'Representante1', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 },
-  representante2: { slug: 'representante2', name: 'Representante2', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: 50 }
+  huesller: { slug: 'huesller', name: 'Huesller', phone: '554733054401', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.huesller.discount },
+  ney: { slug: 'ney', name: 'Ney', phone: '554733054400', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.ney.discount },
+  gabriel: { slug: 'gabriel', name: 'Gabriel Zatt', phone: '554788647114', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.gabriel.discount },
+  francisco: { slug: 'francisco', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.francisco.discount },
+  representante: { slug: 'representante', name: 'Francisco', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.representante.discount },
+  representante1: { slug: 'representante1', name: 'Representante1', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.representante1.discount },
+  representante2: { slug: 'representante2', name: 'Representante2', phone: '5527992747307', policyType: 'politicaDesconto', baseDiscount: 45, targetDiscount: CONSULTANT_PRICE_POLICIES.representante2.discount }
 };
 const PAGE_SIZE = 24;
 const SORT_OPTIONS = [
