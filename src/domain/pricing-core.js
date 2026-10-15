@@ -1,14 +1,6 @@
-export const DEFAULT_COMMERCIAL_POLICY = 45;
+import { CONSULTANT_PRICE_POLICIES, DEFAULT_COMMERCIAL_POLICY } from './consultant-policies.js';
 
-export const CONSULTANT_PRICE_POLICIES = Object.freeze({
-  huesller: Object.freeze({ discount: 45, multiplier: 0.55 }),
-  ney: Object.freeze({ discount: 45, multiplier: 0.55 }),
-  gabriel: Object.freeze({ discount: 45, multiplier: 0.55 }),
-  francisco: Object.freeze({ discount: 50, multiplier: 0.5 }),
-  representante: Object.freeze({ discount: 50, multiplier: 0.5 }),
-  representante1: Object.freeze({ discount: 50, multiplier: 0.5 }),
-  representante2: Object.freeze({ discount: 50, multiplier: 0.5 })
-});
+export { CONSULTANT_PRICE_POLICIES, DEFAULT_COMMERCIAL_POLICY } from './consultant-policies.js';
 
 export function roundCurrency(value) {
   return Math.round(Number(value || 0) * 100) / 100;
